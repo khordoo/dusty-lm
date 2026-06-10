@@ -1,0 +1,224 @@
+import torch
+import torch.nn as nn
+
+
+class RotaryPositionalEmbeding(nn.Module):
+    """
+    Rotary positional embedign
+    """
+
+    def __init__(self, head_dim: int, max_seq_len: int, base: int = 10000):
+        super().__init__()
+        self.base = base
+        self.head_dim = head_dim
+        assert head_dim % 2 == 0, "Head dimention must be even to be used in Rope"
+        inverse_freq = base ** (-torch.arange(0, head_dim, 2) / head_dim)
+        inverse_freq = torch.cat([inverse_freq, inverse_freq], dim=-1)
+
+        self.register_buffer("inv_freq", inverse_freq, persistent=False)
+
+        postion_ids = torch.arange(0, max_seq_len, dtype=inverse_freq.dtype)
+
+        emb = torch.outer(postion_ids, inverse_freq)
+
+        self.register_buffer("sin_cache", emb.sin())  # (T,Dh)
+        self.register_buffer("cos_cache", emb.cos())
+        print("Rope fully initilazed")
+
+    def forward(self, position_ids):
+        # T = x.shape[-2]  # Works with both (B,T,C) and (B,H,T,Dh)
+
+        sin = self.get_buffer("sin_cache")[position_ids, :]
+        cos = self.get_buffer("cos_cache")[position_ids, :]
+
+        sin = sin.unsqueeze(0).unsqueeze(1)  # [1,1,T,Dh]
+        cos = cos.unsqueeze(0).unsqueeze(1)
+
+        return sin, cos
+
+    def rotate_half(self, x):
+        x1 = x[..., : x.shape[-1] // 2]
+        x2 = x[..., x.shape[-1] // 2 :]
+
+        return torch.cat([-x2, x1], dim=-1)
+
+    def apply_rotary_embeding(self, x, sin, cos):
+
+        return x * cos + self.rotate_half(x) * sin
+
+
+class MultiHeadAttention(nn.Module):
+    def __init__(
+        self, embed_dim, num_heads, num_kv_heads, max_seq_len, rope_base=10000
+    ):
+        assert embed_dim % num_heads == 0, "Invalid embeding dimention"
+        assert (
+            num_heads % num_kv_heads == 0
+        )  # num_kv_heads ? not sure does it have to be multiplier of 2 ?
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.num_kv_heads = num_kv_heads
+        self.head_dim = int(embed_dim / num_heads)
+        self.kv_repeat_factor = int(num_heads / num_kv_heads)
+        self.q_dim = embed_dim
+        self.kv_dim = int(num_kv_heads * self.head_dim)
+        self.max_seq_len = max_seq_len
+        print(" shape :", embed_dim, self.kv_dim)
+        self.qkv_proj = nn.Linear(embed_dim, embed_dim + 2 * self.kv_dim, bias=False)
+        self.proj = nn.Linear(embed_dim, embed_dim, bias=False)
+        self.rope = RotaryPositionalEmbeding(self.head_dim, max_seq_len, rope_base)
+        print("Att bloc kfully initialzied")
+
+    def forward(self, x, past_kv=None, position_ids=None):
+        B, T, C = x.shape
+        assert C == self.embed_dim, (
+            "Input embeding is not compatible with model embeding"
+        )
+
+        if position_ids is None:
+            position_ids = torch.arange(0, T, dtype=torch.long, device=x.device)
+            print("psisiton ids:", position_ids)
+        qkv_proj = self.qkv_proj(x)  # B,T,C
+
+        q, k, v = qkv_proj.split([self.q_dim, self.kv_dim, self.kv_dim], dim=-1)
+        q = q.reshape(B, T, self.num_heads, self.head_dim).transpose(1, 2)  # B,H,T,Dh
+        k = k.reshape(B, T, self.num_kv_heads, self.head_dim).transpose(
+            1, 2
+        )  # B,H`,T,Dh
+        v = v.reshape(B, T, self.num_kv_heads, self.head_dim).transpose(
+            1, 2
+        )  # B,H`,T,Dh
+
+        sin, cos = self.rope(position_ids)
+        # Note apply embeding before the Kv cache. to avoid duple apply on the existing saved ones
+        # positional embeding only applied to Q and K
+        q_embed = self.rope.apply_rotary_embeding(q, sin, cos)
+        k_embed = self.rope.apply_rotary_embeding(k, sin, cos)
+
+        if past_kv is not None:
+            past_k, past_v = past_kv
+            k_embed = torch.cat([past_k, k_embed], dim=2)
+            v = torch.cat([past_v, v], dim=2)
+
+        present_kv = (k_embed, v)
+
+        k_embed = k_embed.repeat_interleave(
+            self.kv_repeat_factor, dim=1
+        )  # head dim  h` ->H , B,H,T,Dh
+        v = v.repeat_interleave(self.kv_repeat_factor, dim=1)  # head dim
+
+        # Rope embedings on Q,K
+
+        # softmax(q@Kt/sqrt(dim))
+        scores = q_embed @ k_embed.transpose(-2, -1) / (self.head_dim**0.5)  # # B,H,T,T
+
+        # prefil
+        if T > 1:
+            mask = torch.triu(torch.ones(T, T, device=x.device), diagonal=1).bool()
+            scores = scores.masked_fill(mask, float("-inf"))
+
+        attention_weights = torch.softmax(scores, dim=-1)  # B,H,T,T
+        context = attention_weights @ v  # B,H,T,Dh
+        context = context.transpose(1, 2).reshape(B, T, C)  # B,T,H,Dh , H*Dh ->C
+        out = self.proj(context)
+        return out, present_kv
+
+
+class TransformerBlock(nn.Module):
+    def __init__(
+        self,
+        embed_dim,
+        num_heads,
+        num_kv_heads,
+        max_seq_len,
+        rope_base=10000,
+        rms_eps=1e-4,
+    ):
+        super().__init__()
+        self.att_norm = nn.RMSNorm(embed_dim, eps=rms_eps)
+        self.attention = MultiHeadAttention(
+            embed_dim, num_heads, num_kv_heads, max_seq_len, rope_base
+        )
+        self.mlp = nn.Sequential(
+            nn.Linear(embed_dim, 4 * embed_dim, bias=False),
+            nn.GELU(),
+            nn.Linear(4 * embed_dim, embed_dim, bias=False),
+        )
+        self.mlp_nrom = nn.RMSNorm(embed_dim, eps=rms_eps)
+        print("Transformer block initizlied")
+
+    def forward(self, x, position_ids=None):
+        B, T, C = x.shape
+        att_out, _ = self.attention(self.att_norm(x), position_ids)  # att,vk_cache
+        x = x + att_out
+        x = x + self.mlp(self.mlp_nrom(x))
+        return x
+
+
+class TinyGPT(nn.Module):
+    def __init__(
+        self,
+        num_layers,
+        vocab_size,
+        max_seq_len,
+        embed_dim,
+        num_heads,
+        num_kv_heads,
+        rope_base=10000,
+        rms_eps=1e-4,
+    ):
+        super().__init__()
+        self.num_layers = num_layers
+        self.embed = nn.Embedding(vocab_size, embed_dim)
+        self.layers = nn.ModuleList(
+            [
+                TransformerBlock(
+                    embed_dim, num_heads, num_kv_heads, max_seq_len, rope_base, rms_eps
+                )
+                for _ in range(num_layers)
+            ]
+        )
+        self.final_norm = nn.RMSNorm(embed_dim, rms_eps)
+        self.vocab_proj = nn.Linear(embed_dim, vocab_size, bias=False)
+        print("tinygpt initilzied")
+
+    def forward(self, x, position_ids=None):
+        print("--" * 20)
+        B, T = x.shape
+        print("x data type:", x.dtype)
+        x = self.embed(x)
+        print("After embed shape:", x.shape)
+        for layer in self.layers:
+            x = layer(x, position_ids)
+        logits = self.vocab_proj(self.final_norm(x))
+
+        return logits
+
+
+if __name__ == "__main__":
+    B = 1
+    T = 2
+    embed_dim = 512
+    max_seq_len = 1024
+    head_dim = 64
+    num_heads = 8
+    num_kv_heads = 2
+    num_layers = 6
+    # import tiktoken
+
+    vocab_size = 1000
+    x = torch.randint(0, vocab_size, size=(B, T), dtype=torch.long)
+    print("Input X Shape:", x.shape)
+    # x = nn.Embedding(vocab_size, embed_dim)(x)
+    # print("Input X Shape after embed:", x.shape)
+    # x, _ = MultiHeadAttention(embed_dim, num_heads, num_kv_heads, max_seq_len)(x)
+    # print("Input X Shape after att:", x.shape)
+
+    # x = TransformerBlock(embed_dim, num_heads, num_kv_heads, max_seq_len)(x)
+    # print("Input X Shape after transformer:", x.shape)
+    model = TinyGPT(
+        num_layers, vocab_size, max_seq_len, embed_dim, num_heads, num_kv_heads
+    )
+    x = model(x)
+    print("x shape:", x.shape)
