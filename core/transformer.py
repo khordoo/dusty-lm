@@ -31,20 +31,24 @@ class RotaryPositionalEmbeding(nn.Module):
         sin = self.get_buffer("sin_cache")[position_ids, :]
         cos = self.get_buffer("cos_cache")[position_ids, :]
 
+        # Since the batch dimension is already there, we only need ONE unsqueeze
+        # to create the Head dimension. Result: (B, 1, T, Dh)
         sin = sin.unsqueeze(0).unsqueeze(1)  # [1,1,T,Dh]
         cos = cos.unsqueeze(0).unsqueeze(1)
 
         return sin, cos
 
-    def rotate_half(self, x):
+    @classmethod
+    def rotate_half(cls, x):
         x1 = x[..., : x.shape[-1] // 2]
         x2 = x[..., x.shape[-1] // 2 :]
 
         return torch.cat([-x2, x1], dim=-1)
 
-    def apply_rotary_embeding(self, x, sin, cos):
+    @classmethod
+    def apply_rotary_embeding(cls, x, sin, cos):
 
-        return x * cos + self.rotate_half(x) * sin
+        return x * cos + cls.rotate_half(x) * sin
 
 
 class MultiHeadAttention(nn.Module):
@@ -67,18 +71,14 @@ class MultiHeadAttention(nn.Module):
         print(" shape :", embed_dim, self.kv_dim)
         self.qkv_proj = nn.Linear(embed_dim, embed_dim + 2 * self.kv_dim, bias=False)
         self.proj = nn.Linear(embed_dim, embed_dim, bias=False)
-        self.rope = RotaryPositionalEmbeding(self.head_dim, max_seq_len, rope_base)
         print("Att bloc kfully initialzied")
 
-    def forward(self, x, past_kv=None, position_ids=None):
+    def forward(self, x, sin, cos, past_kv=None):
         B, T, C = x.shape
         assert C == self.embed_dim, (
             "Input embeding is not compatible with model embeding"
         )
 
-        if position_ids is None:
-            position_ids = torch.arange(0, T, dtype=torch.long, device=x.device)
-            print("psisiton ids:", position_ids)
         qkv_proj = self.qkv_proj(x)  # B,T,C
 
         q, k, v = qkv_proj.split([self.q_dim, self.kv_dim, self.kv_dim], dim=-1)
@@ -90,11 +90,10 @@ class MultiHeadAttention(nn.Module):
             1, 2
         )  # B,H`,T,Dh
 
-        sin, cos = self.rope(position_ids)
         # Note apply embeding before the Kv cache. to avoid duple apply on the existing saved ones
         # positional embeding only applied to Q and K
-        q_embed = self.rope.apply_rotary_embeding(q, sin, cos)
-        k_embed = self.rope.apply_rotary_embeding(k, sin, cos)
+        q_embed = RotaryPositionalEmbeding.apply_rotary_embeding(q, sin, cos)
+        k_embed = RotaryPositionalEmbeding.apply_rotary_embeding(k, sin, cos)
 
         if past_kv is not None:
             past_k, past_v = past_kv
@@ -148,9 +147,9 @@ class TransformerBlock(nn.Module):
         self.mlp_nrom = nn.RMSNorm(embed_dim, eps=rms_eps)
         print("Transformer block initizlied")
 
-    def forward(self, x, position_ids=None):
+    def forward(self, x, sin, cos):
         B, T, C = x.shape
-        att_out, _ = self.attention(self.att_norm(x), position_ids)  # att,vk_cache
+        att_out, _ = self.attention(self.att_norm(x), sin, cos)  # att,vk_cache
         x = x + att_out
         x = x + self.mlp(self.mlp_nrom(x))
         return x
@@ -170,6 +169,8 @@ class TinyGPT(nn.Module):
     ):
         super().__init__()
         self.num_layers = num_layers
+        head_dim = embed_dim // num_heads
+        self.rope = RotaryPositionalEmbeding(head_dim, max_seq_len, rope_base)
         self.embed = nn.Embedding(vocab_size, embed_dim)
         self.layers = nn.ModuleList(
             [
@@ -184,20 +185,24 @@ class TinyGPT(nn.Module):
         print("tinygpt initilzied")
 
     def forward(self, x, position_ids=None):
-        print("--" * 20)
         B, T = x.shape
-        print("x data type:", x.dtype)
+
         x = self.embed(x)
-        print("After embed shape:", x.shape)
+
+        if position_ids is None:
+            # Add unsqueeze(0) to ensure the default shape is (1, T), not just (T,)
+            position_ids = torch.arange(0, T, dtype=torch.long, device=x.device)
+
+        sin, cos = self.rope(position_ids)
         for layer in self.layers:
-            x = layer(x, position_ids)
+            x = layer(x, sin, cos)
         logits = self.vocab_proj(self.final_norm(x))
 
         return logits
 
 
 if __name__ == "__main__":
-    B = 1
+    B = 18
     T = 2
     embed_dim = 512
     max_seq_len = 1024
