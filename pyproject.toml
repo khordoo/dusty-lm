@@ -1,7 +1,7 @@
 [project]
 name = "tiny-gpt"
 version = "0.1.0"
-description = "Add your description here"
+description = "An educational tiny GPT implementation with RoPE, grouped-query attention, training, and cached generation."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -13,3 +13,18 @@ dependencies = [
     "torchaudio>=2.11.0",
     "torchvision>=0.27.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["tiny_gpt*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

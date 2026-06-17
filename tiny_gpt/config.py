@@ -25,7 +25,7 @@ class TrainingConfig:
     batch_size: int = 8
     raw_python_dataset_path: str = "../data/python_dataset"
     dataset_path: str = "data/tiny_codes_python_tokenized"
-    checkpoint_name: str = "tinygpt_epoch_1.pt"
+    checkpoint_path: Path = REPO_ROOT / "checkpoints" / "tinygpt_epoch_1.pt"
     log_dir: str = "runs/"
 
 

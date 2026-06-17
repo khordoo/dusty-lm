@@ -1,5 +1,5 @@
 def main():
-    print("Hello from tiny-gpt!")
+    print("Run generation with: uv run python -m tiny_gpt.generate")
 
 
 if __name__ == "__main__":
