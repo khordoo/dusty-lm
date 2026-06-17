@@ -17,6 +17,7 @@ current = Path(__file__).parents[1]
 
 checkpoint_path = Path(__file__).parents[1] / "checkpoints" / "tinygpt_epoch_1.pt"
 MAX_SEQ_LEN = 512
+MAX_GENERATION = 1000
 embed_dim = 512
 max_seq_len = 256
 head_dim = 64
@@ -38,6 +39,7 @@ model = TinyGPT(
 print("loading checkpoint from:", checkpoint_path)
 state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
 model.load_state_dict(state_dict)
+model.rope.resize_cache(MAX_SEQ_LEN + MAX_GENERATION)
 model.eval()
 prompt = "<|im_start|>user\nWrite a python function to calculate the fibonacci sequence.<|im_end|>\n<|im_start|>assistant\n"
 prompt = "<|im_start|>user\nWrite a python function about caoughing<|im_end|>\n<|im_start|>assistant\n"
@@ -54,12 +56,15 @@ eos_length = len(eos_sequence)
 print("EOS_token_id", eos_sequence)
 generated_ids = []
 with torch.inference_mode():
-    max_egenration = 1000
     temperature = 1
     top_k = 10
-    for _ in range(max_egenration):
+    layers_cache = None
+    input_tokens = tokens
+    for step in range(MAX_GENERATION):
         t0 = time.time_ns()
-        logits = model(tokens)  # B,T,C
+        logits, layers_cache = model(
+            x=input_tokens, kv_cache=layers_cache, cache_enabled=True
+        )  # B,T,C
         next_token_logits = logits[:, -1, :]
 
         # 2. Apply Temperature (e.g., 0.8)
@@ -84,9 +89,11 @@ with torch.inference_mode():
         # Check if the exact string exists in the tail
         if "<|im_end|>" in tail_text:
             print("\n\n[Generation stopped: <|im_end|> detected]")
+            print("Token/sec:", len(tokens) * 1e9 / (time.time_ns() - t0))
             break
-        print(f"Time={time.time_ns() - t0}: Tokens={tokens.shape[-1]}")
+        # print(f"Time={time.time_ns() - t0}: Tokens={tokens.shape[-1]}")
         tokens = torch.cat([tokens, next_token.unsqueeze(0)], dim=-1)
         # dirty trick to cut to max seq lengh to allow to generate modere tokesn that 512
         tokens = tokens[:, -MAX_SEQ_LEN:]
+        input_tokens = next_token.unsqueeze(0)
         print(next_word, end="", flush=True)
