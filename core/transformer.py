@@ -1,5 +1,14 @@
+from dataclasses import dataclass
+
 import torch
 import torch.nn as nn
+
+
+@dataclass(frozen=True)
+class ForwardContext:
+    position_ids: torch.Tensor
+    rope_sin: torch.Tensor
+    rope_cos: torch.Tensor
 
 
 class RotaryPositionalEmbeding(nn.Module):
@@ -84,7 +93,7 @@ class MultiHeadAttention(nn.Module):
         self.proj = nn.Linear(embed_dim, embed_dim, bias=False)
         print("Att bloc kfully initialzied")
 
-    def forward(self, x, sin, cos, past_kv=None, cache_enabled=False):
+    def forward(self, x, context: ForwardContext, past_kv=None):
         B, T, C = x.shape
         assert C == self.embed_dim, (
             "Input embeding is not compatible with model embeding"
@@ -104,8 +113,12 @@ class MultiHeadAttention(nn.Module):
 
         # Note apply embeding before the Kv cache. to avoid duple apply on the existing saved ones
         # positional embeding only applied to Q and K
-        q_embed = RotaryPositionalEmbeding.apply_rotary_embeding(q, sin, cos)
-        k_embed = RotaryPositionalEmbeding.apply_rotary_embeding(k, sin, cos)
+        q_embed = RotaryPositionalEmbeding.apply_rotary_embeding(
+            q, context.rope_sin, context.rope_cos
+        )
+        k_embed = RotaryPositionalEmbeding.apply_rotary_embeding(
+            k, context.rope_sin, context.rope_cos
+        )
 
         if past_kv is not None:
             past_k, past_v = past_kv
@@ -113,7 +126,7 @@ class MultiHeadAttention(nn.Module):
             k_embed = torch.cat([past_k, k_embed], dim=2)
             v = torch.cat([past_v, v], dim=2)
 
-        present_kv = (k_embed, v) if cache_enabled else None
+        present_kv = (k_embed, v)
 
         k_embed = k_embed.repeat_interleave(
             self.kv_repeat_factor, dim=1
@@ -133,9 +146,9 @@ class MultiHeadAttention(nn.Module):
             scores = scores.masked_fill(mask, float("-inf"))
 
         attention_weights = torch.softmax(scores, dim=-1)  # B,H,T,T
-        context = attention_weights @ v  # B,H,T,Dh
-        context = context.transpose(1, 2).reshape(B, T, C)  # B,T,H,Dh , H*Dh ->C
-        out = self.proj(context)
+        att_context = attention_weights @ v  # B,H,T,Dh
+        att_context = att_context.transpose(1, 2).reshape(B, T, C)
+        out = self.proj(att_context)
 
         return out, present_kv
 
@@ -163,9 +176,9 @@ class TransformerBlock(nn.Module):
         self.mlp_nrom = nn.RMSNorm(embed_dim, eps=rms_eps)
         print("Transformer block initizlied")
 
-    def forward(self, x, sin, cos, kv_cache=None, cache_enabled=False):
+    def forward(self, x, context: ForwardContext, kv_cache=None):
         att_out, present_kv = self.attention(
-            self.att_norm(x), sin, cos, kv_cache, cache_enabled
+            self.att_norm(x), context, kv_cache
         )  # att,vk_cache
         x = x + att_out
         x = x + self.mlp(self.mlp_nrom(x))
@@ -201,24 +214,25 @@ class TinyGPT(nn.Module):
         self.vocab_proj = nn.Linear(embed_dim, vocab_size, bias=False)
         print("tinygpt initilzied")
 
+    def empty_kv_cache(self):
+        return [None] * len(self.layers)
+
     def forward(
         self,
         x,
         position_ids=None,
         kv_cache: list[tuple] | None = None,
-        cache_enabled=False,
     ):
         B, T = x.shape
+        use_cache = kv_cache is not None
 
-        if kv_cache is not None and not cache_enabled:
-            raise ValueError("kv_cache was provided, but cache_enabled is False")
-        if kv_cache is not None and len(kv_cache) != len(self.layers):
+        if use_cache and len(kv_cache) != len(self.layers):
             raise ValueError(
                 f"Expected {len(self.layers)} cache entries, got {len(kv_cache)}"
             )
 
         past_len = 0
-        if kv_cache is not None and kv_cache[0] is not None:
+        if use_cache and kv_cache[0] is not None:
             past_len = kv_cache[0][0].shape[2]
 
         x = self.embed(x)
@@ -228,31 +242,31 @@ class TinyGPT(nn.Module):
                 past_len, past_len + T, dtype=torch.long, device=x.device
             )
 
-        sin, cos = self.rope(position_ids)
-        layers_cache = kv_cache if kv_cache is not None else [None] * len(self.layers)
-        present_cache = [] if cache_enabled else None
+        rope_sin, rope_cos = self.rope(position_ids)
+        context = ForwardContext(
+            position_ids=position_ids,
+            rope_sin=rope_sin,
+            rope_cos=rope_cos,
+        )
+        input_kv_cache = kv_cache if use_cache else self.empty_kv_cache()
+        next_kv_cache = [] if use_cache else None
 
         for idx, layer in enumerate(self.layers):
-            x, preset_kv_cache = layer(x, sin, cos, layers_cache[idx], cache_enabled)
-            if cache_enabled:
-                present_cache.append(preset_kv_cache)
+            x, present_kv = layer(x, context, input_kv_cache[idx])
+            if use_cache:
+                next_kv_cache.append(present_kv)
 
         logits = self.vocab_proj(self.final_norm(x))
-        if cache_enabled:
-            return logits, present_cache
+        if use_cache:
+            return logits, next_kv_cache
         return logits
 
 
 if __name__ == "__main__":
+    from config import MODEL_CONFIG, TRAINING_CONFIG
+
     B = 18
     T = 2
-    embed_dim = 512
-    max_seq_len = 1024
-    head_dim = 64
-    num_heads = 8
-    num_kv_heads = 2
-    num_layers = 6
-    # import tiktoken
 
     vocab_size = 1000
     x = torch.randint(0, vocab_size, size=(B, T), dtype=torch.long)
@@ -265,7 +279,12 @@ if __name__ == "__main__":
     # x = TransformerBlock(embed_dim, num_heads, num_kv_heads, max_seq_len)(x)
     # print("Input X Shape after transformer:", x.shape)
     model = TinyGPT(
-        num_layers, vocab_size, max_seq_len, embed_dim, num_heads, num_kv_heads
+        MODEL_CONFIG.num_layers,
+        vocab_size,
+        TRAINING_CONFIG.max_seq_len,
+        MODEL_CONFIG.embed_dim,
+        MODEL_CONFIG.num_heads,
+        MODEL_CONFIG.num_kv_heads,
     )
     x = model(x)
     print("x shape:", x.shape)

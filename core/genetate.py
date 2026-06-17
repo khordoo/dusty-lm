@@ -1,8 +1,6 @@
-import time
-from pathlib import Path
-
 import tiktoken
 import torch
+from config import GENERATION_CONFIG, MODEL_CONFIG, TOKENIZER_NAME
 from transformer import TinyGPT
 
 if torch.cuda.is_available():
@@ -12,34 +10,26 @@ elif torch.backends.mps.is_available():
 else:
     device = "cpu"
 
-
-current = Path(__file__).parents[1]
-
-checkpoint_path = Path(__file__).parents[1] / "checkpoints" / "tinygpt_epoch_1.pt"
-MAX_SEQ_LEN = 512
-MAX_GENERATION = 1000
-embed_dim = 512
-max_seq_len = 256
-head_dim = 64
-num_heads = 8
-num_kv_heads = 2
-num_layers = 6
-model_save_path = "tinygpt_epoch_1.pt"
-log_dir = "runs/"
-tokenizer = tiktoken.get_encoding("r50k_base")
-vocab_size = tiktoken.get_encoding("r50k_base").max_token_value
+tokenizer = tiktoken.get_encoding(TOKENIZER_NAME)
+vocab_size = tokenizer.max_token_value
 model = TinyGPT(
-    num_layers=num_layers,
+    num_layers=MODEL_CONFIG.num_layers,
     vocab_size=vocab_size,
-    max_seq_len=MAX_SEQ_LEN,
-    embed_dim=embed_dim,
-    num_heads=num_heads,
-    num_kv_heads=num_kv_heads,
+    max_seq_len=GENERATION_CONFIG.max_seq_len,
+    embed_dim=MODEL_CONFIG.embed_dim,
+    num_heads=MODEL_CONFIG.num_heads,
+    num_kv_heads=MODEL_CONFIG.num_kv_heads,
+    rope_base=MODEL_CONFIG.rope_base,
+    rms_eps=MODEL_CONFIG.rms_eps,
 )
-print("loading checkpoint from:", checkpoint_path)
-state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
+print("loading checkpoint from:", GENERATION_CONFIG.checkpoint_path)
+state_dict = torch.load(
+    GENERATION_CONFIG.checkpoint_path, map_location=device, weights_only=True
+)
 model.load_state_dict(state_dict)
-model.rope.resize_cache(MAX_SEQ_LEN + MAX_GENERATION)
+model.rope.resize_cache(
+    GENERATION_CONFIG.max_seq_len + GENERATION_CONFIG.max_new_tokens
+)
 model.eval()
 prompt = "<|im_start|>user\nWrite a python function to calculate the fibonacci sequence.<|im_end|>\n<|im_start|>assistant\n"
 prompt = "<|im_start|>user\nWrite a python function about caoughing<|im_end|>\n<|im_start|>assistant\n"
@@ -47,33 +37,23 @@ tokens = tokenizer.encode(prompt)
 tokens = torch.tensor(tokens, dtype=torch.long).unsqueeze(0)  # Add Batch dim -> [B,T]
 print("tokens:", tokens)
 print("Predicting...")
-words = []
-EOS_IM = "<|im_end|>"
-eos_sequence = tokenizer.encode(
-    EOS_IM
-)  # limitation og gpt-2 tokenizer it does not assing unique id to this eos
-eos_length = len(eos_sequence)
+eos_sequence = tokenizer.encode(GENERATION_CONFIG.eos_text)
 print("EOS_token_id", eos_sequence)
 generated_ids = []
 with torch.inference_mode():
-    temperature = 1
-    top_k = 10
-    layers_cache = None
+    kv_cache = model.empty_kv_cache()
     input_tokens = tokens
-    for step in range(MAX_GENERATION):
-        t0 = time.time_ns()
-        logits, layers_cache = model(
-            x=input_tokens, kv_cache=layers_cache, cache_enabled=True
-        )  # B,T,C
+    for _ in range(GENERATION_CONFIG.max_new_tokens):
+        logits, kv_cache = model(x=input_tokens, kv_cache=kv_cache)  # B,T,C
         next_token_logits = logits[:, -1, :]
 
         # 2. Apply Temperature (e.g., 0.8)
         # Higher (>1.0) = more chaotic/creative, Lower (<1.0) = more strict/confident
-        next_token_logits = next_token_logits / temperature
+        next_token_logits = next_token_logits / GENERATION_CONFIG.temperature
 
         # 3. Optional: Top-K filtering to prevent complete gibberish
         # Only keep the top 50 most likely tokens, zero out the rest
-        v, _ = torch.topk(next_token_logits, top_k)
+        v, _ = torch.topk(next_token_logits, GENERATION_CONFIG.top_k)
         # Because v is sorted, that last value is the cutoff threshold (the 50th highest score).
         next_token_logits[next_token_logits < v[:, [-1]]] = float("-inf")
         # print("shape", next_token.shape)
@@ -87,13 +67,12 @@ with torch.inference_mode():
         tail_text = tokenizer.decode(generated_ids[-10:])
 
         # Check if the exact string exists in the tail
-        if "<|im_end|>" in tail_text:
+        if GENERATION_CONFIG.eos_text in tail_text:
             print("\n\n[Generation stopped: <|im_end|> detected]")
-            print("Token/sec:", len(tokens) * 1e9 / (time.time_ns() - t0))
             break
-        # print(f"Time={time.time_ns() - t0}: Tokens={tokens.shape[-1]}")
+
         tokens = torch.cat([tokens, next_token.unsqueeze(0)], dim=-1)
         # dirty trick to cut to max seq lengh to allow to generate modere tokesn that 512
-        tokens = tokens[:, -MAX_SEQ_LEN:]
+        tokens = tokens[:, -GENERATION_CONFIG.max_seq_len :]
         input_tokens = next_token.unsqueeze(0)
         print(next_word, end="", flush=True)

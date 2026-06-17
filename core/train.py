@@ -3,6 +3,7 @@ from pathlib import Path
 
 import tiktoken
 import torch
+from config import MODEL_CONFIG, TOKENIZER_NAME, TRAINING_CONFIG
 from datasets import load_from_disk
 from torch.nn import CrossEntropyLoss
 from torch.nn.utils.rnn import pad_sequence
@@ -12,7 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 from transformer import TinyGPT
 
 print("Loading dataset from disk...")
-dataset = load_from_disk("data/tiny_codes_python_tokenized")
+dataset = load_from_disk(TRAINING_CONFIG.dataset_path)
 print(f"Loaded {len(dataset)} examples in milliseconds!")
 if torch.cuda.is_available():
     DEVICE = "cuda"
@@ -24,19 +25,17 @@ else:
     DEVICE = "mps"
     DTYPE = torch.float32
 
-MAX_SEQ_LEN = 1024
-
-
 def collect_fn(batch):
     print("len batch:", len(batch))
     print(len(batch[0]["input_ids"]))
     input_ids = [
-        torch.tensor(item["input_ids"][:MAX_SEQ_LEN], dtype=torch.long)
+        torch.tensor(item["input_ids"][: TRAINING_CONFIG.max_seq_len], dtype=torch.long)
         for item in batch
     ]
 
     lables = [
-        torch.tensor(item["lables"][:MAX_SEQ_LEN], dtype=torch.long) for item in batch
+        torch.tensor(item["lables"][: TRAINING_CONFIG.max_seq_len], dtype=torch.long)
+        for item in batch
     ]
 
     padded_inputs = pad_sequence(input_ids, batch_first=True, padding_value=0)
@@ -47,35 +46,26 @@ def collect_fn(batch):
     return padded_inputs, padded_lables
 
 
-# B = 18
-# T = 2
-embed_dim = 512
-max_seq_len = 256
-head_dim = 64
-num_heads = 8
-num_kv_heads = 2
-num_layers = 6
-learning_rate = 1e-4
-batch_size = 8
-model_save_path = "tinygpt_epoch_1.pt"
-log_dir = "runs/"
-# import tiktoken
-
 train_loader = DataLoader(
-    dataset=dataset, batch_size=batch_size, shuffle=True, collate_fn=collect_fn
+    dataset=dataset,
+    batch_size=TRAINING_CONFIG.batch_size,
+    shuffle=True,
+    collate_fn=collect_fn,
 )
 
-vocab_size = tiktoken.get_encoding("r50k_base").max_token_value
+vocab_size = tiktoken.get_encoding(TOKENIZER_NAME).max_token_value
 model = TinyGPT(
-    num_layers=num_layers,
+    num_layers=MODEL_CONFIG.num_layers,
     vocab_size=vocab_size,
-    max_seq_len=MAX_SEQ_LEN,
-    embed_dim=embed_dim,
-    num_heads=num_heads,
-    num_kv_heads=num_kv_heads,
+    max_seq_len=TRAINING_CONFIG.max_seq_len,
+    embed_dim=MODEL_CONFIG.embed_dim,
+    num_heads=MODEL_CONFIG.num_heads,
+    num_kv_heads=MODEL_CONFIG.num_kv_heads,
+    rope_base=MODEL_CONFIG.rope_base,
+    rms_eps=MODEL_CONFIG.rms_eps,
 )
 model = model.to(DEVICE)
-optimizer = Adam(model.parameters(), lr=learning_rate)
+optimizer = Adam(model.parameters(), lr=TRAINING_CONFIG.learning_rate)
 critetion = CrossEntropyLoss()
 scaler = torch.amp.GradScaler("mps")
 
@@ -94,7 +84,7 @@ def get_summary_writer(log_dir):
     return writer
 
 
-writer = get_summary_writer(log_dir)
+writer = get_summary_writer(TRAINING_CONFIG.log_dir)
 for batch_idx, (inputs, targets) in enumerate(train_loader):
     inputs = inputs.to(DEVICE)
     targets = targets.to(DEVICE)
@@ -118,4 +108,4 @@ for batch_idx, (inputs, targets) in enumerate(train_loader):
     print(f"Batch step= {batch_idx}/{TOTAL_BATCH_SIZE} , loss={loss.item()}")
 writer.close()
 print("model saved")
-torch.save(model.state_dict(), model_save_path)
+torch.save(model.state_dict(), TRAINING_CONFIG.checkpoint_name)
