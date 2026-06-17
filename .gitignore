@@ -8,3 +8,15 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local OS/editor files
+.DS_Store
+
+# Generated ML artifacts
+checkpoints/
+data/
+runs/
+
+# Private credentials
+*.pem
+*.pem.pub
