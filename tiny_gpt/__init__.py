@@ -1,17 +1,29 @@
 from tiny_gpt.config import (
-    GENERATION_CONFIG,
     IGNORE_INDEX,
-    MODEL_CONFIG,
-    TOKENIZER_NAME,
-    TRAINING_CONFIG,
+    GenerationSpec,
+    HFArtifactSpec,
+    ModelFamily,
+    ModelSpec,
+    Profile,
+    TokenizerSpec,
+    TrainingSpec,
+    get_profile,
+    list_profiles,
+    register,
 )
 from tiny_gpt.model import TinyGPT
 
 __all__ = [
-    "GENERATION_CONFIG",
+    "GenerationSpec",
+    "HFArtifactSpec",
     "IGNORE_INDEX",
-    "MODEL_CONFIG",
-    "TOKENIZER_NAME",
-    "TRAINING_CONFIG",
+    "ModelFamily",
+    "ModelSpec",
+    "Profile",
     "TinyGPT",
+    "TokenizerSpec",
+    "TrainingSpec",
+    "get_profile",
+    "list_profiles",
+    "register",
 ]

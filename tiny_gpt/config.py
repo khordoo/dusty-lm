@@ -1,44 +1,262 @@
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, replace
+from enum import StrEnum
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).parents[1]
-TOKENIZER_NAME = "r50k_base"
 IGNORE_INDEX = -100
 
 
+class ModelFamily(StrEnum):
+    SCRATCH_GPT = "scratch_gpt"
+    SMOLLM2 = "smollm2"
+
+
 @dataclass(frozen=True)
-class ModelConfig:
-    max_seq_len: int = 512
-    embed_dim: int = 512
-    num_heads: int = 8
-    num_kv_heads: int = 2
-    num_layers: int = 6
+class TokenizerSpec:
+    kind: str
+    path_or_name: str | Path
+
+
+@dataclass(frozen=True)
+class ModelSpec:
+    family: ModelFamily
+    max_seq_len: int
+    vocab_size: int
+    embed_dim: int
+    num_heads: int
+    num_kv_heads: int
+    num_layers: int
+    tokenizer: TokenizerSpec
     rope_base: int = 10000
     rms_eps: float = 1e-4
+    hidden_dim: int | None = None
 
 
 @dataclass(frozen=True)
-class TrainingConfig:
-    max_seq_len: int = 1024
-    learning_rate: float = 1e-4
-    batch_size: int = 8
-    raw_python_dataset_path: str = "../data/python_dataset"
-    dataset_path: str = "data/tiny_codes_python_tokenized"
-    checkpoint_path: Path = REPO_ROOT / "checkpoints" / "tinygpt_epoch_1.pt"
-    log_dir: str = "runs/"
+class TrainingSpec:
+    dataset_path: str | Path
+    batch_size: int
+    learning_rate: float
+    output_checkpoint: Path
+    max_seq_len: int
+    raw_python_dataset_path: str | Path = REPO_ROOT / "data" / "python_dataset"
+    log_dir: str | Path = REPO_ROOT / "runs"
 
 
 @dataclass(frozen=True)
-class GenerationConfig:
-    max_seq_len: int = 512
-    max_new_tokens: int = 1000
-    temperature: float = 1.0
-    top_k: int = 10
-    checkpoint_path: Path = REPO_ROOT / "checkpoints" / "tinygpt_epoch_1.pt"
-    eos_text: str = "<|im_end|>"
+class GenerationSpec:
+    checkpoint_path: Path
+    max_new_tokens: int
+    temperature: float
+    top_k: int
+    bos_token_id: int | None = None
+    eos_token_id: int | None = None
+    eos_text: str | None = None
 
 
-MODEL_CONFIG = ModelConfig()
-TRAINING_CONFIG = TrainingConfig()
-GENERATION_CONFIG = GenerationConfig()
+@dataclass(frozen=True)
+class HFArtifactSpec:
+    repo_id: str
+    weights_filename: str
+    tokenizer_filename: str
+    local_weights_path: Path
+    local_tokenizer_path: Path
+    revision: str = "main"
+
+
+@dataclass(frozen=True)
+class Profile:
+    name: str
+    model: ModelSpec
+    training: TrainingSpec | None = None
+    generation: GenerationSpec | None = None
+    hf_artifacts: HFArtifactSpec | None = None
+    base_profile: str | None = None
+
+
+SCRATCH_TOKENIZER = TokenizerSpec(kind="tiktoken", path_or_name="r50k_base")
+SMOLLM2_TOKENIZER = TokenizerSpec(
+    kind="tokenizers",
+    path_or_name=REPO_ROOT / "artifacts" / "tokenizers" / "smollm2_tokenizer.json",
+)
+
+_PROFILES: dict[str, Profile] = {}
+
+
+def register(profile: Profile) -> Profile:
+    if profile.name in _PROFILES:
+        raise ValueError(f"Profile already registered: {profile.name}")
+    _PROFILES[profile.name] = profile
+    return profile
+
+
+def get_profile(name: str) -> Profile:
+    try:
+        profile = _PROFILES[name]
+    except KeyError as exc:
+        available = ", ".join(list_profiles())
+        raise KeyError(
+            f"Unknown profile '{name}'. Available profiles: {available}"
+        ) from exc
+
+    if profile.base_profile is None:
+        return profile
+
+    base = get_profile(profile.base_profile)
+    return Profile(
+        name=profile.name,
+        model=profile.model or base.model,
+        training=profile.training or base.training,
+        generation=profile.generation or base.generation,
+        hf_artifacts=profile.hf_artifacts or base.hf_artifacts,
+        base_profile=profile.base_profile,
+    )
+
+
+def list_profiles() -> list[str]:
+    return sorted(_PROFILES)
+
+
+scratch_small_model = ModelSpec(
+    family=ModelFamily.SCRATCH_GPT,
+    max_seq_len=512,
+    vocab_size=50257,
+    embed_dim=512,
+    num_heads=8,
+    num_kv_heads=2,
+    num_layers=6,
+    tokenizer=SCRATCH_TOKENIZER,
+)
+
+smollm2_360m_model = ModelSpec(
+    family=ModelFamily.SMOLLM2,
+    max_seq_len=8192,
+    vocab_size=49152,
+    embed_dim=960,
+    num_heads=15,
+    num_kv_heads=5,
+    num_layers=32,
+    hidden_dim=2560,
+    rope_base=10000,
+    rms_eps=1e-4,
+    tokenizer=SMOLLM2_TOKENIZER,
+)
+
+smollm2_135m_model = ModelSpec(
+    family=ModelFamily.SMOLLM2,
+    max_seq_len=8192,
+    vocab_size=49152,
+    embed_dim=576,
+    num_heads=9,
+    num_kv_heads=3,
+    num_layers=30,
+    hidden_dim=1536,
+    tokenizer=SMOLLM2_TOKENIZER,
+)
+
+register(
+    Profile(
+        name="scratch_small",
+        model=scratch_small_model,
+        training=TrainingSpec(
+            dataset_path=REPO_ROOT / "data" / "tiny_codes_python_tokenized",
+            batch_size=8,
+            learning_rate=1e-4,
+            output_checkpoint=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "scratch_small.pt",
+            max_seq_len=1024,
+        ),
+        generation=GenerationSpec(
+            checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "scratch_small.pt",
+            max_new_tokens=1000,
+            temperature=1.0,
+            top_k=10,
+            eos_text="<|im_end|>",
+        ),
+    )
+)
+
+register(
+    Profile(
+        name="smollm2_360m",
+        model=smollm2_360m_model,
+        generation=GenerationSpec(
+            checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "smollm2_360m.pt",
+            max_new_tokens=1000,
+            temperature=1.0,
+            top_k=10,
+            bos_token_id=0,
+            eos_token_id=0,
+        ),
+        hf_artifacts=HFArtifactSpec(
+            repo_id="HuggingFaceTB/SmolLM2-360M",
+            weights_filename="model.safetensors",
+            tokenizer_filename="tokenizer.json",
+            local_weights_path=REPO_ROOT
+            / "artifacts"
+            / "hf"
+            / "smollm2_360m.safetensors",
+            local_tokenizer_path=SMOLLM2_TOKENIZER.path_or_name,
+        ),
+    )
+)
+
+register(
+    Profile(
+        name="sft_smollm2_360m",
+        model=smollm2_360m_model,
+        training=TrainingSpec(
+            dataset_path=REPO_ROOT / "data" / "tiny_codes_python_tokenized",
+            batch_size=1,
+            learning_rate=1e-5,
+            output_checkpoint=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "sft_smollm2_360m.pt",
+            max_seq_len=2048,
+        ),
+        generation=replace(
+            get_profile("smollm2_360m").generation,
+            checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "sft_smollm2_360m.pt",
+        ),
+        base_profile="smollm2_360m",
+    )
+)
+
+register(
+    Profile(
+        name="smollm2_135m",
+        model=smollm2_135m_model,
+        generation=GenerationSpec(
+            checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "smollm2_135m.pt",
+            max_new_tokens=1000,
+            temperature=1.0,
+            top_k=10,
+            bos_token_id=0,
+            eos_token_id=0,
+        ),
+        hf_artifacts=HFArtifactSpec(
+            repo_id="HuggingFaceTB/SmolLM2-135M",
+            weights_filename="model.safetensors",
+            tokenizer_filename="tokenizer.json",
+            local_weights_path=REPO_ROOT
+            / "artifacts"
+            / "hf"
+            / "smollm2_135m.safetensors",
+            local_tokenizer_path=SMOLLM2_TOKENIZER.path_or_name,
+        ),
+    )
+)

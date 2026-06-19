@@ -1,17 +1,16 @@
-import tiktoken
 from datasets import load_dataset
 from huggingface_hub import login
 
-from tiny_gpt.config import IGNORE_INDEX, TOKENIZER_NAME, TRAINING_CONFIG
+from tiny_gpt.config import IGNORE_INDEX, get_profile
+from tiny_gpt.modeling import build_tokenizer
 
 
-def build_tokenizer():
-    return tiktoken.get_encoding(TOKENIZER_NAME)
+DEFAULT_PROFILE_NAME = "scratch_small"
 
 
 def prepare_training_example(example, tokenizer=None):
     """Mask prompt tokens so loss is only computed on assistant response tokens."""
-    tokenizer = tokenizer or build_tokenizer()
+    tokenizer = tokenizer or build_tokenizer(get_profile(DEFAULT_PROFILE_NAME))
     prompt_text = (
         f"<|im_start|>user\n{example['prompt']}<|im_end|>\n"
         "<|im_start|>assistant\n"
@@ -28,21 +27,25 @@ def prepare_training_example(example, tokenizer=None):
 
 
 def main():
+    profile = get_profile(DEFAULT_PROFILE_NAME)
+    if profile.training is None:
+        raise ValueError(f"Profile '{profile.name}' does not define training config")
+
     print("Launching Hugging Face login. Paste your token when prompted.")
     login()
     print("Downloading tiny-codes dataset...")
 
     dataset = load_dataset("nampdn-ai/tiny-codes", split="train")
     python_dataset = dataset.filter(lambda x: x["programming_language"] == "Python")
-    python_dataset.save_to_disk(TRAINING_CONFIG.raw_python_dataset_path)
+    python_dataset.save_to_disk(str(profile.training.raw_python_dataset_path))
 
-    tokenizer = build_tokenizer()
+    tokenizer = build_tokenizer(profile)
     tokenized_dataset = python_dataset.map(
         lambda example: prepare_training_example(example, tokenizer),
         remove_columns=python_dataset.column_names,
     )
-    print(f"Saving dataset to {TRAINING_CONFIG.dataset_path}...")
-    tokenized_dataset.save_to_disk(TRAINING_CONFIG.dataset_path)
+    print(f"Saving dataset to {profile.training.dataset_path}...")
+    tokenized_dataset.save_to_disk(str(profile.training.dataset_path))
     print(f"Ready to train on {len(tokenized_dataset)} Python examples.")
 
 

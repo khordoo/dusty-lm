@@ -1,8 +1,8 @@
+import argparse
 import os
 from datetime import datetime
 from pathlib import Path
 
-import tiktoken
 import torch
 from datasets import load_from_disk
 from torch.nn import CrossEntropyLoss
@@ -11,8 +11,8 @@ from torch.optim.adam import Adam
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from tiny_gpt.config import IGNORE_INDEX, MODEL_CONFIG, TOKENIZER_NAME, TRAINING_CONFIG
-from tiny_gpt.model import TinyGPT
+from tiny_gpt.config import IGNORE_INDEX, Profile, get_profile, list_profiles
+from tiny_gpt.modeling import build_model
 
 
 def get_device_and_dtype():
@@ -23,34 +23,31 @@ def get_device_and_dtype():
     return "cpu", torch.float32
 
 
-def collate_batch(batch):
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--profile",
+        default="scratch_small",
+        choices=list_profiles(),
+        help="Registered training profile to run.",
+    )
+    return parser.parse_args(argv)
+
+
+def collate_batch(batch, max_seq_len: int):
     def get_labels(item):
         return item["labels"] if "labels" in item else item["lables"]
 
     input_ids = [
-        torch.tensor(item["input_ids"][: TRAINING_CONFIG.max_seq_len], dtype=torch.long)
+        torch.tensor(item["input_ids"][:max_seq_len], dtype=torch.long)
         for item in batch
     ]
     labels = [
-        torch.tensor(get_labels(item)[: TRAINING_CONFIG.max_seq_len], dtype=torch.long)
-        for item in batch
+        torch.tensor(get_labels(item)[:max_seq_len], dtype=torch.long) for item in batch
     ]
     return (
         pad_sequence(input_ids, batch_first=True, padding_value=0),
         pad_sequence(labels, batch_first=True, padding_value=IGNORE_INDEX),
-    )
-
-
-def build_model(vocab_size: int):
-    return TinyGPT(
-        num_layers=MODEL_CONFIG.num_layers,
-        vocab_size=vocab_size,
-        max_seq_len=TRAINING_CONFIG.max_seq_len,
-        embed_dim=MODEL_CONFIG.embed_dim,
-        num_heads=MODEL_CONFIG.num_heads,
-        num_kv_heads=MODEL_CONFIG.num_kv_heads,
-        rope_base=MODEL_CONFIG.rope_base,
-        rms_eps=MODEL_CONFIG.rms_eps,
     )
 
 
@@ -60,26 +57,28 @@ def get_summary_writer(log_dir):
     return SummaryWriter(writer_path)
 
 
-def train():
+def train(profile: Profile):
+    if profile.training is None:
+        raise ValueError(f"Profile '{profile.name}' does not define training config")
+
+    training = profile.training
     print("Loading dataset from disk...")
-    dataset = load_from_disk(TRAINING_CONFIG.dataset_path)
+    dataset = load_from_disk(str(training.dataset_path))
     print(f"Loaded {len(dataset)} examples.")
 
     device, dtype = get_device_and_dtype()
     train_loader = DataLoader(
         dataset=dataset,
-        batch_size=TRAINING_CONFIG.batch_size,
+        batch_size=training.batch_size,
         shuffle=True,
-        collate_fn=collate_batch,
+        collate_fn=lambda batch: collate_batch(batch, training.max_seq_len),
     )
 
-    tokenizer = tiktoken.get_encoding(TOKENIZER_NAME)
-    vocab_size = tokenizer.max_token_value
-    model = build_model(vocab_size).to(device)
-    optimizer = Adam(model.parameters(), lr=TRAINING_CONFIG.learning_rate)
+    model = build_model(profile, max_seq_len=training.max_seq_len).to(device)
+    optimizer = Adam(model.parameters(), lr=training.learning_rate)
     criterion = CrossEntropyLoss(ignore_index=IGNORE_INDEX)
     scaler = torch.amp.GradScaler("cuda", enabled=device == "cuda")
-    writer = get_summary_writer(TRAINING_CONFIG.log_dir)
+    writer = get_summary_writer(training.log_dir)
 
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         inputs = inputs.to(device)
@@ -90,7 +89,10 @@ def train():
             logits = model(inputs)
             shift_logits = logits[:, :-1, :].contiguous()
             shift_targets = targets[:, 1:].contiguous()
-            loss = criterion(shift_logits.view(-1, vocab_size), shift_targets.view(-1))
+            loss = criterion(
+                shift_logits.view(-1, profile.model.vocab_size),
+                shift_targets.view(-1),
+            )
 
         writer.add_scalar("loss", loss.item(), batch_idx)
         if scaler.is_enabled():
@@ -104,13 +106,14 @@ def train():
         print(f"Batch step={batch_idx}/{len(train_loader)}, loss={loss.item()}")
 
     writer.close()
-    TRAINING_CONFIG.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), TRAINING_CONFIG.checkpoint_path)
-    print(f"model saved to {TRAINING_CONFIG.checkpoint_path}")
+    training.output_checkpoint.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), training.output_checkpoint)
+    print(f"model saved to {training.output_checkpoint}")
 
 
-def main():
-    train()
+def main(argv=None):
+    args = parse_args(argv)
+    train(get_profile(args.profile))
 
 
 if __name__ == "__main__":

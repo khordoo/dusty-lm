@@ -1,7 +1,36 @@
 # Architecture
 
 `tiny-gpt` is a small decoder-only transformer intended for learning and
-experimentation. The main implementation lives in `tiny_gpt.model`.
+experimentation. Scratch and SmolLM2 architectures live in `tiny_gpt.models`,
+while `tiny_gpt.model` remains a compatibility import for the scratch model.
+
+## Profile Registry
+
+`tiny_gpt.config` is the source of truth for model variants. A `Profile`
+combines:
+
+- `ModelSpec`: family, dimensions, vocab size, RoPE settings, and tokenizer.
+- `TrainingSpec`: dataset, batch size, learning rate, checkpoint output, and
+  max sequence length.
+- `GenerationSpec`: converted checkpoint path and sampling settings.
+
+Runtime code calls `get_profile(name)` and then uses `tiny_gpt.modeling` to
+build the correct model and tokenizer. This keeps training, generation, and
+checkpoint conversion from depending on overwritten module-level globals.
+
+## Artifact Layout
+
+Local model assets are intentionally outside git under `artifacts/`:
+
+```text
+artifacts/checkpoints/
+artifacts/tokenizers/smollm2_tokenizer.json
+artifacts/hf/
+```
+
+All SmolLM2 profiles use the same tokenizer JSON at
+`artifacts/tokenizers/smollm2_tokenizer.json`. Each model or fine-tuned profile
+points to its own converted checkpoint in `artifacts/checkpoints/`.
 
 ## Model Flow
 

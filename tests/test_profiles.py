@@ -1,0 +1,100 @@
+import pytest
+
+from tiny_gpt.config import (
+    ModelFamily,
+    ModelSpec,
+    Profile,
+    TokenizerSpec,
+    get_profile,
+    list_profiles,
+)
+from tiny_gpt.modeling import build_model
+from tiny_gpt.models.scratch import TinyGPT as ScratchGPT
+from tiny_gpt.models.smollm2 import TinyGPT as SmolLM2
+
+
+def test_profile_lookup_and_unknown_profile_errors():
+    assert get_profile("scratch_small").name == "scratch_small"
+
+    with pytest.raises(KeyError, match="Unknown profile"):
+        get_profile("missing")
+
+
+def test_smollm2_profiles_share_tokenizer_path():
+    profiles = [
+        get_profile(name)
+        for name in list_profiles()
+        if get_profile(name).model.family == ModelFamily.SMOLLM2
+    ]
+
+    tokenizer_paths = {profile.model.tokenizer.path_or_name for profile in profiles}
+
+    assert tokenizer_paths == {
+        get_profile("smollm2_360m").model.tokenizer.path_or_name
+    }
+
+
+def test_sft_profile_uses_base_model_spec():
+    base = get_profile("smollm2_360m")
+    sft = get_profile("sft_smollm2_360m")
+
+    assert sft.base_profile == "smollm2_360m"
+    assert sft.model == base.model
+    assert sft.training is not None
+    assert sft.generation is not None
+    assert sft.hf_artifacts == base.hf_artifacts
+
+
+def test_smollm2_profiles_define_download_artifacts():
+    profile_360m = get_profile("smollm2_360m")
+    profile_135m = get_profile("smollm2_135m")
+
+    assert profile_360m.hf_artifacts is not None
+    assert profile_360m.hf_artifacts.repo_id == "HuggingFaceTB/SmolLM2-360M"
+    assert profile_360m.hf_artifacts.weights_filename == "model.safetensors"
+    assert profile_360m.hf_artifacts.local_weights_path.name == "smollm2_360m.safetensors"
+
+    assert profile_135m.hf_artifacts is not None
+    assert profile_135m.hf_artifacts.repo_id == "HuggingFaceTB/SmolLM2-135M"
+    assert (
+        profile_135m.hf_artifacts.local_weights_path.name
+        == "smollm2_135m.safetensors"
+    )
+    assert profile_135m.model.hidden_dim == 1536
+
+
+def test_build_model_dispatches_scratch_family():
+    profile = Profile(
+        name="tiny_scratch",
+        model=ModelSpec(
+            family=ModelFamily.SCRATCH_GPT,
+            max_seq_len=16,
+            vocab_size=32,
+            embed_dim=16,
+            num_heads=4,
+            num_kv_heads=2,
+            num_layers=1,
+            tokenizer=TokenizerSpec(kind="tiktoken", path_or_name="r50k_base"),
+        ),
+    )
+
+    assert isinstance(build_model(profile), ScratchGPT)
+
+
+def test_build_model_dispatches_smollm2_family():
+    profile = Profile(
+        name="tiny_smollm2",
+        model=ModelSpec(
+            family=ModelFamily.SMOLLM2,
+            max_seq_len=16,
+            vocab_size=32,
+            embed_dim=16,
+            num_heads=4,
+            num_kv_heads=2,
+            num_layers=1,
+            hidden_dim=32,
+            tokenizer=TokenizerSpec(kind="tokenizers", path_or_name="tokenizer.json"),
+        ),
+    )
+
+    assert isinstance(build_model(profile), SmolLM2)
