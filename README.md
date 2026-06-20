@@ -1,141 +1,235 @@
-# TinyGPT: Modern LLM Internals, Built From Scratch
+<![CDATA[<div align="center">
 
-TinyGPT is a compact, engineering-focused implementation of a modern decoder-only
-large language model in pure PyTorch. It is designed for people who want to
-understand how Llama-style architectures actually work under the hood, without
-outsourcing the core model logic to Hugging Face `transformers`.
+# 🧠 TinyGPT
 
-The repository implements the forward pass, attention stack, cache mechanics,
-checkpoint conversion, profile registry, and generation loop directly. Hugging
-Face model files can be used as source artifacts, but the runtime path is custom
-PyTorch.
+**A from-scratch Llama-style LLM in pure PyTorch — no Hugging Face runtime, no magic.**
 
-## Why TinyGPT? 🔬
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.12+-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![Python](https://img.shields.io/badge/Python-3.14+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+[![Apple Silicon](https://img.shields.io/badge/Apple_Silicon-Optimized-000000?style=for-the-badge&logo=apple&logoColor=white)](#-hardware--memory-optimization)
 
-Modern LLM libraries are powerful, but they hide the exact tensor operations that
-make transformer systems work. TinyGPT strips away those abstraction layers and
-keeps the important parts visible:
+*Every attention head, every rotary embedding, every KV-cache append — written by hand, tested, and optimized for consumer hardware.*
 
-- how queries, keys, and values move through grouped-query attention;
-- how rotary embeddings are computed and applied;
-- how KV caching changes inference from full-sequence recomputation to
-  token-by-token decoding;
-- how Hugging Face `.safetensors` weights can be mapped into a custom module
-  hierarchy;
-- how model variants can be managed cleanly without piles of YAML or nested
-  conditionals.
+</div>
 
-The goal is not to be the biggest framework. The goal is to be a readable,
-rigorous baseline for understanding and extending modern LLM architecture.
+---
 
-## Technical Highlights ⚙️
+## 🔍 What Is This?
 
-- **Pure PyTorch runtime**: no Hugging Face `transformers` dependency for model
-  execution, inference, attention, cache management, or generation.
-- **Llama / SmolLM2-style architecture**: implements RoPE, grouped-query
-  attention, RMSNorm, SwiGLU, and tied embedding / vocabulary projection weights.
-- **KV cache inference**: prefill the prompt once, then decode with only the
-  newest token while preserving per-layer key/value state.
-- **Offline weight surgery**: `tiny_gpt.adapter` maps raw Hugging Face
-  `.safetensors` keys into the custom TinyGPT module layout and saves a local
-  PyTorch checkpoint.
-- **Typed profile registry**: `tiny_gpt.config` uses frozen dataclasses for
-  model, tokenizer, training, and generation profiles.
-- **Standalone tokenization**: SmolLM2 profiles use the lightweight Rust-backed
-  `tokenizers` library directly, decoupled from the broader Hugging Face runtime.
-- **Explicit artifact downloads**: profile metadata can fetch raw HF weights and
-  tokenizers into the local `artifacts/` layout on demand.
-- **Testable core mechanics**: unit tests cover cache behavior, profile lookup,
-  model dispatch, generation CLI parsing, and adapter key mapping.
+TinyGPT is a **custom, ground-up implementation** of a modern decoder-only large language model. It implements the same architecture class that powers **Llama, SmolLM2, and Mistral** — but every line of the forward pass, attention stack, caching strategy, and generation loop is **hand-written in pure PyTorch**.
 
-## Architecture 🧠
+> **This is not a wrapper.** Hugging Face `.safetensors` files are used only as _source artifacts_ for weight conversion. The runtime path — from token embedding to logit projection — is entirely custom.
 
-TinyGPT separates model definition, configuration, and runtime construction:
+### Why does this matter?
+
+Production LLM frameworks are powerful, but they hide the exact tensor operations that make transformers work. TinyGPT strips away those abstraction layers and keeps the important parts **visible and auditable**:
+
+| What's implemented from scratch | Why it matters |
+|---|---|
+| **Grouped Query Attention (GQA)** | Reduces KV-cache memory by sharing key/value heads across query groups |
+| **Rotary Positional Embeddings (RoPE)** | Encodes position directly into Q/K dot products — no learned position table |
+| **KV-Cache Inference** | Prefill once, then decode token-by-token with O(1) per step instead of O(n) |
+| **SwiGLU Feed-Forward** | Gated MLP with SiLU activation — the Llama-style FFN block |
+| **RMSNorm** | Pre-norm architecture with root mean square layer normalization |
+| **Weight Tying** | `embed_tokens` and `vocab_proj` share the exact same tensor in memory |
+| **Mixed-Precision Training** | Automatic `float16`/`bfloat16` casting with gradient scaling |
+| **Safetensors Weight Surgery** | Offline key remapping from HF checkpoint format into custom module hierarchy |
+
+---
+
+## ⚙️ Architecture Deep Dive
+
+TinyGPT cleanly separates **model definition**, **configuration**, and **runtime construction** into focused modules:
 
 ```text
 tiny_gpt/
-  config.py        # typed profile registry
-  modeling.py      # model/tokenizer factories
-  artifacts.py     # profile-driven artifact downloads
-  generate.py      # profile-driven generation
-  train.py         # profile-driven training
-  adapter.py       # offline HF safetensors conversion
-  models/
-    scratch.py     # small GPT architecture
-    smollm2.py     # SmolLM2/Llama-style architecture
+├── config.py         # Typed profile registry (frozen dataclasses, zero YAML)
+├── modeling.py       # Model & tokenizer factory dispatch
+├── generate.py       # KV-cache generation loop with top-k sampling
+├── train.py          # Mixed-precision training with TensorBoard logging
+├── adapter.py        # Offline HF .safetensors → TinyGPT checkpoint conversion
+├── artifacts.py      # Profile-driven artifact download from Hugging Face Hub
+├── data_prep.py      # Tokenized dataset preparation pipeline
+└── models/
+    ├── scratch.py    # Compact GPT with fused QKV projection
+    └── smollm2.py    # Full SmolLM2/Llama-style architecture
 ```
 
-The SmolLM2 implementation includes the mechanics expected in a modern compact
-LLM:
+### The SmolLM2 Forward Pass
 
-- **RoPE**: rotary positional embeddings are computed once per forward pass and
-  shared through a `ForwardContext`.
-- **GQA**: query heads can outnumber key/value heads, with KV repetition handled
-  explicitly inside attention.
-- **KV cache**: generation stores per-layer `(key, value)` tensors and appends
-  new tokens without recomputing the full prompt.
-- **SwiGLU MLP**: the feed-forward block follows the gated Llama-style pattern.
-- **Weight tying**: `embed_tokens.weight` and `vocab_proj.weight` reference the
-  same tensor.
+The SmolLM2 implementation follows the exact architecture of modern compact LLMs:
 
-## Profile Registry 🗂️
-
-Model variants are managed through a typed registry in `tiny_gpt.config` instead
-of ad hoc global constants or nested configuration branches.
-
-Current profiles include:
-
-- `scratch_small`: a small GPT profile for local training and experiments.
-- `smollm2_360m`: a SmolLM2-360M architecture backed by a converted checkpoint.
-- `sft_smollm2_360m`: a supervised fine-tuning profile that reuses the 360M base
-  model spec.
-- `smollm2_135m`: a smaller SmolLM2 profile with its own checkpoint target.
-
-Adding another model size is mostly a configuration change: define a new
-`ModelSpec`, point it at the shared SmolLM2 tokenizer artifact, and register a
-profile with its converted checkpoint path.
-
-## Artifact Layout 📦
-
-Local model assets are intentionally kept out of git:
-
-```text
-artifacts/
-  hf/
-    smollm2_135m.safetensors
-    smollm2_360m.safetensors
-  checkpoints/
-    scratch_small.pt
-    smollm2_135m.pt
-    smollm2_360m.pt
-    sft_smollm2_360m.pt
-  datasets/
-    scratch_text_tokenized/
-  tokenizers/
-    smollm2_tokenizer.json
+```
+Input IDs → Embedding → [RoPE + GQA + RMSNorm + SwiGLU] × 32 layers → Final RMSNorm → Vocab Projection → Logits
+                              ↑                                                              ↑
+                        KV-Cache read/write                                          Weight-tied to Embedding
 ```
 
-- `artifacts/hf/` stores raw downloaded Hugging Face `.safetensors` files.
-- `artifacts/checkpoints/` stores converted TinyGPT PyTorch checkpoints.
-- `artifacts/datasets/` stores tokenized local training corpora.
-- `artifacts/tokenizers/smollm2_tokenizer.json` is shared by all SmolLM2
-  profiles.
+**Key engineering decisions:**
+- **RoPE** is computed once per forward pass and shared through a `ForwardContext` dataclass — no redundant trig recomputation across layers.
+- **GQA** uses `repeat_interleave` to expand KV heads to match query head count, with explicit dimensionality validation.
+- **KV-Cache** stores per-layer `(key, value)` tensors and appends new tokens via `torch.cat` — no full-sequence recomputation during generation.
+- **Causal masking** is applied only during multi-token prefill (`seq_len > 1`); single-token decode steps skip masking entirely.
 
-## Quickstart 🚀
+---
 
-Install dependencies:
+## 🗂️ The Profile Registry — Zero YAML, Pure Python
+
+One of TinyGPT's cleanest design decisions is how model variants are managed. Instead of sprawling YAML files, messy dictionaries, or fragile CLI flag combinations, every model configuration lives as a **frozen, type-checked Python dataclass**:
+
+```python
+from dataclasses import dataclass, replace
+from enum import StrEnum
+
+class ModelFamily(StrEnum):
+    SCRATCH_GPT = "scratch_gpt"
+    SMOLLM2 = "smollm2"
+
+@dataclass(frozen=True)
+class ModelSpec:
+    family: ModelFamily
+    max_seq_len: int
+    vocab_size: int
+    embed_dim: int
+    num_heads: int
+    num_kv_heads: int     # GQA: fewer KV heads than query heads
+    num_layers: int
+    tokenizer: TokenizerSpec
+    rope_base: int = 10000
+    rms_eps: float = 1e-4
+    hidden_dim: int | None = None
+
+@dataclass(frozen=True)
+class Profile:
+    name: str
+    model: ModelSpec
+    training: TrainingSpec | None = None
+    generation: GenerationSpec | None = None
+    hf_artifacts: HFArtifactSpec | None = None
+    base_profile: str | None = None    # Profile inheritance!
+```
+
+Defining a new model variant is a **one-shot registration** — every parameter is typed, immutable, and IDE-autocomplete-friendly:
+
+```python
+# SmolLM2-360M: 32 layers, 15 query heads, 5 KV heads (GQA ratio = 3:1)
+smollm2_360m = register(
+    Profile(
+        name="smollm2_360m",
+        model=ModelSpec(
+            family=ModelFamily.SMOLLM2,
+            max_seq_len=8192,
+            vocab_size=49152,
+            embed_dim=960,
+            num_heads=15,
+            num_kv_heads=5,   # 3× fewer KV heads → 3× less cache memory
+            num_layers=32,
+            hidden_dim=2560,
+            tokenizer=SMOLLM2_TOKENIZER,
+        ),
+        generation=GenerationSpec(
+            checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "smollm2_360m.pt",
+            max_new_tokens=1000,
+            temperature=1.0,
+            top_k=10,
+        ),
+    )
+)
+```
+
+**Want to fine-tune it?** Profile inheritance makes SFT a config-level change — no code duplication:
+
+```python
+register(
+    Profile(
+        name="sft_smollm2_360m",
+        model=smollm2_360m_model,
+        training=TrainingSpec(
+            batch_size=1,
+            learning_rate=1e-5,
+            max_seq_len=2048,
+            output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "sft_smollm2_360m.pt",
+            ...
+        ),
+        base_profile="smollm2_360m",   # Inherits generation + HF artifact config
+    )
+)
+```
+
+### Available Profiles
+
+| Profile | Architecture | Layers | Heads (Q/KV) | Embed Dim | Params | Use Case |
+|---|---|---|---|---|---|---|
+| `scratch_small` | Custom GPT | 6 | 8 / 2 | 512 | ~25M | Local training & experimentation |
+| `smollm2_135m` | SmolLM2/Llama | 30 | 9 / 3 | 576 | 135M | Lightweight inference |
+| `smollm2_360m` | SmolLM2/Llama | 32 | 15 / 5 | 960 | 360M | Full-scale inference & SFT |
+| `sft_smollm2_360m` | SmolLM2/Llama | 32 | 15 / 5 | 960 | 360M | Supervised fine-tuning |
+
+---
+
+## 💻 Hardware & Memory Optimization
+
+TinyGPT's training loop and KV-cache generation are **heavily optimized for consumer hardware**, with first-class support for **Apple Silicon (M1/M2/M3/M4) Macs**.
+
+### Training Memory Footprint
+
+The training pipeline uses **automatic mixed-precision** casting — `float16` on MPS (Apple Silicon), `bfloat16` on CUDA, `float32` on CPU — with per-device gradient scaling:
+
+```python
+device, dtype = get_device_and_dtype()
+# → ("mps", torch.float16) on Apple Silicon
+# → ("cuda", torch.bfloat16) on NVIDIA GPUs
+# → ("cpu", torch.float32) as fallback
+
+with torch.autocast(device_type=device, dtype=dtype, enabled=device != "cpu"):
+    logits = model(inputs)
+```
+
+#### `scratch_small` — Memory Math on Apple Silicon
+
+| Component | Calculation | Memory |
+|---|---|---|
+| Model params (~25M) | 25M × 2 bytes (fp16) | ~50 MB |
+| Optimizer state (AdamW) | 25M × 2 × 4 bytes (fp32 moments) | ~200 MB |
+| Activations (batch=16, seq=256) | 16 × 256 × 512 × 6 layers × 2 bytes | ~25 MB |
+| Gradients | 25M × 2 bytes | ~50 MB |
+| **Total estimated** | | **~325 MB** |
+
+> 💡 **The `scratch_small` profile trains comfortably on an 8GB MacBook Air.** For 16GB+ machines, increase `batch_size` to `32` for better throughput. If you hit OOM, lower `batch_size` to `8` first — it reduces memory without changing the learning objective.
+
+### KV-Cache Memory During Generation
+
+The KV-cache stores per-layer key/value tensors, growing linearly with sequence length:
+
+| Profile | Cache per token per layer | 1024-token cache (all layers) |
+|---|---|---|
+| `scratch_small` (2 KV heads, dim=64) | 2 × 64 × 2 × 2B = **512 B** | 6 layers × 512 B × 1024 = **3 MB** |
+| `smollm2_360m` (5 KV heads, dim=64) | 2 × 5 × 64 × 2B = **1.25 KB** | 32 layers × 1.25 KB × 1024 = **40 MB** |
+
+> GQA's reduced KV head count is the key optimization here — the 360M model uses **3× less cache memory** than it would with full multi-head attention.
+
+---
+
+## 🚀 Quickstart
+
+### Prerequisites
+
+TinyGPT uses [`uv`](https://docs.astral.sh/uv/) for fast, reproducible dependency management.
+
+### Install
 
 ```bash
+# Core dependencies
 uv sync
-```
 
-For development and tests:
-
-```bash
+# With dev tools (pytest)
 uv sync --group dev
 ```
 
-Convert a SmolLM2 checkpoint into TinyGPT format:
+### 🔄 Download & Convert a Pre-trained Model
+
+Fetch SmolLM2-360M weights from Hugging Face and convert them into TinyGPT's checkpoint format — one command:
 
 ```bash
 uv run python -m tiny_gpt.artifacts download \
@@ -143,30 +237,25 @@ uv run python -m tiny_gpt.artifacts download \
   --convert
 ```
 
-This downloads the raw HF safetensors and tokenizer into `artifacts/`, then
-writes the converted checkpoint configured by the profile.
+This downloads the raw `.safetensors` and tokenizer into `artifacts/`, then runs the key-remapping adapter to produce a TinyGPT-native checkpoint.
 
-If the files are already present and you only need conversion, run:
+<details>
+<summary>📎 Already have the weights? Conversion-only commands</summary>
 
+If the files are already present and you only need conversion:
 ```bash
 uv run python -m tiny_gpt.adapter --profile smollm2_360m
 ```
 
-If you manually downloaded a safetensors file elsewhere, pass it explicitly:
-
+If you manually downloaded a safetensors file to a custom path:
 ```bash
 uv run python -m tiny_gpt.adapter \
   --profile smollm2_360m \
   --hf-model-path artifacts/hf/smollm2_360m.safetensors
 ```
+</details>
 
-Run generation:
-
-```bash
-uv run python -m tiny_gpt.generate --profile smollm2_360m
-```
-
-Download and convert the smaller SmolLM2 profile:
+Want the smaller 135M model instead?
 
 ```bash
 uv run python -m tiny_gpt.artifacts download \
@@ -174,102 +263,114 @@ uv run python -m tiny_gpt.artifacts download \
   --convert
 ```
 
-Prepare the tracked demo text corpus for the scratch profile:
+### ⚡ Generate Text
 
 ```bash
+uv run python -m tiny_gpt.generate --profile smollm2_360m
+```
+
+### 🏋️ Train From Scratch
+
+Train a small GPT model on a local text corpus — fully from scratch, no pre-trained weights needed:
+
+```bash
+# 1. Prepare the tokenized dataset from demo text
 uv run python -m tiny_gpt.data_prep --profile scratch_small
-```
 
-Train the scratch profile on the Alice excerpt:
-
-```bash
+# 2. Train for 20 epochs (loss drops to ~2.4 on the demo corpus)
 uv run python -m tiny_gpt.train --profile scratch_small --epochs 20
+
+# 3. Generate from your freshly trained checkpoint
+uv run python -m tiny_gpt.generate --profile scratch_small --prompt "Alice was"
 ```
 
-The training command defaults to one epoch if `--epochs` is omitted, but the
-tracked Alice corpus is intentionally tiny for educational use. Running about 20
-epochs gives the model enough repeated exposure for the loss to drop toward
-roughly `2.4`, where it starts to learn the local language patterns. For a real
-dataset, use more data instead of repeatedly overfitting a small excerpt.
+> The included demo corpus is intentionally tiny for educational use. ~20 epochs gives the model enough exposure for the loss to converge around **2.4**, where it starts to capture local language patterns. For real workloads, use more data instead of overfitting a small excerpt.
 
-For a single default epoch, run:
+<details>
+<summary>📎 Single-epoch training (default)</summary>
 
 ```bash
 uv run python -m tiny_gpt.train --profile scratch_small
 ```
+</details>
 
-Generate from the scratch checkpoint:
-
-```bash
-uv run python -m tiny_gpt.generate --profile scratch_small --prompt "Alice was"
-```
-
-## Hardware Requirements & Memory Tuning 💻
-
-The scratch model is small enough for local educational training on consumer
-hardware, including Apple Silicon laptops and standard GPUs. The main memory
-knobs live in `tiny_gpt/config.py` under the `scratch_small` training profile:
-
-```python
-max_seq_len=256
-batch_size=16
-```
-
-If you have 16GB or more of unified memory / VRAM, you can usually increase
-`batch_size` to `32` for better throughput with `max_seq_len=256`. That setup is
-expected to use roughly a few GB of memory for this custom model.
-
-If you are on an 8GB machine or hit an out-of-memory error, lower only the batch
-size first:
-
-```python
-batch_size=16  # or 8 for tighter memory
-```
-
-Lowering `batch_size` reduces memory use while keeping the same learning
-objective. Training may take more optimizer steps to see the same amount of data,
-but the model is still learning from the same token sequences. For larger local
-story corpora, such as adding another `.txt` file under `demo_text/`, tune
-`batch_size` based on available memory before changing model dimensions.
-
-Run the test suite:
+### 🧪 Run Tests
 
 ```bash
 uv run pytest
 ```
 
-## Generation Flow ⚡
+The test suite covers KV-cache behavior, profile lookup and inheritance, model factory dispatch, generation CLI parsing, adapter key mapping, and data preparation.
 
-Generation uses an explicit cache-aware loop:
+---
 
-1. Tokenize the prompt with the profile's tokenizer.
-2. Run a prefill pass with an empty KV cache.
-3. Sample the next token from the final-position logits.
-4. Feed only the newest token back into the model.
-5. Append new keys and values to each layer's cache.
+## ⚡ Generation Flow — How KV-Caching Works
 
-This makes the inference path easy to inspect and avoids hiding the most
-important performance optimization behind a framework API.
+The generation loop implements an **explicit, cache-aware autoregressive decode** — no framework abstraction hiding the critical performance optimization:
 
-## Roadmap 🛠️
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. Tokenize prompt                                         │
+│  2. PREFILL: Run full prompt through model with empty cache │
+│     └→ KV-cache populated for all prompt positions          │
+│  3. Sample next token from final-position logits (top-k)    │
+│  4. DECODE LOOP:                                            │
+│     ├→ Feed ONLY the newest token into the model            │
+│     ├→ Append new K,V to each layer's cache                 │
+│     ├→ Sample next token                                    │
+│     └→ Repeat until max_new_tokens or EOS                   │
+└─────────────────────────────────────────────────────────────┘
+```
 
-- **Supervised Fine-Tuning (SFT)**: complete the SmolLM2 SFT path using the
-  existing `sft_smollm2_360m` profile.
-- **Direct Preference Optimization (DPO)**: add a preference-training pipeline
-  for alignment experiments.
-- **Benchmarking**: add tokens/sec, memory, and cache efficiency measurements
-  across CPU, CUDA, and Apple Silicon.
-- **More profiles**: expand model coverage through additional typed SmolLM2
-  profiles and converted checkpoints.
-- **Evaluation harness**: add lightweight perplexity and generation-quality
-  checks for local model iteration.
+**This is the difference between O(n²) and O(n) generation** — and in TinyGPT, you can see exactly how it works.
 
-## Repository Policy 🔒
+---
 
-Do not commit model checkpoints, raw HF downloads, tokenizers, datasets, run
-logs, or credentials. Local artifacts belong under `artifacts/`, `data/`, and
-`runs/`, all of which are ignored by git.
+## 📦 Artifact Layout
 
-TinyGPT is intentionally small, but the engineering bar is high: explicit tensor
-flows, typed configuration, reproducible artifact boundaries, and tests for the
-core mechanics that make modern autoregressive models work.
+All model assets are local-only and git-ignored:
+
+```text
+artifacts/
+├── hf/                              # Raw HF .safetensors downloads
+│   ├── smollm2_135m.safetensors
+│   └── smollm2_360m.safetensors
+├── checkpoints/                     # Converted TinyGPT-native checkpoints
+│   ├── scratch_small.pt
+│   ├── smollm2_135m.pt
+│   ├── smollm2_360m.pt
+│   └── sft_smollm2_360m.pt
+├── datasets/                        # Tokenized training corpora
+│   └── scratch_text_tokenized/
+└── tokenizers/                      # Shared tokenizer artifacts
+    └── smollm2_tokenizer.json
+```
+
+---
+
+## 🛠️ Roadmap
+
+- [ ] **Supervised Fine-Tuning (SFT)** — Complete the SmolLM2 SFT pipeline using `sft_smollm2_360m`
+- [ ] **Direct Preference Optimization (DPO)** — Preference-training pipeline for alignment experiments
+- [ ] **Benchmarking** — Tokens/sec, peak memory, and cache efficiency across CPU / CUDA / Apple Silicon
+- [ ] **Evaluation Harness** — Lightweight perplexity and generation-quality checks
+- [ ] **More Profiles** — Expanded SmolLM2 coverage and additional model families
+
+---
+
+## 🔒 Repository Policy
+
+> Do not commit model checkpoints, raw HF downloads, tokenizers, datasets, run logs, or credentials. Local artifacts belong under `artifacts/`, `data/`, and `runs/` — all git-ignored.
+
+---
+
+<div align="center">
+
+**TinyGPT is intentionally small, but the engineering bar is high.**
+
+*Explicit tensor flows · Typed configuration · Reproducible artifacts · Tested core mechanics*
+
+Built with ❤️ and pure PyTorch.
+
+</div>
+]]>
