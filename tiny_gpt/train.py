@@ -7,7 +7,7 @@ import torch
 from datasets import load_from_disk
 from torch.nn import CrossEntropyLoss
 from torch.nn.utils.rnn import pad_sequence
-from torch.optim.adam import Adam
+from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
@@ -30,6 +30,12 @@ def parse_args(argv=None):
         default="scratch_small",
         choices=list_profiles(),
         help="Registered training profile to run.",
+    )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=1,
+        help="Number of training epochs to run.",
     )
     return parser.parse_args(argv)
 
@@ -57,9 +63,11 @@ def get_summary_writer(log_dir):
     return SummaryWriter(writer_path)
 
 
-def train(profile: Profile):
+def train(profile: Profile, num_epochs: int = 1):
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
+    if num_epochs < 1:
+        raise ValueError("num_epochs must be at least 1")
 
     training = profile.training
     print("Loading dataset from disk...")
@@ -75,35 +83,41 @@ def train(profile: Profile):
     )
 
     model = build_model(profile, max_seq_len=training.max_seq_len).to(device)
-    optimizer = Adam(model.parameters(), lr=training.learning_rate)
+    optimizer = AdamW(model.parameters(), lr=training.learning_rate, weight_decay=0.01)
     criterion = CrossEntropyLoss(ignore_index=IGNORE_INDEX)
     scaler = torch.amp.GradScaler("cuda", enabled=device == "cuda")
     writer = get_summary_writer(training.log_dir)
 
-    for batch_idx, (inputs, targets) in enumerate(train_loader):
-        inputs = inputs.to(device)
-        targets = targets.to(device)
-        optimizer.zero_grad()
+    global_step = 0
+    for epoch in range(num_epochs):
+        print(f"\n--- Starting Epoch {epoch + 1}/{num_epochs} ---")
+        for batch_idx, (inputs, targets) in enumerate(train_loader):
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+            optimizer.zero_grad()
 
-        with torch.autocast(device_type=device, dtype=dtype, enabled=device != "cpu"):
-            logits = model(inputs)
-            shift_logits = logits[:, :-1, :].contiguous()
-            shift_targets = targets[:, 1:].contiguous()
-            loss = criterion(
-                shift_logits.view(-1, profile.model.vocab_size),
-                shift_targets.view(-1),
-            )
+            with torch.autocast(
+                device_type=device, dtype=dtype, enabled=device != "cpu"
+            ):
+                logits = model(inputs)
+                shift_logits = logits[:, :-1, :].contiguous()
+                shift_targets = targets[:, 1:].contiguous()
+                loss = criterion(
+                    shift_logits.view(-1, profile.model.vocab_size),
+                    shift_targets.view(-1),
+                )
 
-        writer.add_scalar("loss", loss.item(), batch_idx)
-        if scaler.is_enabled():
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-        else:
-            loss.backward()
-            optimizer.step()
+            writer.add_scalar("loss", loss.item(), global_step)
+            if scaler.is_enabled():
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss.backward()
+                optimizer.step()
 
-        print(f"Batch step={batch_idx}/{len(train_loader)}, loss={loss.item()}")
+            print(f"Batch step={batch_idx}/{len(train_loader)}, loss={loss.item()}")
+            global_step += 1
 
     writer.close()
     training.output_checkpoint.parent.mkdir(parents=True, exist_ok=True)
@@ -113,7 +127,7 @@ def train(profile: Profile):
 
 def main(argv=None):
     args = parse_args(argv)
-    train(get_profile(args.profile))
+    train(get_profile(args.profile), num_epochs=args.epochs)
 
 
 if __name__ == "__main__":

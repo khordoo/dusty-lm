@@ -100,7 +100,7 @@ def generate_text(prompt=DEFAULT_PROMPT, profile_name="scratch_small"):
 
     print("tokens:", tokens)
     print("Predicting...")
-
+    print(prompt, end="", flush=True)
     with torch.inference_mode():
         for _ in range(spec.max_new_tokens):
             logits, kv_cache = model(x=input_tokens, kv_cache=kv_cache)

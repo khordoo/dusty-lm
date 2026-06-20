@@ -41,6 +41,7 @@ class TrainingSpec:
     learning_rate: float
     output_checkpoint: Path
     max_seq_len: int
+    raw_text_path: str | Path | None = None
     raw_python_dataset_path: str | Path = REPO_ROOT / "data" / "python_dataset"
     log_dir: str | Path = REPO_ROOT / "runs"
 
@@ -121,7 +122,7 @@ def list_profiles() -> list[str]:
 
 scratch_small_model = ModelSpec(
     family=ModelFamily.SCRATCH_GPT,
-    max_seq_len=512,
+    max_seq_len=256,
     vocab_size=50257,
     embed_dim=512,
     num_heads=8,
@@ -161,19 +162,26 @@ register(
         name="scratch_small",
         model=scratch_small_model,
         training=TrainingSpec(
-            dataset_path=REPO_ROOT / "data" / "tiny_codes_python_tokenized",
-            batch_size=8,
+            dataset_path=REPO_ROOT
+            / "artifacts"
+            / "datasets"
+            / "scratch_text_tokenized",
+            batch_size=16,
             learning_rate=1e-4,
             output_checkpoint=REPO_ROOT
             / "artifacts"
             / "checkpoints"
             / "scratch_small.pt",
-            max_seq_len=1024,
+            max_seq_len=256,
+            raw_text_path=REPO_ROOT / "demo_text",
         ),
         generation=GenerationSpec(
-            checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "scratch_small.pt",
+            checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "scratch_small.pt",
             max_new_tokens=1000,
-            temperature=1.0,
+            temperature=0.75,
             top_k=10,
             eos_text="<|im_end|>",
         ),
@@ -185,10 +193,7 @@ register(
         name="smollm2_360m",
         model=smollm2_360m_model,
         generation=GenerationSpec(
-            checkpoint_path=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "smollm2_360m.pt",
+            checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "smollm2_360m.pt",
             max_new_tokens=1000,
             temperature=1.0,
             top_k=10,
@@ -238,10 +243,7 @@ register(
         name="smollm2_135m",
         model=smollm2_135m_model,
         generation=GenerationSpec(
-            checkpoint_path=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "smollm2_135m.pt",
+            checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "smollm2_135m.pt",
             max_new_tokens=1000,
             temperature=1.0,
             top_k=10,

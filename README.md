@@ -105,15 +105,19 @@ artifacts/
     smollm2_135m.safetensors
     smollm2_360m.safetensors
   checkpoints/
+    scratch_small.pt
     smollm2_135m.pt
     smollm2_360m.pt
     sft_smollm2_360m.pt
+  datasets/
+    scratch_text_tokenized/
   tokenizers/
     smollm2_tokenizer.json
 ```
 
 - `artifacts/hf/` stores raw downloaded Hugging Face `.safetensors` files.
 - `artifacts/checkpoints/` stores converted TinyGPT PyTorch checkpoints.
+- `artifacts/datasets/` stores tokenized local training corpora.
 - `artifacts/tokenizers/smollm2_tokenizer.json` is shared by all SmolLM2
   profiles.
 
@@ -170,11 +174,63 @@ uv run python -m tiny_gpt.artifacts download \
   --convert
 ```
 
-Train the scratch profile:
+Prepare the tracked demo text corpus for the scratch profile:
+
+```bash
+uv run python -m tiny_gpt.data_prep --profile scratch_small
+```
+
+Train the scratch profile on the Alice excerpt:
+
+```bash
+uv run python -m tiny_gpt.train --profile scratch_small --epochs 20
+```
+
+The training command defaults to one epoch if `--epochs` is omitted, but the
+tracked Alice corpus is intentionally tiny for educational use. Running about 20
+epochs gives the model enough repeated exposure for the loss to drop toward
+roughly `2.4`, where it starts to learn the local language patterns. For a real
+dataset, use more data instead of repeatedly overfitting a small excerpt.
+
+For a single default epoch, run:
 
 ```bash
 uv run python -m tiny_gpt.train --profile scratch_small
 ```
+
+Generate from the scratch checkpoint:
+
+```bash
+uv run python -m tiny_gpt.generate --profile scratch_small --prompt "Alice was"
+```
+
+## Hardware Requirements & Memory Tuning 💻
+
+The scratch model is small enough for local educational training on consumer
+hardware, including Apple Silicon laptops and standard GPUs. The main memory
+knobs live in `tiny_gpt/config.py` under the `scratch_small` training profile:
+
+```python
+max_seq_len=256
+batch_size=16
+```
+
+If you have 16GB or more of unified memory / VRAM, you can usually increase
+`batch_size` to `32` for better throughput with `max_seq_len=256`. That setup is
+expected to use roughly a few GB of memory for this custom model.
+
+If you are on an 8GB machine or hit an out-of-memory error, lower only the batch
+size first:
+
+```python
+batch_size=16  # or 8 for tighter memory
+```
+
+Lowering `batch_size` reduces memory use while keeping the same learning
+objective. Training may take more optimizer steps to see the same amount of data,
+but the model is still learning from the same token sequences. For larger local
+story corpora, such as adding another `.txt` file under `demo_text/`, tune
+`batch_size` based on available memory before changing model dimensions.
 
 Run the test suite:
 
