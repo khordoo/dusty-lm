@@ -83,7 +83,11 @@ def train(profile: Profile, num_epochs: int = 1):
     )
 
     model = build_model(profile, max_seq_len=training.max_seq_len).to(device)
-    optimizer = AdamW(model.parameters(), lr=training.learning_rate, weight_decay=0.01)
+    optimizer = AdamW(
+        model.parameters(),
+        lr=training.learning_rate,
+        weight_decay=training.weight_decay,
+    )
     criterion = CrossEntropyLoss(ignore_index=IGNORE_INDEX)
     scaler = torch.amp.GradScaler("cuda", enabled=device == "cuda")
     writer = get_summary_writer(training.log_dir)

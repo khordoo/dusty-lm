@@ -20,6 +20,14 @@ def test_profile_lookup_and_unknown_profile_errors():
         get_profile("missing")
 
 
+def test_scratch_training_profile_defines_optimizer_hyperparameters():
+    profile = get_profile("scratch_small")
+
+    assert profile.training is not None
+    assert profile.training.learning_rate == 1e-4
+    assert profile.training.weight_decay == 0.01
+
+
 def test_smollm2_profiles_share_tokenizer_path():
     profiles = [
         get_profile(name)

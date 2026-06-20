@@ -41,6 +41,7 @@ class TrainingSpec:
     learning_rate: float
     output_checkpoint: Path
     max_seq_len: int
+    weight_decay: float = 0.0
     raw_text_path: str | Path | None = None
     raw_python_dataset_path: str | Path = REPO_ROOT / "data" / "python_dataset"
     log_dir: str | Path = REPO_ROOT / "runs"
@@ -173,6 +174,7 @@ register(
             / "checkpoints"
             / "scratch_small.pt",
             max_seq_len=256,
+            weight_decay=0.01,
             raw_text_path=REPO_ROOT / "demo_text",
         ),
         generation=GenerationSpec(
