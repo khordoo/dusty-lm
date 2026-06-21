@@ -1,3 +1,11 @@
+"""Dataset preparation: plain-text chunking and SFT prompt/response masking.
+
+For pretraining (scratch model), raw text files are concatenated with a
+document separator token and sliced into fixed-length chunks.  For supervised
+fine-tuning (SFT), prompt tokens are masked with ``IGNORE_INDEX`` so the loss
+is computed only on the assistant's response tokens.
+"""
+
 import argparse
 from pathlib import Path
 
@@ -52,10 +60,12 @@ def read_plain_text_documents(raw_text_path: str | Path) -> list[str]:
 
 def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: int):
     joined_text = DOCUMENT_SEPARATOR.join(documents)
+    # Add separator at the end of the last document
+    joined_text = joined_text + DOCUMENT_SEPARATOR
     token_ids = tokenizer.encode(joined_text, allowed_special={DOCUMENT_SEPARATOR})
-    print("total leng token ids:", len(token_ids))
+    print(f"Total token count: {len(token_ids):,}")
     examples = []
-    print("max seq lengh:", max_seq_len)
+    print(f"Max sequence length: {max_seq_len}")
     for start in range(0, len(token_ids), max_seq_len):
         input_ids = token_ids[start : start + max_seq_len]
         if input_ids:

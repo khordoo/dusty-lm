@@ -1,3 +1,11 @@
+"""Typed dataclass configuration system and profile registry.
+
+Every model variant, training run, and generation configuration is defined
+as a ``Profile`` — a frozen dataclass that bundles a ``ModelSpec``,
+``TrainingSpec``, ``GenerationSpec``, and optional ``HFArtifactSpec``.
+Profiles are registered at import time and looked up by name at runtime.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, replace

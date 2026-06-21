@@ -1,3 +1,10 @@
+"""CLI for downloading HuggingFace model weights and tokenizer files.
+
+Downloads are resolved from the ``HFArtifactSpec`` on each profile, cached
+locally under ``artifacts/``, and optionally converted to TinyGPT checkpoint
+format in one step via the ``--convert`` flag.
+"""
+
 import argparse
 import shutil
 from pathlib import Path

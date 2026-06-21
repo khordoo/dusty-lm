@@ -1,3 +1,11 @@
+"""Convert HuggingFace SmolLM2 safetensors checkpoints to TinyGPT state dict format.
+
+HuggingFace uses key names like ``model.layers.0.self_attn.o_proj.weight``;
+this module maps them to TinyGPT's flattened naming convention
+(e.g., ``layers.0.self_attn.out_proj.weight``).  After conversion, the state
+dict is validated by loading it into a freshly constructed model.
+"""
+
 import argparse
 from pathlib import Path
 
@@ -8,12 +16,7 @@ from tiny_gpt.config import REPO_ROOT, Profile, get_profile, list_profiles
 from tiny_gpt.modeling import build_model
 
 
-DEFAULT_HF_MODEL_PATHS = {
-    "smollm2_360m": [
-        REPO_ROOT / "artifacts" / "hf" / "smollm2_360m.safetensors",
-        REPO_ROOT / "artifacts" / "hf" / "smollm2_360.safetensors",
-    ],
-}
+
 
 
 def map_smollm2_key(hf_key: str) -> str:
@@ -39,19 +42,6 @@ def convert_smollm2_state_dict(hf_weights: dict[str, torch.Tensor]):
 def resolve_hf_model_path(profile: Profile, hf_model_path: str | Path | None) -> Path:
     if hf_model_path is not None:
         return Path(hf_model_path)
-
-    if profile.hf_artifacts is not None and profile.hf_artifacts.local_weights_path.exists():
-        return profile.hf_artifacts.local_weights_path
-
-    candidates = DEFAULT_HF_MODEL_PATHS.get(profile.name, [])
-    for candidate in candidates:
-        if candidate.exists():
-            if candidate != candidates[0]:
-                print("Using discovered Hugging Face model file:", candidate)
-            return candidate
-
-    if candidates:
-        return candidates[0]
     if profile.hf_artifacts is not None:
         return profile.hf_artifacts.local_weights_path
     return REPO_ROOT / "artifacts" / "hf" / f"{profile.name}.safetensors"

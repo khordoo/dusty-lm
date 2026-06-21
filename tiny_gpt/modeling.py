@@ -1,3 +1,11 @@
+"""Factory functions that dispatch model and tokenizer construction from profiles.
+
+``build_model`` inspects the ``ModelFamily`` in a profile's ``ModelSpec`` and
+returns the corresponding ``TinyGPT`` instance (scratch or SmolLM2).
+``build_tokenizer`` similarly dispatches between tiktoken and HuggingFace
+tokenizers based on the ``TokenizerSpec.kind`` field.
+"""
+
 from pathlib import Path
 from typing import Any
 

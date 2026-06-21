@@ -1,3 +1,10 @@
+"""Training loop with mixed-precision, TensorBoard logging, and checkpoint saving.
+
+Supports CUDA (bfloat16), Apple Silicon MPS (float16), and CPU (float32).
+The loss is computed on shifted logits/targets so that position ``t`` predicts
+token ``t+1``, following the standard causal language modeling objective.
+"""
+
 import argparse
 import os
 from datetime import datetime

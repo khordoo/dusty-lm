@@ -39,7 +39,7 @@ def test_plain_text_documents_are_separated_by_endoftext():
 
     prepare_plain_text_examples(["alpha", "beta"], tokenizer, max_seq_len=100)
 
-    assert tokenizer.encoded_text == f"alpha{DOCUMENT_SEPARATOR}beta"
+    assert tokenizer.encoded_text == f"alpha{DOCUMENT_SEPARATOR}beta{DOCUMENT_SEPARATOR}"
 
 
 def test_plain_text_examples_do_not_insert_chat_template():
