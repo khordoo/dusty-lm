@@ -1,30 +1,17 @@
 import concurrent.futures
+import argparse
 import os
 import threading
 from pathlib import Path
 
 from openai import OpenAI
 
-api_key = ""
-assert api_key.strip() != "", (
-    "Please provide your OpenRouter api key or ser OPENROUTER_API_KEY env variable"
-)
-os.environ["OPENROUTER_API_KEY"] = api_key
-
 base = Path(__file__).parents[1]
 
-# Initialize the OpenRouter client (Uses the standard OpenAI library!)
-# Make sure to run: export OPENAI_API_KEY , OPENROUTER_API_KEY="your-key-here" in your terminal first
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.environ.get("OPENROUTER_API_KEY"),
-)
-
-# You can use any Qwen model ID from OpenRouter here
-MODEL_ID = "qwen/qwen3-235b-a22b-2507:floor"  # "openai/gpt-oss-120b:floor"
-OUTPUT_FILE = base / "artifacts/datasets/dusty_pretrain.txt"
-PROGRESS_FILE = base / "artifacts/datasets/dusty_pretrain_progress.txt"
-NUM_ITERATIONS = 30  # 30 loops * ~2500 words = ~75,000 words
+DEFAULT_MODEL_ID = "qwen/qwen3-235b-a22b-2507:floor"
+DEFAULT_OUTPUT_FILE = base / "artifacts/datasets/dusty_pretrain.txt"
+DEFAULT_PROGRESS_FILE = base / "artifacts/datasets/dusty_pretrain_progress.txt"
+DEFAULT_MAX_WORKERS = 5
 
 # We cycle through different scenarios so the data doesn't get boring!
 # We use your exact SFT categories to ensure 100% vocabulary coverage!
@@ -131,28 +118,37 @@ Dusty only moves on floors. Dusty avoids stairs and socks. When the battery is l
 the dock is warm and safe. my battery feels full today. rolling onto the floor is my main job. there is a large dust pile near the wall. cleaning it makes me feel proud. my belly is full of dust. a scary sock is blocking the path, so turning left is the best idea. beep. the floor looks very clean now. going home to charge is next.
 """
 
-print(f"🧹 Starting Dusty Dataset Generation. Saving to {OUTPUT_FILE}...")
-
-# 1. Load previously completed categories to support resuming
-completed_categories = set()
-if os.path.exists(PROGRESS_FILE):
-    with open(PROGRESS_FILE, "r", encoding="utf-8") as pf:
-        completed_categories = set(pf.read().splitlines())
-    print(f"Found {len(completed_categories)} completed categories. Resuming...")
-
-# Create a lock to prevent multiple threads from writing to the files at the exact same time
-write_lock = threading.Lock()
+def get_openrouter_api_key() -> str:
+    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "Set OPENAI_API_KEY to your OpenRouter API key. "
+            "OPENROUTER_API_KEY is also supported."
+        )
+    return api_key
 
 
-def process_category(i, category, description):
-    prompt = f"Write 2,000 words of continuous paragraphs from Dusty's perspective. Focus on this theme: {description}"
+def process_category(
+    client: OpenAI,
+    model_id: str,
+    output_file: Path,
+    progress_file: Path,
+    write_lock: threading.Lock,
+    i: int,
+    category: str,
+    description: str,
+):
+    prompt = (
+        "Write 2,000 words of continuous paragraphs from Dusty's perspective. "
+        f"Focus on this theme: {description}"
+    )
     print(
         f"Batch {i + 1}/{len(CATEGORY_DESCRIPTIONS)} - Theme: {category} (Started in parallel)"
     )
 
     try:
         response = client.chat.completions.create(
-            model=MODEL_ID,
+            model=model_id,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt},
@@ -166,8 +162,8 @@ def process_category(i, category, description):
         # Safely lock the files while writing so text chunks don't get mixed together
         with write_lock:
             with (
-                open(OUTPUT_FILE, "a", encoding="utf-8") as f,
-                open(PROGRESS_FILE, "a", encoding="utf-8") as pf,
+                open(output_file, "a", encoding="utf-8") as f,
+                open(progress_file, "a", encoding="utf-8") as pf,
             ):
                 f.write(generated_text + "\n\n")
                 f.flush()
@@ -175,36 +171,79 @@ def process_category(i, category, description):
                 pf.write(category + "\n")
                 pf.flush()
 
-        print(
-            f"  -> Batch {i + 1} [{category}]: Generated {len(generated_text.split())} words. Saved.\n"
-        )
+        word_count = len(generated_text.split())
+        print(f"  -> Batch {i + 1} [{category}]: Generated {word_count} words. Saved.\n")
 
     except Exception as e:
         print(f"  -> Error on batch {i + 1} [{category}]: {e}")
 
 
-# Build a list of tasks that still need to be done
-pending_tasks = []
-for i, (category, description) in enumerate(CATEGORY_DESCRIPTIONS.items()):
-    if category in completed_categories:
-        print(
-            f"Batch {i + 1}/{len(CATEGORY_DESCRIPTIONS)} - Theme: {category} (Already done, skipping!)"
-        )
-        continue
-    pending_tasks.append((i, category, description))
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default=DEFAULT_MODEL_ID)
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUTPUT_FILE)
+    parser.add_argument("--progress", type=Path, default=DEFAULT_PROGRESS_FILE)
+    parser.add_argument("--workers", type=int, default=DEFAULT_MAX_WORKERS)
+    return parser.parse_args(argv)
 
-# 2. Run the tasks in parallel!
-# We use 5 workers so we don't trigger "Too Many Requests" rate limits from OpenRouter.
-MAX_WORKERS = 5
-if pending_tasks:
-    print(
-        f"\n🚀 Launching {len(pending_tasks)} remaining tasks across {MAX_WORKERS} parallel threads...\n"
+
+def main(argv=None):
+    args = parse_args(argv)
+    if args.workers < 1:
+        raise ValueError("workers must be at least 1")
+
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.progress.parent.mkdir(parents=True, exist_ok=True)
+
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=get_openrouter_api_key(),
     )
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = [
-            executor.submit(process_category, i, cat, desc)
-            for i, cat, desc in pending_tasks
-        ]
-        concurrent.futures.wait(futures)
 
-print("✨ Dataset generation complete! Dusty is ready to learn.")
+    print(f"Starting Dusty pretrain dataset generation. Saving to {args.out}...")
+
+    completed_categories = set()
+    if args.progress.exists():
+        completed_categories = set(
+            args.progress.read_text(encoding="utf-8").splitlines()
+        )
+        print(f"Found {len(completed_categories)} completed categories. Resuming...")
+
+    write_lock = threading.Lock()
+    pending_tasks = []
+    for i, (category, description) in enumerate(CATEGORY_DESCRIPTIONS.items()):
+        if category in completed_categories:
+            print(
+                f"Batch {i + 1}/{len(CATEGORY_DESCRIPTIONS)} - "
+                f"Theme: {category} (Already done, skipping!)"
+            )
+            continue
+        pending_tasks.append((i, category, description))
+
+    if pending_tasks:
+        print(
+            f"\nLaunching {len(pending_tasks)} remaining tasks across "
+            f"{args.workers} parallel threads...\n"
+        )
+        with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
+            futures = [
+                executor.submit(
+                    process_category,
+                    client,
+                    args.model,
+                    args.out,
+                    args.progress,
+                    write_lock,
+                    i,
+                    cat,
+                    desc,
+                )
+                for i, cat, desc in pending_tasks
+            ]
+            concurrent.futures.wait(futures)
+
+    print("Dataset generation complete. Dusty is ready to learn.")
+
+
+if __name__ == "__main__":
+    main()

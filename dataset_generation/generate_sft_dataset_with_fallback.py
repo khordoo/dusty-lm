@@ -1372,12 +1372,12 @@ def main() -> None:
     parser.add_argument(
         "--out",
         type=Path,
-        default=Path("data/dusty_raw.jsonl"),
+        default=Path("artifacts/datasets/dusty_sft.jsonl"),
     )
     parser.add_argument(
         "--rejected",
         type=Path,
-        default=Path("data/dusty_rejected.jsonl"),
+        default=Path("artifacts/datasets/dusty_sft_rejected.jsonl"),
     )
 
     parser.add_argument(
@@ -1469,35 +1469,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    """
-    EXample commnad from the root directory
-    export OPENAI_API_KEY="YOUR_OPENROUTER_API_KEY" 
-    uv run python sft_dataset_with_fallback.py \
-         --mode generate \ 
-         --model qwen/qwen3-235b-a22b-2507:floor \ 
-         --fallback-model openai/gpt-oss-120b:floor \ 
-         --per-category 500 \ 
-         --batch-size 20 \ 
-         --temperature 0.8 \ 
-         --max-empty-batches 3 \ 
-         --max-user-occurrences 5 \ 
-         --acceptance-window 5 \ 
-         --sleep 0.2 \ 
-         --out data/dusty_raw.jsonl \ 
-         --rejected data/dusty_rejected.jsonl
-
-    You may configure more fallbacks by repeating the option:
-
-    --fallback-model openai/gpt-oss-120b:floor \
-    --fallback-model another/model:floor
-
-    The script resumes from the existing output file, so categories already at max (i.e 500 = your per-category) will be skipped.
-    """
-    import os
-
-    api_key = ""
-    assert api_key.strip() != "", (
-        "Please provide your OpenRouter api key or ser OPENAI_API_KEY env variable"
-    )
-    os.environ["OPENAI_API_KEY"] = api_key
     main()
