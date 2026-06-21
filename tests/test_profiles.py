@@ -5,6 +5,7 @@ from tiny_gpt.config import (
     ModelSpec,
     Profile,
     TokenizerSpec,
+    TrainingTask,
     get_profile,
     list_profiles,
 )
@@ -24,8 +25,21 @@ def test_scratch_training_profile_defines_optimizer_hyperparameters():
     profile = get_profile("scratch_small")
 
     assert profile.training is not None
+    assert profile.training.task == TrainingTask.PRETRAIN
     assert profile.training.learning_rate == 1e-4
     assert profile.training.weight_decay == 0.01
+
+
+def test_dusty8m_profile_is_scratch_pretrain_profile():
+    profile = get_profile("dusty8m")
+
+    assert profile.model.family == ModelFamily.SCRATCH_GPT
+    assert profile.model.vocab_size == 4096
+    assert profile.training is not None
+    assert profile.training.task == TrainingTask.PRETRAIN
+    assert profile.training.output_checkpoint.name == "dusty8m.pt"
+    assert profile.generation is not None
+    assert profile.generation.checkpoint_path.name == "dusty8m.pt"
 
 
 def test_smollm2_profiles_share_tokenizer_path():

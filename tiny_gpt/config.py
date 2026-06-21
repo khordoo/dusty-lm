@@ -21,6 +21,11 @@ class ModelFamily(StrEnum):
     SMOLLM2 = "smollm2"
 
 
+class TrainingTask(StrEnum):
+    PRETRAIN = "pretrain"
+    SFT = "sft"
+
+
 @dataclass(frozen=True)
 class TokenizerSpec:
     kind: str
@@ -44,6 +49,7 @@ class ModelSpec:
 
 @dataclass(frozen=True)
 class TrainingSpec:
+    task: TrainingTask
     dataset_path: str | Path
     batch_size: int
     learning_rate: float
@@ -90,6 +96,10 @@ SCRATCH_TOKENIZER = TokenizerSpec(kind="tiktoken", path_or_name="r50k_base")
 SMOLLM2_TOKENIZER = TokenizerSpec(
     kind="tokenizers",
     path_or_name=REPO_ROOT / "artifacts" / "tokenizers" / "smollm2_tokenizer.json",
+)
+DUSTY_TOKENIZER = TokenizerSpec(
+    kind="tokenizers",
+    path_or_name=REPO_ROOT / "artifacts" / "tokenizers" / "dusty_tokenizer.json",
 )
 
 _PROFILES: dict[str, Profile] = {}
@@ -166,11 +176,50 @@ smollm2_135m_model = ModelSpec(
     tokenizer=SMOLLM2_TOKENIZER,
 )
 
+dusty_8m_model = ModelSpec(
+    family=ModelFamily.SCRATCH_GPT,
+    embed_dim=256,
+    num_layers=8,
+    num_heads=8,
+    num_kv_heads=4,
+    max_seq_len=256,
+    vocab_size=4096,
+    tokenizer=DUSTY_TOKENIZER,
+)
+
+register(
+    Profile(
+        name="dusty8m",
+        model=dusty_8m_model,
+        training=TrainingSpec(
+            task=TrainingTask.PRETRAIN,
+            dataset_path=REPO_ROOT
+            / "artifacts"
+            / "datasets"
+            / "dusty_pretrain_tokenized",
+            batch_size=32,
+            learning_rate=5e-4,
+            output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
+            max_seq_len=256,
+            weight_decay=0.01,
+            raw_text_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_pretrain.txt",
+        ),
+        generation=GenerationSpec(
+            checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
+            max_new_tokens=100,
+            temperature=0.8,
+            top_k=10,
+            eos_text="<|endoftext|>",
+        ),
+    )
+)
+
 register(
     Profile(
         name="scratch_small",
         model=scratch_small_model,
         training=TrainingSpec(
+            task=TrainingTask.PRETRAIN,
             dataset_path=REPO_ROOT
             / "artifacts"
             / "datasets"
@@ -228,6 +277,7 @@ register(
         name="sft_smollm2_360m",
         model=smollm2_360m_model,
         training=TrainingSpec(
+            task=TrainingTask.SFT,
             dataset_path=REPO_ROOT / "data" / "tiny_codes_python_tokenized",
             batch_size=1,
             learning_rate=1e-5,

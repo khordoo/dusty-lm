@@ -14,8 +14,8 @@ from huggingface_hub import login
 
 from tiny_gpt.config import (
     IGNORE_INDEX,
-    ModelFamily,
     Profile,
+    TrainingTask,
     get_profile,
     list_profiles,
 )
@@ -23,6 +23,31 @@ from tiny_gpt.modeling import build_tokenizer
 
 DEFAULT_PROFILE_NAME = "scratch_small"
 DOCUMENT_SEPARATOR = "<|endoftext|>"
+
+
+def encode_token_ids(tokenizer, text: str, allowed_special=None) -> list[int]:
+    try:
+        encoded = tokenizer.encode(text, allowed_special=allowed_special)
+    except TypeError:
+        encoded = tokenizer.encode(text)
+    if hasattr(encoded, "ids"):
+        return list(encoded.ids)
+    return list(encoded)
+
+
+def require_tokenizer_file(profile: Profile) -> None:
+    tokenizer_spec = profile.model.tokenizer
+    if tokenizer_spec.kind != "tokenizers":
+        return
+
+    path = Path(tokenizer_spec.path_or_name)
+    if path.exists():
+        return
+
+    hint = ""
+    if profile.name == "dusty8m":
+        hint = " Run `make dusty-tokenizer` first."
+    raise FileNotFoundError(f"Tokenizer file not found: {path}.{hint}")
 
 
 def prepare_prompt_response_training_example(example, tokenizer=None):
@@ -33,8 +58,8 @@ def prepare_prompt_response_training_example(example, tokenizer=None):
     )
     response_text = f"{example['response']}<|im_end|>"
 
-    prompt_tokens = tokenizer.encode(prompt_text, allowed_special="all")
-    response_tokens = tokenizer.encode(response_text, allowed_special="all")
+    prompt_tokens = encode_token_ids(tokenizer, prompt_text, allowed_special="all")
+    response_tokens = encode_token_ids(tokenizer, response_text, allowed_special="all")
 
     return {
         "input_ids": prompt_tokens + response_tokens,
@@ -51,6 +76,9 @@ def read_plain_text_documents(raw_text_path: str | Path) -> list[str]:
     if path.is_file():
         return [path.read_text()]
 
+    if not path.exists():
+        raise FileNotFoundError(f"Raw pretrain text not found: {path}")
+
     text_files = sorted(file for file in path.rglob("*.txt") if file.is_file())
     if not text_files:
         raise FileNotFoundError(f"No .txt files found under {path}")
@@ -62,7 +90,9 @@ def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: in
     joined_text = DOCUMENT_SEPARATOR.join(documents)
     # Add separator at the end of the last document
     joined_text = joined_text + DOCUMENT_SEPARATOR
-    token_ids = tokenizer.encode(joined_text, allowed_special={DOCUMENT_SEPARATOR})
+    token_ids = encode_token_ids(
+        tokenizer, joined_text, allowed_special={DOCUMENT_SEPARATOR}
+    )
     print(f"Total token count: {len(token_ids):,}")
     examples = []
     print(f"Max sequence length: {max_seq_len}")
@@ -80,6 +110,7 @@ def prepare_scratch_text_dataset(profile: Profile):
     if profile.training.raw_text_path is None:
         raise ValueError(f"Profile '{profile.name}' does not define raw_text_path")
 
+    require_tokenizer_file(profile)
     documents = read_plain_text_documents(profile.training.raw_text_path)
     tokenizer = build_tokenizer(profile)
     examples = prepare_plain_text_examples(
@@ -97,6 +128,7 @@ def prepare_tiny_codes_sft_dataset(profile: Profile):
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
 
+    require_tokenizer_file(profile)
     print("Launching Hugging Face login. Paste your token when prompted.")
     login()
     print("Downloading tiny-codes dataset...")
@@ -129,11 +161,17 @@ def parse_args(argv=None):
 def main(argv=None):
     args = parse_args(argv)
     profile = get_profile(args.profile)
-    if profile.model.family == ModelFamily.SCRATCH_GPT:
+    if profile.training is None:
+        raise ValueError(f"Profile '{profile.name}' does not define training config")
+
+    if profile.training.task == TrainingTask.PRETRAIN:
         prepare_scratch_text_dataset(profile)
         return
+    if profile.training.task == TrainingTask.SFT:
+        prepare_tiny_codes_sft_dataset(profile)
+        return
 
-    prepare_tiny_codes_sft_dataset(profile)
+    raise ValueError(f"Unsupported training task: {profile.training.task}")
 
 
 if __name__ == "__main__":

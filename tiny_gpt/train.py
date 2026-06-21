@@ -7,9 +7,11 @@ token ``t+1``, following the standard causal language modeling objective.
 
 import argparse
 import os
+import random
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 import torch
 from datasets import load_from_disk
 from torch.nn import CrossEntropyLoss
@@ -70,6 +72,36 @@ def get_summary_writer(log_dir):
     return SummaryWriter(writer_path)
 
 
+def initialize_random_seed() -> int:
+    current_seed = random.randint(1, 10000)
+    print(f"🌱 INITIALIZING WITH RANDOM SEED: {current_seed}")
+
+    random.seed(current_seed)
+    np.random.seed(current_seed)
+    torch.manual_seed(current_seed)
+
+    if torch.backends.mps.is_available():
+        torch.mps.manual_seed(current_seed)
+
+    return current_seed
+
+
+def require_training_dataset(profile: Profile) -> None:
+    if profile.training is None:
+        raise ValueError(f"Profile '{profile.name}' does not define training config")
+
+    dataset_path = Path(profile.training.dataset_path)
+    if dataset_path.exists():
+        return
+
+    hint = ""
+    if profile.name == "dusty8m":
+        hint = " Run `make dusty-pretrain-data` first."
+    raise FileNotFoundError(
+        f"Tokenized training dataset not found: {dataset_path}.{hint}"
+    )
+
+
 def train(profile: Profile, num_epochs: int = 1):
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
@@ -77,6 +109,8 @@ def train(profile: Profile, num_epochs: int = 1):
         raise ValueError("num_epochs must be at least 1")
 
     training = profile.training
+    initialize_random_seed()
+    require_training_dataset(profile)
     print("Loading dataset from disk...")
     dataset = load_from_disk(str(training.dataset_path))
     print(f"Loaded {len(dataset)} examples.")
