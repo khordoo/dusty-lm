@@ -161,6 +161,7 @@ register(
 
 | Profile | Architecture | Layers | Heads (Q/KV) | Embed Dim | Params | Use Case |
 |---|---|---|---|---|---|---|
+| `dusty8m` | Custom GPT | 8 | 8 / 4 | 256 | ~8M | Dusty pretraining |
 | `scratch_small` | Custom GPT | 6 | 8 / 2 | 512 | ~25M | Local training & experimentation |
 | `smollm2_135m` | SmolLM2/Llama | 30 | 9 / 3 | 576 | 135M | Lightweight inference |
 | `smollm2_360m` | SmolLM2/Llama | 32 | 15 / 5 | 960 | 360M | Full-scale inference & SFT |
@@ -273,6 +274,61 @@ uv run python -m tiny_gpt.generate --profile smollm2_360m
 
 Train a small GPT model on a local text corpus — fully from scratch, no pre-trained weights needed:
 
+Generate Dusty data with OpenRouter, then train:
+
+```bash
+export OPENAI_API_KEY="YOUR_OPENROUTER_API_KEY"
+
+# 1. Generate raw pretraining text into artifacts/datasets/dusty_pretrain.txt
+make dusty-generate-pretrain
+
+# 2. Generate SFT examples into artifacts/datasets/dusty_sft.jsonl
+make dusty-generate-sft
+```
+
+The SFT generator writes accepted rows to `artifacts/datasets/dusty_sft.jsonl` and rejected rows to `artifacts/datasets/dusty_sft_rejected.jsonl`. It starts each category with `DUSTY_MODEL` and switches to `DUSTY_FALLBACK_MODEL` for that category after `--max-empty-batches` consecutive batches produce zero accepted examples. Existing accepted rows are loaded on startup, so reruns resume progress and skip categories that already reached `DUSTY_SFT_PER_CATEGORY`.
+
+The pretrain generator writes raw diary-style text to `artifacts/datasets/dusty_pretrain.txt` and tracks completed categories in `artifacts/datasets/dusty_pretrain_progress.txt`, so reruns continue where the previous run stopped. Override Make variables when needed, for example `make dusty-generate-sft DUSTY_SFT_PER_CATEGORY=100 DUSTY_MODEL=openai/gpt-oss-120b:floor`.
+
+For long macOS runs, you can wrap either generation command with `caffeinate -is` to keep the machine awake:
+
+```bash
+caffeinate -is make dusty-generate-sft
+```
+
+```bash
+# 3. Train tokenizer, prepare data, then pretrain Dusty 8M
+make dusty-tokenizer
+make dusty-pretrain-data
+make dusty-pretrain EPOCHS=20
+
+# 4. View training loss and other TensorBoard logs
+make tensorboard
+```
+
+Each Dusty pretraining run initializes with a random seed and prints it, for example `INITIALIZING WITH RANDOM SEED: 7102`. The run overwrites `artifacts/checkpoints/dusty8m.pt`; if generation quality is poor, rerun training and test again. If a seed produces a strong checkpoint, hardcode that seed in `tiny_gpt/train.py` before the next final run.
+
+Example Dusty pretraining loss:
+
+![Dusty pretraining loss](docs/images/dusty_pretraining_loss.png)
+
+Test the pretrained Dusty checkpoint:
+
+```bash
+make dusty-generate
+
+# or pass a custom prompt
+make dusty-generate PROMPT="i wake up."
+```
+
+Example pretraining-only output, before SFT:
+
+```text
+i wake up. my motor is full. i roll out to living room. i see dog. dog is big. dog is asleep. dog wags tail. dog hair is on floor. i see it. small... dog hair. i suck it. hair is stuck. i try to suck. hair sticks to me. it rolls. socks are bad. i beep. dog does not know clean and i go.
+
+i feel battery. battery is low. low battery is scary.
+```
+
 ```bash
 # 1. Prepare the tokenized dataset from demo text
 uv run python -m tiny_gpt.data_prep --profile scratch_small
@@ -336,13 +392,19 @@ artifacts/
 │   ├── smollm2_135m.safetensors
 │   └── smollm2_360m.safetensors
 ├── checkpoints/                     # Converted TinyGPT-native checkpoints
+│   ├── dusty8m.pt
 │   ├── scratch_small.pt
 │   ├── smollm2_135m.pt
 │   ├── smollm2_360m.pt
 │   └── sft_smollm2_360m.pt
 ├── datasets/                        # Tokenized training corpora
+│   ├── dusty_pretrain.txt
+│   ├── dusty_pretrain_tokenized/
+│   ├── dusty_sft.jsonl
+│   ├── dusty_sft_rejected.jsonl
 │   └── scratch_text_tokenized/
 └── tokenizers/                      # Shared tokenizer artifacts
+    ├── dusty_tokenizer.json
     └── smollm2_tokenizer.json
 ```
 
