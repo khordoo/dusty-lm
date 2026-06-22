@@ -11,7 +11,8 @@ combines:
 
 - `ModelSpec`: family, dimensions, vocab size, RoPE settings, and tokenizer.
 - `TrainingSpec`: dataset, batch size, learning rate, checkpoint output, and
-  max sequence length.
+  max sequence length. Dusty profiles also use optional SFT fields, an initial
+  checkpoint, and step-checkpoint settings.
 - `GenerationSpec`: converted checkpoint path and sampling settings.
 
 Runtime code calls `get_profile(name)` and then uses `tiny_gpt.modeling` to
@@ -31,6 +32,31 @@ artifacts/hf/
 All SmolLM2 profiles use the same tokenizer JSON at
 `artifacts/tokenizers/smollm2_tokenizer.json`. Each model or fine-tuned profile
 points to its own converted checkpoint in `artifacts/checkpoints/`.
+
+Dusty training writes final checkpoints such as `dusty8m.pt` and
+`dusty8m_sft.pt`. When `checkpoint_every_steps` is configured, the training loop
+also writes step checkpoints beside the final checkpoint, using names like
+`dusty8m_step_100.pt`.
+
+## Text Normalization
+
+Dusty text is normalized before tokenization with:
+
+```python
+text.lower().replace(";", ".")
+```
+
+The raw dataset artifacts stay unchanged. Tokenizer training writes temporary
+normalized corpora, while pretrain and SFT data prep apply the same
+normalization before converting text to token IDs. SFT examples are formatted as
+ChatML after normalization.
+
+## Generation Checkpoint Selection
+
+Generation uses `GenerationSpec.checkpoint_path` by default. Passing
+`--checkpoint-step N` derives a step checkpoint path from the final checkpoint
+name, for example `dusty8m.pt` becomes `dusty8m_step_N.pt`, and
+`dusty8m_sft.pt` becomes `dusty8m_sft_step_N.pt`.
 
 ## Model Flow
 

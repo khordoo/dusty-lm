@@ -162,6 +162,7 @@ register(
 | Profile | Architecture | Layers | Heads (Q/KV) | Embed Dim | Params | Use Case |
 |---|---|---|---|---|---|---|
 | `dusty8m` | Custom GPT | 8 | 8 / 4 | 256 | ~8M | Dusty pretraining |
+| `sft_dusty8m` | Custom GPT | 8 | 8 / 4 | 256 | ~8M | Dusty SFT from `dusty8m.pt` |
 | `scratch_small` | Custom GPT | 6 | 8 / 2 | 512 | ~25M | Local training & experimentation |
 | `smollm2_135m` | SmolLM2/Llama | 30 | 9 / 3 | 576 | 135M | Lightweight inference |
 | `smollm2_360m` | SmolLM2/Llama | 32 | 15 / 5 | 960 | 360M | Full-scale inference & SFT |
@@ -284,11 +285,18 @@ make dusty-generate-pretrain
 
 # 2. Generate SFT examples into artifacts/datasets/dusty_sft.jsonl
 make dusty-generate-sft
+
+# Optional: filter long SFT answers and sample a balanced 2k-row set
+make dusty-filter-sft
 ```
 
 The SFT generator writes accepted rows to `artifacts/datasets/dusty_sft.jsonl` and rejected rows to `artifacts/datasets/dusty_sft_rejected.jsonl`. It starts each category with `DUSTY_MODEL` and switches to `DUSTY_FALLBACK_MODEL` for that category after `--max-empty-batches` consecutive batches produce zero accepted examples. Existing accepted rows are loaded on startup, so reruns resume progress and skip categories that already reached `DUSTY_SFT_PER_CATEGORY`.
 
+`make dusty-filter-sft` removes SFT rows where Dusty's answer is longer than `DUSTY_SFT_MAX_ANSWER_TOKENS` tokenizer tokens, then samples a deterministic category-balanced set across all 60 categories. By default it writes `artifacts/datasets/dusty_sft_2000.jsonl`; override `DUSTY_SFT_FILTER_TARGET`, `DUSTY_SFT_MAX_ANSWER_TOKENS`, or `DUSTY_SFT_FILTERED_OUT` when needed.
+
 The pretrain generator writes raw diary-style text to `artifacts/datasets/dusty_pretrain.txt` and tracks completed categories in `artifacts/datasets/dusty_pretrain_progress.txt`, so reruns continue where the previous run stopped. Override Make variables when needed, for example `make dusty-generate-sft DUSTY_SFT_PER_CATEGORY=100 DUSTY_MODEL=openai/gpt-oss-120b:floor`.
+
+Before tokenization, Dusty text is normalized with `text.lower().replace(";", ".")`. This is applied consistently when training the tokenizer, preparing pretrain data, and preparing SFT ChatML examples. The raw source files are left unchanged; tokenizer training uses temporary normalized corpora.
 
 For long macOS runs, you can wrap either generation command with `caffeinate -is` to keep the machine awake:
 
@@ -302,11 +310,26 @@ make dusty-tokenizer
 make dusty-pretrain-data
 make dusty-pretrain EPOCHS=20
 
-# 4. View training loss and other TensorBoard logs
+# 4. Prepare SFT data, then fine-tune from artifacts/checkpoints/dusty8m.pt
+make dusty-sft-data
+make dusty-sft-train EPOCHS=5
+
+# 5. View training loss and other TensorBoard logs
 make tensorboard
 ```
 
-Each Dusty pretraining run initializes with a random seed and prints it, for example `INITIALIZING WITH RANDOM SEED: 7102`. The run overwrites `artifacts/checkpoints/dusty8m.pt`; if generation quality is poor, rerun training and test again. If a seed produces a strong checkpoint, hardcode that seed in `tiny_gpt/train.py` before the next final run.
+Each Dusty training run initializes with a random seed and prints it, for example `INITIALIZING WITH RANDOM SEED: 7102`. The final pretrain checkpoint is saved to `artifacts/checkpoints/dusty8m.pt`; the final SFT checkpoint is saved to `artifacts/checkpoints/dusty8m_sft.pt`.
+
+Dusty training also saves step checkpoints every `CHECKPOINT_EVERY_STEPS` optimizer steps, default `100`, while still saving the final checkpoint at the end:
+
+```bash
+make dusty-pretrain EPOCHS=20 CHECKPOINT_EVERY_STEPS=50
+make dusty-sft-train EPOCHS=5 CHECKPOINT_EVERY_STEPS=50
+```
+
+This produces files like `artifacts/checkpoints/dusty8m_step_100.pt` and `artifacts/checkpoints/dusty8m_sft_step_100.pt`. Set `CHECKPOINT_EVERY_STEPS=0` to disable interim checkpoints for a run.
+
+The default interval is `100`. If your run has fewer than 100 optimizer steps, no step checkpoint will be written; lower `CHECKPOINT_EVERY_STEPS` in the Make command, for example `CHECKPOINT_EVERY_STEPS=25`, when doing short test runs.
 
 Example Dusty pretraining loss:
 
@@ -319,7 +342,18 @@ make dusty-generate
 
 # or pass a custom prompt
 make dusty-generate PROMPT="i wake up."
+
+# generate from a specific pretrain step checkpoint
+make dusty-generate PROFILE=dusty8m CHECKPOINT_STEP=100 PROMPT="i wake up."
+
+# generate from the final SFT checkpoint; raw prompts are wrapped in ChatML
+make dusty-generate PROFILE=sft_dusty8m PROMPT="where are you?"
+
+# generate from a specific SFT step checkpoint
+make dusty-generate PROFILE=sft_dusty8m CHECKPOINT_STEP=100 PROMPT="where are you?"
 ```
+
+If `CHECKPOINT_STEP` is omitted, generation loads the final profile checkpoint. For SFT generation, `tiny_gpt/generate.py` automatically formats raw prompts as ChatML and stops on the `<|im_end|>` token ID.
 
 Example pretraining-only output, before SFT:
 
@@ -328,6 +362,82 @@ i wake up. my motor is full. i roll out to living room. i see dog. dog is big. d
 
 i feel battery. battery is low. low battery is scary.
 ```
+
+### Train Your Own Dusty-Style Model
+
+You can use the Dusty workflow with generated data from this repo or with your own data. The important rule is that raw text files are not enough: every time you change the dataset, rerun the matching data-prep step before training.
+
+Expected raw files:
+
+```text
+artifacts/datasets/dusty_pretrain.txt
+artifacts/datasets/dusty_sft.jsonl
+```
+
+Pretraining data is plain text. SFT data is JSONL with one conversation per line:
+
+```json
+{"category":"crumbs","user":"where are you?","dusty":"i am under the couch. there are crumbs here."}
+```
+
+Required SFT fields are `category`, `user`, and `dusty`. The `category` is metadata for balancing and filtering; it is not included in the final ChatML training text.
+
+Recommended custom-data workflow:
+
+```bash
+# 1. Put or generate your raw files
+#    artifacts/datasets/dusty_pretrain.txt
+#    artifacts/datasets/dusty_sft.jsonl
+
+# 2. Train the tokenizer if your data changed meaningfully
+make dusty-tokenizer
+
+# 3. Always prepare pretrain data after changing pretrain text or tokenizer
+make dusty-pretrain-data
+
+# 4. Pretrain and save step checkpoints
+make dusty-pretrain EPOCHS=20 CHECKPOINT_EVERY_STEPS=100
+
+# 5. Test pretrain checkpoint vibe
+make dusty-generate PROFILE=dusty8m CHECKPOINT_STEP=100 PROMPT="i wake up."
+make dusty-generate PROFILE=dusty8m CHECKPOINT_STEP=200 PROMPT="i wake up."
+```
+
+`CHECKPOINT_EVERY_STEPS` defaults to `100`. If your dataset or epoch count produces fewer than 100 optimizer steps, pass a smaller value, such as `CHECKPOINT_EVERY_STEPS=25`, or edit the Makefile default.
+
+When a pretrain step checkpoint sounds best, promote it to the base checkpoint used by SFT:
+
+```bash
+cp artifacts/checkpoints/dusty8m_step_200.pt artifacts/checkpoints/dusty8m.pt
+```
+
+Then prepare and train SFT:
+
+```bash
+# 6. Always prepare SFT data after changing SFT JSONL or tokenizer
+make dusty-sft-data
+
+# 7. Fine-tune from artifacts/checkpoints/dusty8m.pt
+make dusty-sft-train EPOCHS=5 CHECKPOINT_EVERY_STEPS=100
+
+# 8. Test SFT checkpoint vibe
+make dusty-generate PROFILE=sft_dusty8m PROMPT="where are you?"
+make dusty-generate PROFILE=sft_dusty8m CHECKPOINT_STEP=100 PROMPT="where are you?"
+```
+
+Tokenizer notes:
+
+- The Dusty tokenizer vocab size is `4096`.
+- To increase it, update `VOCAB_SIZE = 4096` in `tiny_gpt/tokenizer.py` and `dusty_8m_model.vocab_size=4096` in `tiny_gpt/config.py`, then rerun `make dusty-tokenizer`, `make dusty-pretrain-data`, and `make dusty-sft-data`.
+- Prefer simple English before increasing vocab. This 8M model learns better from short sentences, repeated phrasing, and stable vocabulary.
+- When generating datasets, tell the data generator to use simple English, short answers, lowercase-friendly wording, and consistent words for the same ideas.
+
+Loss and checkpoint guidance:
+
+- Do not pick checkpoints by final loss alone; generate from step checkpoints and listen for stability.
+- For this small model, SFT loss around `1.5` can be reasonable.
+- If loss goes far below `1.0`, check generations carefully for memorization, loops, or degraded vibe.
+- Keep the final files `dusty8m.pt` and `dusty8m_sft.pt` for normal generation; use `CHECKPOINT_STEP` only when comparing intermediate checkpoints.
 
 ```bash
 # 1. Prepare the tokenized dataset from demo text
@@ -393,6 +503,9 @@ artifacts/
 │   └── smollm2_360m.safetensors
 ├── checkpoints/                     # Converted TinyGPT-native checkpoints
 │   ├── dusty8m.pt
+│   ├── dusty8m_step_100.pt
+│   ├── dusty8m_sft.pt
+│   ├── dusty8m_sft_step_100.pt
 │   ├── scratch_small.pt
 │   ├── smollm2_135m.pt
 │   ├── smollm2_360m.pt
@@ -401,6 +514,7 @@ artifacts/
 │   ├── dusty_pretrain.txt
 │   ├── dusty_pretrain_tokenized/
 │   ├── dusty_sft.jsonl
+│   ├── dusty_sft_2000.jsonl
 │   ├── dusty_sft_rejected.jsonl
 │   └── scratch_text_tokenized/
 └── tokenizers/                      # Shared tokenizer artifacts
