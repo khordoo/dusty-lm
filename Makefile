@@ -15,8 +15,10 @@ DUSTY_SFT_REJECTED ?= artifacts/datasets/dusty_sft_rejected.jsonl
 DUSTY_SFT_FILTERED_OUT ?= artifacts/datasets/dusty_sft_2000.jsonl
 DUSTY_SFT_FILTER_TARGET ?= 2000
 DUSTY_SFT_MAX_ANSWER_TOKENS ?= 256
+DUSTY_SFT_SAMPLING_MODE ?= balanced
+DUSTY_SFT_CHATML_PRETRAIN_OUT ?= artifacts/datasets/dusty_sft_chatml_pretrain.txt
 
-.PHONY: help dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train tensorboard
+.PHONY: help dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train tensorboard
 
 help:
 	@echo "TinyGPT commands"
@@ -25,6 +27,7 @@ help:
 	@echo "  make dusty-generate-pretrain   Generate artifacts/datasets/dusty_pretrain.txt"
 	@echo "  make dusty-generate-sft        Generate artifacts/datasets/dusty_sft.jsonl"
 	@echo "  make dusty-filter-sft          Filter/sample SFT JSONL to artifacts/datasets/dusty_sft_2000.jsonl"
+	@echo "  make dusty-flatten-sft-pretrain Flatten SFT JSONL to ChatML pretrain text"
 	@echo "  make dusty-tokenizer            Train artifacts/tokenizers/dusty_tokenizer.json"
 	@echo "  make dusty-pretrain-data        Tokenize artifacts/datasets/dusty_pretrain.txt"
 	@echo "  make dusty-pretrain EPOCHS=1    Train the dusty8m profile"
@@ -60,7 +63,13 @@ dusty-filter-sft:
 		--input $(DUSTY_SFT_OUT) \
 		--output $(DUSTY_SFT_FILTERED_OUT) \
 		--target-total $(DUSTY_SFT_FILTER_TARGET) \
-		--max-answer-tokens $(DUSTY_SFT_MAX_ANSWER_TOKENS)
+		--max-answer-tokens $(DUSTY_SFT_MAX_ANSWER_TOKENS) \
+		--sampling-mode $(DUSTY_SFT_SAMPLING_MODE)
+
+dusty-flatten-sft-pretrain:
+	uv run python dataset_generation/flatten_sft_to_pretrain.py \
+		--input $(DUSTY_SFT_OUT) \
+		--output $(DUSTY_SFT_CHATML_PRETRAIN_OUT)
 
 dusty-tokenizer:
 	uv run python -m tiny_gpt.tokenizer

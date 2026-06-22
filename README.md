@@ -294,6 +294,33 @@ The SFT generator writes accepted rows to `artifacts/datasets/dusty_sft.jsonl` a
 
 `make dusty-filter-sft` removes SFT rows where Dusty's answer is longer than `DUSTY_SFT_MAX_ANSWER_TOKENS` tokenizer tokens, then samples a deterministic category-balanced set across all 60 categories. By default it writes `artifacts/datasets/dusty_sft_2000.jsonl`; override `DUSTY_SFT_FILTER_TARGET`, `DUSTY_SFT_MAX_ANSWER_TOKENS`, or `DUSTY_SFT_FILTERED_OUT` when needed.
 
+Experimental: weighted SFT sampling is available when you want a smaller golden dataset that keeps more persona/refusal examples and fewer simple noun-swap examples. This is optional; the default workflow above stays balanced.
+
+```bash
+make dusty-filter-sft \
+  DUSTY_SFT_FILTER_TARGET=800 \
+  DUSTY_SFT_SAMPLING_MODE=weighted \
+  DUSTY_SFT_FILTERED_OUT=artifacts/datasets/dusty_sft_weighted_800.jsonl
+```
+
+Experimental: tokenizer fertility can help choose a vocabulary size for tiny models. Fertility is tokens per whitespace-delimited word; around `1.2` to `1.5` is usually a useful range. Lower values can mean the vocab is spending too many parameters on word embeddings, while much higher values mean words are being split too heavily.
+
+```bash
+uv run python dataset_generation/tokenizer_fertility_test.py \
+  --lines 10000 \
+  --vocab-sizes 4096 8192
+```
+
+Example result on TinyStories plus the flattened Dusty ChatML pretrain file:
+
+```text
+vocab_size    lines      words     tokens  fertility
+      4096    10000     327204     430793      1.317
+      8192    10000     327204     410990      1.256
+```
+
+Both are in range; for an 8M model, `4096` is a good default because it leaves more parameters for the transformer layers.
+
 The pretrain generator writes raw diary-style text to `artifacts/datasets/dusty_pretrain.txt` and tracks completed categories in `artifacts/datasets/dusty_pretrain_progress.txt`, so reruns continue where the previous run stopped. Override Make variables when needed, for example `make dusty-generate-sft DUSTY_SFT_PER_CATEGORY=100 DUSTY_MODEL=openai/gpt-oss-120b:floor`.
 
 Before tokenization, Dusty text is normalized with `text.lower().replace(";", ".")`. This is applied consistently when training the tokenizer, preparing pretrain data, and preparing SFT ChatML examples. The raw source files are left unchanged; tokenizer training uses temporary normalized corpora.
