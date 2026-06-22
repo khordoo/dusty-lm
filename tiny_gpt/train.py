@@ -46,6 +46,15 @@ def parse_args(argv=None):
         default=1,
         help="Number of training epochs to run.",
     )
+    parser.add_argument(
+        "--checkpoint-every-steps",
+        type=int,
+        default=None,
+        help=(
+            "Override step checkpoint interval. Use 0 to disable step "
+            "checkpoints for this run."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -97,18 +106,74 @@ def require_training_dataset(profile: Profile) -> None:
     hint = ""
     if profile.name == "dusty8m":
         hint = " Run `make dusty-pretrain-data` first."
+    if profile.name == "sft_dusty8m":
+        hint = " Run `make dusty-sft-data` first."
     raise FileNotFoundError(
         f"Tokenized training dataset not found: {dataset_path}.{hint}"
     )
 
 
-def train(profile: Profile, num_epochs: int = 1):
+def load_init_checkpoint_if_configured(model, profile: Profile, device: str):
+    if profile.training is None:
+        raise ValueError(f"Profile '{profile.name}' does not define training config")
+
+    checkpoint_path = profile.training.init_checkpoint_path
+    if checkpoint_path is None:
+        return False
+
+    if not checkpoint_path.exists():
+        hint = ""
+        if profile.name == "sft_dusty8m":
+            hint = " Run `make dusty-pretrain` first."
+        raise FileNotFoundError(
+            f"Initial checkpoint not found: {checkpoint_path}.{hint}"
+        )
+
+    print(f"Loading initial checkpoint from: {checkpoint_path}")
+    state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
+    model.load_state_dict(state_dict)
+    return True
+
+
+def get_step_checkpoint_path(profile: Profile, step: int) -> Path:
+    if profile.training is None:
+        raise ValueError(f"Profile '{profile.name}' does not define training config")
+
+    training = profile.training
+    checkpoint_dir = training.checkpoint_dir or training.output_checkpoint.parent
+    checkpoint_name = f"{training.output_checkpoint.stem}_step_{step}.pt"
+    return checkpoint_dir / checkpoint_name
+
+
+def save_step_checkpoint_if_due(model, profile: Profile, step: int, interval: int | None):
+    if interval is None or interval <= 0 or step % interval != 0:
+        return None
+
+    checkpoint_path = get_step_checkpoint_path(profile, step)
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), checkpoint_path)
+    print(f"step checkpoint saved to {checkpoint_path}")
+    return checkpoint_path
+
+
+def train(
+    profile: Profile,
+    num_epochs: int = 1,
+    checkpoint_every_steps: int | None = None,
+):
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
     if num_epochs < 1:
         raise ValueError("num_epochs must be at least 1")
+    if checkpoint_every_steps is not None and checkpoint_every_steps < 0:
+        raise ValueError("checkpoint_every_steps must be 0 or greater")
 
     training = profile.training
+    step_checkpoint_interval = (
+        checkpoint_every_steps
+        if checkpoint_every_steps is not None
+        else training.checkpoint_every_steps
+    )
     initialize_random_seed()
     require_training_dataset(profile)
     print("Loading dataset from disk...")
@@ -124,6 +189,7 @@ def train(profile: Profile, num_epochs: int = 1):
     )
 
     model = build_model(profile, max_seq_len=training.max_seq_len).to(device)
+    load_init_checkpoint_if_configured(model, profile, device)
     optimizer = AdamW(
         model.parameters(),
         lr=training.learning_rate,
@@ -163,6 +229,12 @@ def train(profile: Profile, num_epochs: int = 1):
 
             print(f"Batch step={batch_idx}/{len(train_loader)}, loss={loss.item()}")
             global_step += 1
+            save_step_checkpoint_if_due(
+                model=model,
+                profile=profile,
+                step=global_step,
+                interval=step_checkpoint_interval,
+            )
 
     writer.close()
     training.output_checkpoint.parent.mkdir(parents=True, exist_ok=True)
@@ -172,7 +244,11 @@ def train(profile: Profile, num_epochs: int = 1):
 
 def main(argv=None):
     args = parse_args(argv)
-    train(get_profile(args.profile), num_epochs=args.epochs)
+    train(
+        get_profile(args.profile),
+        num_epochs=args.epochs,
+        checkpoint_every_steps=args.checkpoint_every_steps,
+    )
 
 
 if __name__ == "__main__":

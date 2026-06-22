@@ -9,6 +9,7 @@ the full sequence at every step:
 """
 
 import argparse
+from pathlib import Path
 
 import torch
 from tokenizers import Tokenizer
@@ -16,8 +17,8 @@ from tokenizers import Tokenizer
 from tiny_gpt.config import GenerationSpec, Profile, get_profile, list_profiles
 from tiny_gpt.modeling import build_model, build_tokenizer
 
-
 DEFAULT_PROMPT = """The capital of France is Paris. The capital of Italy is """
+CHATML_START_TOKEN = "<|im_start|>"
 
 
 def get_device():
@@ -37,6 +38,15 @@ def parse_args(argv=None):
         help="Registered generation profile to run.",
     )
     parser.add_argument("--prompt", default=DEFAULT_PROMPT)
+    parser.add_argument(
+        "--checkpoint-step",
+        type=int,
+        default=None,
+        help=(
+            "Load a step checkpoint instead of the final generation checkpoint, "
+            "for example --checkpoint-step 100 loads dusty8m_step_100.pt."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -54,7 +64,29 @@ def decode_tokens(tokenizer, token_ids: list[int]) -> str:
     return tokenizer.decode(token_ids)
 
 
-def load_model(profile: Profile, device=None):
+def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
+    if profile.name != "sft_dusty8m" or CHATML_START_TOKEN in prompt:
+        return prompt
+    return f"<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
+
+
+def resolve_generation_checkpoint_path(
+    profile: Profile,
+    checkpoint_step: int | None = None,
+) -> Path:
+    if profile.generation is None:
+        raise ValueError(f"Profile '{profile.name}' does not define generation config")
+    if checkpoint_step is None:
+        return profile.generation.checkpoint_path
+    if checkpoint_step < 1:
+        raise ValueError("checkpoint_step must be at least 1")
+
+    final_checkpoint_path = profile.generation.checkpoint_path
+    checkpoint_name = f"{final_checkpoint_path.stem}_step_{checkpoint_step}.pt"
+    return final_checkpoint_path.parent / checkpoint_name
+
+
+def load_model(profile: Profile, device=None, checkpoint_step: int | None = None):
     """Build the model, load a checkpoint, and prepare for inference.
 
     RoPE sin/cos caches are not part of the learned weights, so they are
@@ -67,10 +99,9 @@ def load_model(profile: Profile, device=None):
     device = device or get_device()
     tokenizer = build_tokenizer(profile)
     model = build_model(profile)
-    print("loading checkpoint from:", profile.generation.checkpoint_path)
-    state_dict = torch.load(
-        profile.generation.checkpoint_path, map_location=device, weights_only=True
-    )
+    checkpoint_path = resolve_generation_checkpoint_path(profile, checkpoint_step)
+    print("loading checkpoint from:", checkpoint_path)
+    state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
     # RoPE caches are derived buffers, not learned parameters.
     state_dict.pop("rope.sin_cache", None)
     state_dict.pop("rope.cos_cache", None)
@@ -113,14 +144,19 @@ def sample_next_token(logits, spec: GenerationSpec):
     return torch.multinomial(probabilities, num_samples=1).squeeze(0)  # [B]
 
 
-def generate_text(prompt=DEFAULT_PROMPT, profile_name="scratch_small"):
+def generate_text(
+    prompt=DEFAULT_PROMPT,
+    profile_name="scratch_small",
+    checkpoint_step: int | None = None,
+):
     """Generate text autoregressively from a prompt using KV-cached decoding."""
     profile = get_profile(profile_name)
     if profile.generation is None:
         raise ValueError(f"Profile '{profile.name}' does not define generation config")
 
     spec = profile.generation
-    model, tokenizer, device = load_model(profile)
+    model, tokenizer, device = load_model(profile, checkpoint_step=checkpoint_step)
+    prompt = prepare_generation_prompt(prompt, profile)
     token_ids = encode_prompt(tokenizer, prompt, spec)
     tokens = torch.tensor(token_ids, dtype=torch.long, device=device).unsqueeze(0)
     generated_ids = []
@@ -163,7 +199,11 @@ def generate_text(prompt=DEFAULT_PROMPT, profile_name="scratch_small"):
 
 def main(argv=None):
     args = parse_args(argv)
-    generate_text(prompt=args.prompt, profile_name=args.profile)
+    generate_text(
+        prompt=args.prompt,
+        profile_name=args.profile,
+        checkpoint_step=args.checkpoint_step,
+    )
 
 
 if __name__ == "__main__":
