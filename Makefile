@@ -1,5 +1,8 @@
 EPOCHS ?= 23
+CHECKPOINT_EVERY_STEPS ?= 100
+CHECKPOINT_STEP ?=
 PROMPT ?= i wake up.
+PROFILE ?= dusty8m
 DUSTY_MODEL ?= qwen/qwen3-235b-a22b-2507:floor
 DUSTY_FALLBACK_MODEL ?= openai/gpt-oss-120b:floor
 DUSTY_SFT_PER_CATEGORY ?= 500
@@ -9,8 +12,11 @@ DUSTY_PRETRAIN_OUT ?= artifacts/datasets/dusty_pretrain.txt
 DUSTY_PRETRAIN_PROGRESS ?= artifacts/datasets/dusty_pretrain_progress.txt
 DUSTY_SFT_OUT ?= artifacts/datasets/dusty_sft.jsonl
 DUSTY_SFT_REJECTED ?= artifacts/datasets/dusty_sft_rejected.jsonl
+DUSTY_SFT_FILTERED_OUT ?= artifacts/datasets/dusty_sft_2000.jsonl
+DUSTY_SFT_FILTER_TARGET ?= 2000
+DUSTY_SFT_MAX_ANSWER_TOKENS ?= 256
 
-.PHONY: help dusty-generate-pretrain dusty-generate-sft dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft tensorboard
+.PHONY: help dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train tensorboard
 
 help:
 	@echo "TinyGPT commands"
@@ -18,11 +24,13 @@ help:
 	@echo "Dusty 8M workflow:"
 	@echo "  make dusty-generate-pretrain   Generate artifacts/datasets/dusty_pretrain.txt"
 	@echo "  make dusty-generate-sft        Generate artifacts/datasets/dusty_sft.jsonl"
+	@echo "  make dusty-filter-sft          Filter/sample SFT JSONL to artifacts/datasets/dusty_sft_2000.jsonl"
 	@echo "  make dusty-tokenizer            Train artifacts/tokenizers/dusty_tokenizer.json"
 	@echo "  make dusty-pretrain-data        Tokenize artifacts/datasets/dusty_pretrain.txt"
 	@echo "  make dusty-pretrain EPOCHS=1    Train the dusty8m profile"
-	@echo "  make dusty-generate             Generate from dusty8m with PROMPT='i wake up.'"
-	@echo "  make dusty-sft                  Placeholder for future Dusty SFT"
+	@echo "  make dusty-sft-data             Tokenize artifacts/datasets/dusty_sft.jsonl"
+	@echo "  make dusty-sft EPOCHS=1         Train the sft_dusty8m profile"
+	@echo "  make dusty-generate             Generate with PROFILE=dusty8m PROMPT='i wake up.'"
 	@echo "  make tensorboard                Plot training logs from runs/"
 
 dusty-generate-pretrain:
@@ -47,6 +55,13 @@ dusty-generate-sft:
 		--out $(DUSTY_SFT_OUT) \
 		--rejected $(DUSTY_SFT_REJECTED)
 
+dusty-filter-sft:
+	uv run python dataset_generation/filter_sft_dataset.py \
+		--input $(DUSTY_SFT_OUT) \
+		--output $(DUSTY_SFT_FILTERED_OUT) \
+		--target-total $(DUSTY_SFT_FILTER_TARGET) \
+		--max-answer-tokens $(DUSTY_SFT_MAX_ANSWER_TOKENS)
+
 dusty-tokenizer:
 	uv run python -m tiny_gpt.tokenizer
 
@@ -54,14 +69,16 @@ dusty-pretrain-data:
 	uv run python -m tiny_gpt.data_prep --profile dusty8m
 
 dusty-pretrain:
-	uv run python -m tiny_gpt.train --profile dusty8m --epochs $(EPOCHS)
+	uv run python -m tiny_gpt.train --profile dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
 
 dusty-generate:
-	uv run python tiny_gpt/generate.py --profile dusty8m --prompt "$(PROMPT)"
+	uv run python tiny_gpt/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
 
-dusty-sft:
-	@echo "Dusty SFT is planned but not implemented yet."
-	@exit 1
+dusty-sft-data:
+	uv run python -m tiny_gpt.data_prep --profile sft_dusty8m
+
+dusty-sft-train:
+	uv run python -m tiny_gpt.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
 
 tensorboard:
 	uv run tensorboard --logdir runs

@@ -7,6 +7,7 @@ is computed only on the assistant's response tokens.
 """
 
 import argparse
+import json
 from pathlib import Path
 
 from datasets import Dataset, load_dataset
@@ -23,6 +24,10 @@ from tiny_gpt.modeling import build_tokenizer
 
 DEFAULT_PROFILE_NAME = "scratch_small"
 DOCUMENT_SEPARATOR = "<|endoftext|>"
+
+
+def normalize_pretrain_text(raw_text: str) -> str:
+    return raw_text.lower().replace(";", ".")
 
 
 def encode_token_ids(tokenizer, text: str, allowed_special=None) -> list[int]:
@@ -45,7 +50,7 @@ def require_tokenizer_file(profile: Profile) -> None:
         return
 
     hint = ""
-    if profile.name == "dusty8m":
+    if profile.name in {"dusty8m", "sft_dusty8m"}:
         hint = " Run `make dusty-tokenizer` first."
     raise FileNotFoundError(f"Tokenizer file not found: {path}.{hint}")
 
@@ -53,10 +58,21 @@ def require_tokenizer_file(profile: Profile) -> None:
 def prepare_prompt_response_training_example(example, tokenizer=None):
     """Mask prompt tokens so loss is only computed on assistant response tokens."""
     tokenizer = tokenizer or build_tokenizer(get_profile(DEFAULT_PROFILE_NAME))
-    prompt_text = (
-        f"<|im_start|>user\n{example['prompt']}<|im_end|>\n<|im_start|>assistant\n"
+    return prepare_chatml_sft_training_example(
+        example["prompt"],
+        example["response"],
+        tokenizer,
     )
-    response_text = f"{example['response']}<|im_end|>"
+
+
+def prepare_chatml_sft_training_example(user_text: str, assistant_text: str, tokenizer):
+    """Format a user/assistant pair as ChatML and mask user-side labels."""
+    user_text = normalize_pretrain_text(user_text)
+    assistant_text = normalize_pretrain_text(assistant_text)
+    prompt_text = (
+        f"<|im_start|>user\n{user_text}<|im_end|>\n<|im_start|>assistant\n"
+    )
+    response_text = f"{assistant_text}<|im_end|>"
 
     prompt_tokens = encode_token_ids(tokenizer, prompt_text, allowed_special="all")
     response_tokens = encode_token_ids(tokenizer, response_text, allowed_special="all")
@@ -86,8 +102,35 @@ def read_plain_text_documents(raw_text_path: str | Path) -> list[str]:
     return [file.read_text() for file in text_files]
 
 
+def read_jsonl_sft_rows(raw_sft_path: str | Path) -> list[dict]:
+    path = Path(raw_sft_path)
+    if not path.exists():
+        hint = ""
+        if path.name == "dusty_sft.jsonl":
+            hint = " Run `make dusty-generate-sft` first."
+        raise FileNotFoundError(f"Raw SFT JSONL not found: {path}.{hint}")
+
+    rows = []
+    with path.open() as file:
+        for line_number, line in enumerate(file, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError as exc:
+                raise ValueError(
+                    f"Invalid JSON on line {line_number} of {path}: {exc.msg}"
+                ) from exc
+
+    if not rows:
+        raise ValueError(f"No SFT rows found in {path}")
+    return rows
+
+
 def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: int):
-    joined_text = DOCUMENT_SEPARATOR.join(documents)
+    normalized_documents = [normalize_pretrain_text(document) for document in documents]
+    joined_text = DOCUMENT_SEPARATOR.join(normalized_documents)
     # Add separator at the end of the last document
     joined_text = joined_text + DOCUMENT_SEPARATOR
     token_ids = encode_token_ids(
@@ -147,6 +190,35 @@ def prepare_tiny_codes_sft_dataset(profile: Profile):
     print(f"Ready to train on {len(tokenized_dataset)} Python examples.")
 
 
+def prepare_jsonl_sft_dataset(profile: Profile):
+    if profile.training is None:
+        raise ValueError(f"Profile '{profile.name}' does not define training config")
+    if profile.training.raw_sft_path is None:
+        raise ValueError(f"Profile '{profile.name}' does not define raw_sft_path")
+
+    require_tokenizer_file(profile)
+    rows = read_jsonl_sft_rows(profile.training.raw_sft_path)
+    tokenizer = build_tokenizer(profile)
+
+    examples = []
+    for index, row in enumerate(rows):
+        try:
+            user_text = row[profile.training.sft_user_field]
+            assistant_text = row[profile.training.sft_assistant_field]
+        except KeyError as exc:
+            raise KeyError(
+                f"SFT row {index} is missing configured field {exc.args[0]!r}"
+            ) from exc
+        examples.append(
+            prepare_chatml_sft_training_example(user_text, assistant_text, tokenizer)
+        )
+
+    tokenized_dataset = Dataset.from_list(examples)
+    print(f"Saving dataset to {profile.training.dataset_path}...")
+    tokenized_dataset.save_to_disk(str(profile.training.dataset_path))
+    print(f"Ready to train on {len(tokenized_dataset)} SFT examples.")
+
+
 def parse_args(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -168,7 +240,10 @@ def main(argv=None):
         prepare_scratch_text_dataset(profile)
         return
     if profile.training.task == TrainingTask.SFT:
-        prepare_tiny_codes_sft_dataset(profile)
+        if profile.training.raw_sft_path is not None:
+            prepare_jsonl_sft_dataset(profile)
+        else:
+            prepare_tiny_codes_sft_dataset(profile)
         return
 
     raise ValueError(f"Unsupported training task: {profile.training.task}")

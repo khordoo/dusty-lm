@@ -38,8 +38,31 @@ def test_dusty8m_profile_is_scratch_pretrain_profile():
     assert profile.training is not None
     assert profile.training.task == TrainingTask.PRETRAIN
     assert profile.training.output_checkpoint.name == "dusty8m.pt"
+    assert profile.training.checkpoint_every_steps == 100
+    assert profile.training.checkpoint_dir.name == "checkpoints"
     assert profile.generation is not None
     assert profile.generation.checkpoint_path.name == "dusty8m.pt"
+    assert profile.generation.eos_text == "<|endoftext|>"
+
+
+def test_sft_dusty8m_profile_finetunes_dusty_checkpoint_separately():
+    pretrain = get_profile("dusty8m")
+    sft = get_profile("sft_dusty8m")
+
+    assert sft.model == pretrain.model
+    assert sft.training is not None
+    assert sft.training.task == TrainingTask.SFT
+    assert sft.training.raw_sft_path.name == "dusty_sft.jsonl"
+    assert sft.training.sft_user_field == "user"
+    assert sft.training.sft_assistant_field == "dusty"
+    assert sft.training.init_checkpoint_path.name == "dusty8m.pt"
+    assert sft.training.output_checkpoint.name == "dusty8m_sft.pt"
+    assert sft.training.checkpoint_every_steps == 100
+    assert sft.training.checkpoint_dir.name == "checkpoints"
+    assert sft.generation is not None
+    assert sft.generation.checkpoint_path.name == "dusty8m_sft.pt"
+    assert sft.generation.eos_token_id == 2
+    assert sft.generation.eos_text is None
 
 
 def test_smollm2_profiles_share_tokenizer_path():

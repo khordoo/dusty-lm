@@ -57,6 +57,12 @@ class TrainingSpec:
     max_seq_len: int
     weight_decay: float = 0.0
     raw_text_path: str | Path | None = None
+    raw_sft_path: str | Path | None = None
+    sft_user_field: str = "user"
+    sft_assistant_field: str = "assistant"
+    init_checkpoint_path: Path | None = None
+    checkpoint_every_steps: int | None = None
+    checkpoint_dir: Path | None = None
     raw_python_dataset_path: str | Path = REPO_ROOT / "data" / "python_dataset"
     log_dir: str | Path = REPO_ROOT / "runs"
 
@@ -203,6 +209,8 @@ register(
             max_seq_len=256,
             weight_decay=0.01,
             raw_text_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_pretrain.txt",
+            checkpoint_every_steps=100,
+            checkpoint_dir=REPO_ROOT / "artifacts" / "checkpoints",
         ),
         generation=GenerationSpec(
             checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
@@ -243,6 +251,46 @@ register(
             temperature=0.75,
             top_k=10,
             eos_text="<|im_end|>",
+        ),
+    )
+)
+
+register(
+    Profile(
+        name="sft_dusty8m",
+        model=dusty_8m_model,
+        training=TrainingSpec(
+            task=TrainingTask.SFT,
+            dataset_path=REPO_ROOT
+            / "artifacts"
+            / "datasets"
+            / "dusty_sft_tokenized",
+            batch_size=32,
+            learning_rate=1e-5,
+            output_checkpoint=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "dusty8m_sft.pt",
+            max_seq_len=256,
+            weight_decay=0.01,
+            raw_sft_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft.jsonl",
+            sft_assistant_field="dusty",
+            init_checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "dusty8m.pt",
+            checkpoint_every_steps=100,
+            checkpoint_dir=REPO_ROOT / "artifacts" / "checkpoints",
+        ),
+        generation=GenerationSpec(
+            checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "dusty8m_sft.pt",
+            max_new_tokens=100,
+            temperature=0.8,
+            top_k=10,
+            eos_token_id=2,
         ),
     )
 )
