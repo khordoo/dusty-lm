@@ -65,8 +65,10 @@ def decode_tokens(tokenizer, token_ids: list[int]) -> str:
 
 
 def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
+    # prompt = prompt.replace("\\n", "\n")
     if profile.name != "sft_dusty8m" or CHATML_START_TOKEN in prompt:
         return prompt
+
     return f"<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
 
 
@@ -156,6 +158,7 @@ def generate_text(
 
     spec = profile.generation
     model, tokenizer, device = load_model(profile, checkpoint_step=checkpoint_step)
+
     prompt = prepare_generation_prompt(prompt, profile)
     token_ids = encode_prompt(tokenizer, prompt, spec)
     tokens = torch.tensor(token_ids, dtype=torch.long, device=device).unsqueeze(0)
@@ -179,9 +182,22 @@ def generate_text(
             next_token_id = next_token.item()
             generated_ids.append(next_token_id)
 
-            if spec.eos_token_id is not None and next_token_id == spec.eos_token_id:
-                print(f"\n\n[Generation stopped: eos={spec.eos_token_id} detected]")
+            # Get the ID for <|im_end|> directly from the tokenizer
+            if isinstance(tokenizer, Tokenizer):
+                im_end_id = tokenizer.token_to_id("<|im_end|>")
+            else:
+                im_end_id = tokenizer.encode("<|im_end|>")[0]
+
+            # Stop if we hit the config's EOS token OR the ChatML end token
+            if (
+                spec.eos_token_id is not None and next_token_id == spec.eos_token_id
+            ) or next_token_id == im_end_id:
+                print("\n\n[Generation stopped: Stop token detected]")
                 break
+
+            # if spec.eos_token_id is not None and next_token_id == spec.eos_token_id:
+            #     print(f"\n\n[Generation stopped: eos={spec.eos_token_id} detected]")
+            #     break
 
             tail_text = decode_tokens(tokenizer, generated_ids[-10:])
             if spec.eos_text is not None and spec.eos_text in tail_text:
