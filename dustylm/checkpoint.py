@@ -1,6 +1,6 @@
 """Checkpoint loading and profile detection helpers.
 
-TinyGPT checkpoints intentionally remain plain PyTorch state dicts so they can
+DustyLM checkpoints intentionally remain plain PyTorch state dicts so they can
 be exported, shared, and adapted without framework-specific metadata. Runtime
 code can still improve UX by reading an optional sidecar config or sniffing the
 CPU-loaded state dict keys.

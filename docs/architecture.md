@@ -1,12 +1,12 @@
 # Architecture
 
-`tiny-gpt` is a small decoder-only transformer intended for learning and
-experimentation. Scratch and SmolLM2 architectures live in `tiny_gpt.models`,
-while `tiny_gpt.model` remains a compatibility import for the scratch model.
+`dusty-lm` is a small decoder-only transformer intended for learning and
+experimentation. Scratch and SmolLM2 architectures live in `dustylm.models`,
+while `dustylm.model` remains a compatibility import for the scratch model.
 
 ## Profile Registry
 
-`tiny_gpt.config` is the source of truth for model variants. A `Profile`
+`dustylm.config` is the source of truth for model variants. A `Profile`
 combines:
 
 - `ModelSpec`: family, dimensions, vocab size, RoPE settings, and tokenizer.
@@ -15,7 +15,7 @@ combines:
   checkpoint, and step-checkpoint settings.
 - `GenerationSpec`: converted checkpoint path and sampling settings.
 
-Runtime code calls `get_profile(name)` and then uses `tiny_gpt.modeling` to
+Runtime code calls `get_profile(name)` and then uses `dustylm.modeling` to
 build the correct model and tokenizer. This keeps training, generation, and
 checkpoint conversion from depending on overwritten module-level globals.
 
@@ -60,7 +60,7 @@ name, for example `dusty8m.pt` becomes `dusty8m_step_N.pt`, and
 
 ## Model Flow
 
-`TinyGPT.forward()` accepts token IDs with shape `[batch, seq]`.
+`DustyLM.forward()` accepts token IDs with shape `[batch, seq]`.
 
 - Without cache, `model(tokens)` returns logits with shape
   `[batch, seq, vocab]`.
@@ -73,7 +73,7 @@ simple.
 ## ForwardContext
 
 RoPE tensors are shared across all transformer layers for a single forward
-pass. `TinyGPT` computes them once and stores them in:
+pass. `DustyLM` computes them once and stores them in:
 
 ```python
 ForwardContext(

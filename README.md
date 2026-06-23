@@ -1,21 +1,21 @@
 <div align="center">
 
-<img src="docs/images/logo.png" alt="DustyLLM logo" width="520">
+<img src="docs/images/logo.png" alt="DustyLM logo" width="520">
 
-<h1>DustyLLM</h1>
+<h1>DustyLM</h1>
 
-<p><strong>An ~8M parameter LLM that talks like a tiny vacuum robot.</strong></p>
+<p><strong>An ~8M parameter language model that talks like a tiny vacuum robot.</strong></p>
 
 <p>
   <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-2.12+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"></a>
-  <a href="https://python.org/"><img src="https://img.shields.io/badge/Python-3.14+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://python.org/"><img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License: MIT"></a>
   <a href="#-the-profile-registry--zero-yaml-pure-python"><img src="https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square" alt="Model: dusty8m"></a>
   <a href="#-hardware--memory-optimization"><img src="https://img.shields.io/badge/Apple_Silicon-ready-black?style=flat-square&logo=apple&logoColor=white" alt="Apple Silicon ready"></a>
 </p>
 
 <p>
-  <a href="https://khordoo.github.io/dustyLLM/"><img src="https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white" alt="Browser Demo"></a>
+  <a href="https://khordoo.github.io/dusty-lm/"><img src="https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white" alt="Browser Demo"></a>
 </p>
 
 </div>
@@ -113,15 +113,15 @@ Training artifacts are local-only under `artifacts/`. Model checkpoints and gene
 
 ---
 
-## 🔍 What Is TinyGPT?
+## 🔍 How DustyLM Works
 
-DustyLLM is built on **TinyGPT**, a custom, ground-up implementation of a modern decoder-only language model. It implements the same architecture class that powers **Llama, SmolLM2, and Mistral** — but every line of the forward pass, attention stack, caching strategy, and generation loop is **hand-written in pure PyTorch**.
+DustyLM is a custom, ground-up implementation of a modern decoder-only language model. It implements the same architecture class that powers **Llama, SmolLM2, and Mistral** — but every line of the forward pass, attention stack, caching strategy, and generation loop is **hand-written in pure PyTorch**.
 
 > **This is not a wrapper.** Hugging Face `.safetensors` files are used only as _source artifacts_ for weight conversion. The runtime path — from token embedding to logit projection — is entirely custom.
 
 ### Why does this matter?
 
-Production LLM frameworks are powerful, but they hide the exact tensor operations that make transformers work. TinyGPT strips away those abstraction layers and keeps the important parts **visible and auditable**:
+Production model frameworks are powerful, but they hide the exact tensor operations that make transformers work. DustyLM strips away those abstraction layers and keeps the important parts **visible and auditable**:
 
 | What's implemented from scratch | Why it matters |
 |---|---|
@@ -138,15 +138,15 @@ Production LLM frameworks are powerful, but they hide the exact tensor operation
 
 ## ⚙️ Architecture Deep Dive
 
-TinyGPT cleanly separates **model definition**, **configuration**, and **runtime construction** into focused modules:
+DustyLM cleanly separates **model definition**, **configuration**, and **runtime construction** into focused modules:
 
 ```text
-tiny_gpt/
+dustylm/
 ├── config.py         # Typed profile registry (frozen dataclasses, zero YAML)
 ├── modeling.py       # Model & tokenizer factory dispatch
 ├── generate.py       # KV-cache generation loop with top-k sampling
 ├── train.py          # Mixed-precision training with TensorBoard logging
-├── adapter.py        # Offline HF .safetensors → TinyGPT checkpoint conversion
+├── adapter.py        # Offline HF .safetensors → DustyLM checkpoint conversion
 ├── artifacts.py      # Profile-driven artifact download from Hugging Face Hub
 ├── data_prep.py      # Tokenized dataset preparation pipeline
 └── models/
@@ -156,7 +156,7 @@ tiny_gpt/
 
 ### The SmolLM2 Forward Pass
 
-The SmolLM2 implementation follows the exact architecture of modern compact LLMs:
+The SmolLM2 implementation follows the exact architecture of modern compact language models:
 
 ```
 Input IDs → Embedding → [RoPE + GQA + RMSNorm + SwiGLU] × 32 layers → Final RMSNorm → Vocab Projection → Logits
@@ -174,7 +174,7 @@ Input IDs → Embedding → [RoPE + GQA + RMSNorm + SwiGLU] × 32 layers → Fin
 
 ## 🗂️ The Profile Registry — Zero YAML, Pure Python
 
-One of TinyGPT's cleanest design decisions is how model variants are managed. Instead of sprawling YAML files, messy dictionaries, or fragile CLI flag combinations, every model configuration lives as a **frozen, type-checked Python dataclass**:
+One of DustyLM's cleanest design decisions is how model variants are managed. Instead of sprawling YAML files, messy dictionaries, or fragile CLI flag combinations, every model configuration lives as a **frozen, type-checked Python dataclass**:
 
 ```python
 from dataclasses import dataclass, replace
@@ -270,7 +270,7 @@ register(
 
 ## 💻 Hardware & Memory Optimization
 
-TinyGPT's training loop and KV-cache generation are **heavily optimized for consumer hardware**, with first-class support for **Apple Silicon (M1/M2/M3/M4) Macs**.
+DustyLM's training loop and KV-cache generation are **heavily optimized for consumer hardware**, with first-class support for **Apple Silicon (M1/M2/M3/M4) Macs**.
 
 ### Training Memory Footprint
 
@@ -315,7 +315,7 @@ The KV-cache stores per-layer key/value tensors, growing linearly with sequence 
 
 ### Prerequisites
 
-TinyGPT uses [`uv`](https://docs.astral.sh/uv/) for fast, reproducible dependency management.
+DustyLM uses [`uv`](https://docs.astral.sh/uv/) for fast, reproducible dependency management.
 
 ### Install
 
@@ -329,27 +329,27 @@ uv sync --group dev
 
 ### 🔄 Download & Convert a Pre-trained Model
 
-Fetch SmolLM2-360M weights from Hugging Face and convert them into TinyGPT's checkpoint format — one command:
+Fetch SmolLM2-360M weights from Hugging Face and convert them into DustyLM's checkpoint format — one command:
 
 ```bash
-uv run python -m tiny_gpt.artifacts download \
+uv run python -m dustylm.artifacts download \
   --profile smollm2_360m \
   --convert
 ```
 
-This downloads the raw `.safetensors` and tokenizer into `artifacts/`, then runs the key-remapping adapter to produce a TinyGPT-native checkpoint.
+This downloads the raw `.safetensors` and tokenizer into `artifacts/`, then runs the key-remapping adapter to produce a DustyLM-native checkpoint.
 
 <details>
 <summary>📎 Already have the weights? Conversion-only commands</summary>
 
 If the files are already present and you only need conversion:
 ```bash
-uv run python -m tiny_gpt.adapter --profile smollm2_360m
+uv run python -m dustylm.adapter --profile smollm2_360m
 ```
 
 If you manually downloaded a safetensors file to a custom path:
 ```bash
-uv run python -m tiny_gpt.adapter \
+uv run python -m dustylm.adapter \
   --profile smollm2_360m \
   --hf-model-path artifacts/hf/smollm2_360m.safetensors
 ```
@@ -358,7 +358,7 @@ uv run python -m tiny_gpt.adapter \
 Want the smaller 135M model instead?
 
 ```bash
-uv run python -m tiny_gpt.artifacts download \
+uv run python -m dustylm.artifacts download \
   --profile smollm2_135m \
   --convert
 ```
@@ -366,7 +366,7 @@ uv run python -m tiny_gpt.artifacts download \
 ### ⚡ Generate Text
 
 ```bash
-uv run python -m tiny_gpt.generate --profile smollm2_360m
+uv run python -m dustylm.generate --profile smollm2_360m
 ```
 
 ### 🏋️ Train From Scratch
@@ -481,7 +481,7 @@ make dusty-generate PROFILE=sft_dusty8m CHECKPOINT_STEP=100 PROMPT="where are yo
 make dusty-generate PROFILE=sft_dusty8m TOP_P=0.9 PROMPT="where are you?"
 ```
 
-If `CHECKPOINT_STEP` is omitted, generation loads the final profile checkpoint. Dusty profiles use `top_p=0.8` from `tiny_gpt/config.py` by default; override it with `TOP_P=...` in Make or `--top-p ...` when running `tiny_gpt/generate.py` directly. For SFT generation, `tiny_gpt/generate.py` automatically formats raw prompts as ChatML and stops on the `<|im_end|>` token ID.
+If `CHECKPOINT_STEP` is omitted, generation loads the final profile checkpoint. Dusty profiles use `top_p=0.8` from `dustylm/config.py` by default; override it with `TOP_P=...` in Make or `--top-p ...` when running `dustylm/generate.py` directly. For SFT generation, `dustylm/generate.py` automatically formats raw prompts as ChatML and stops on the `<|im_end|>` token ID.
 
 Example pretraining-only output, before SFT:
 
@@ -556,7 +556,7 @@ make dusty-generate PROFILE=sft_dusty8m CHECKPOINT_STEP=100 PROMPT="where are yo
 Tokenizer notes:
 
 - The Dusty tokenizer vocab size is `4096`.
-- To increase it, update `VOCAB_SIZE = 4096` in `tiny_gpt/tokenizer.py` and `dusty_8m_model.vocab_size=4096` in `tiny_gpt/config.py`, then rerun `make dusty-tokenizer`, `make dusty-pretrain-data`, and `make dusty-sft-data`.
+- To increase it, update `VOCAB_SIZE = 4096` in `dustylm/tokenizer.py` and `dusty_8m_model.vocab_size=4096` in `dustylm/config.py`, then rerun `make dusty-tokenizer`, `make dusty-pretrain-data`, and `make dusty-sft-data`.
 - Prefer simple English before increasing vocab. This 8M model learns better from short sentences, repeated phrasing, and stable vocabulary.
 - When generating datasets, tell the data generator to use simple English, short answers, lowercase-friendly wording, and consistent words for the same ideas.
 
@@ -569,13 +569,13 @@ Loss and checkpoint guidance:
 
 ```bash
 # 1. Prepare the tokenized dataset from demo text
-uv run python -m tiny_gpt.data_prep --profile scratch_small
+uv run python -m dustylm.data_prep --profile scratch_small
 
 # 2. Train for 20 epochs (loss drops to ~2.4 on the demo corpus)
-uv run python -m tiny_gpt.train --profile scratch_small --epochs 20
+uv run python -m dustylm.train --profile scratch_small --epochs 20
 
 # 3. Generate from your freshly trained checkpoint
-uv run python -m tiny_gpt.generate --profile scratch_small --prompt "Alice was"
+uv run python -m dustylm.generate --profile scratch_small --prompt "Alice was"
 ```
 
 > The included demo corpus is intentionally tiny for educational use. ~20 epochs gives the model enough exposure for the loss to converge around **2.4**, where it starts to capture local language patterns. For real workloads, use more data instead of overfitting a small excerpt.
@@ -584,7 +584,7 @@ uv run python -m tiny_gpt.generate --profile scratch_small --prompt "Alice was"
 <summary>📎 Single-epoch training (default)</summary>
 
 ```bash
-uv run python -m tiny_gpt.train --profile scratch_small
+uv run python -m dustylm.train --profile scratch_small
 ```
 </details>
 
@@ -616,7 +616,7 @@ The generation loop implements an **explicit, cache-aware autoregressive decode*
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**This is the difference between O(n²) and O(n) generation** — and in TinyGPT, you can see exactly how it works.
+**This is the difference between O(n²) and O(n) generation** — and in DustyLM, you can see exactly how it works.
 
 ---
 
@@ -629,7 +629,7 @@ artifacts/
 ├── hf/                              # Raw HF .safetensors downloads
 │   ├── smollm2_135m.safetensors
 │   └── smollm2_360m.safetensors
-├── checkpoints/                     # Converted TinyGPT-native checkpoints
+├── checkpoints/                     # Converted DustyLM-native checkpoints
 │   ├── dusty8m.pt
 │   ├── dusty8m_step_100.pt
 │   ├── dusty8m_sft.pt
@@ -670,7 +670,7 @@ artifacts/
 
 <div align="center">
 
-**TinyGPT is intentionally small, but the engineering bar is high.**
+**DustyLM is intentionally small, but the engineering bar is high.**
 
 *Explicit tensor flows · Typed configuration · Reproducible artifacts · Tested core mechanics*
 

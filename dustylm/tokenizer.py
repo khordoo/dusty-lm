@@ -4,8 +4,8 @@ from pathlib import Path
 
 from tokenizers import ByteLevelBPETokenizer
 
-from tiny_gpt.config import get_profile
-from tiny_gpt.data_prep import normalize_pretrain_text, read_jsonl_sft_rows
+from dustylm.config import get_profile
+from dustylm.data_prep import normalize_pretrain_text, read_jsonl_sft_rows
 
 base = Path(__file__).parents[1]
 TOKENIZER_TEXT_CORPORA = [

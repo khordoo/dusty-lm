@@ -1,4 +1,4 @@
-"""Assistant-oriented inference API for SFT TinyGPT checkpoints."""
+"""Assistant-oriented inference API for SFT DustyLM checkpoints."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from tiny_gpt.checkpoint import (
+from dustylm.checkpoint import (
     CHAT_PROFILE_DEFAULT,
     load_state_dict,
     resolve_profile_name_for_checkpoint,
 )
-from tiny_gpt.config import (
+from dustylm.config import (
     GenerationSpec,
     Profile,
     TokenizerSpec,
@@ -20,13 +20,13 @@ from tiny_gpt.config import (
     get_profile,
     list_profiles,
 )
-from tiny_gpt.generate import (
+from dustylm.generate import (
     CHATML_START_TOKEN,
     encode_prompt,
     generate_token_ids,
     get_device,
 )
-from tiny_gpt.modeling import build_model, build_tokenizer
+from dustylm.modeling import build_model, build_tokenizer
 
 CHATML_END_TOKEN = "<|im_end|>"
 SUPPORTED_ROLES = {"system", "user", "assistant"}
@@ -44,7 +44,7 @@ def parse_args(argv=None):
     parser.add_argument(
         "--checkpoint-path",
         default=None,
-        help="TinyGPT checkpoint path. Defaults to the profile generation checkpoint.",
+        help="DustyLM checkpoint path. Defaults to the profile generation checkpoint.",
     )
     parser.add_argument(
         "--tokenizer-path",
@@ -72,7 +72,7 @@ def require_sft_profile(profile: Profile) -> None:
     if profile.training is None or profile.training.task != TrainingTask.SFT:
         raise ValueError(
             "Inference supports chat/SFT profiles only. "
-            "Use tiny_gpt.generate for base-model text generation."
+            "Use dustylm.generate for base-model text generation."
         )
     if profile.generation is None:
         raise ValueError(f"Profile '{profile.name}' does not define generation config")

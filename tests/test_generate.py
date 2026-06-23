@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from tiny_gpt.config import get_profile
-from tiny_gpt.generate import (
+from dustylm.config import get_profile
+from dustylm.generate import (
     apply_top_p_filter,
     get_token_id,
     parse_args,

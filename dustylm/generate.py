@@ -15,13 +15,13 @@ from pathlib import Path
 import torch
 from tokenizers import Tokenizer
 
-from tiny_gpt.checkpoint import (
+from dustylm.checkpoint import (
     GENERATION_PROFILE_DEFAULT,
     load_state_dict,
     resolve_profile_name_for_checkpoint,
 )
-from tiny_gpt.config import GenerationSpec, Profile, get_profile, list_profiles
-from tiny_gpt.modeling import build_model, build_tokenizer
+from dustylm.config import GenerationSpec, Profile, get_profile, list_profiles
+from dustylm.modeling import build_model, build_tokenizer
 
 DEFAULT_PROMPT = "Once upon a time "
 DEFAULT_PROFILE = GENERATION_PROFILE_DEFAULT

@@ -1,7 +1,7 @@
 [project]
-name = "tiny-gpt"
+name = "dusty-lm"
 version = "0.1.0"
-description = "An educational tiny GPT implementation with RoPE, grouped-query attention, training, and cached generation."
+description = "An educational small language model with RoPE, grouped-query attention, training, and cached generation."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -34,7 +34,7 @@ requires = ["setuptools>=80"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["tiny_gpt*"]
+include = ["dustylm*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from tiny_gpt.config import IGNORE_INDEX, get_profile
-from tiny_gpt.data_prep import (
+from dustylm.config import IGNORE_INDEX, get_profile
+from dustylm.data_prep import (
     DOCUMENT_SEPARATOR,
     encode_token_ids,
     main,
@@ -99,7 +99,7 @@ def test_prepare_jsonl_sft_dataset_uses_configured_assistant_field(monkeypatch, 
     )
     Path(profile.model.tokenizer.path_or_name).write_text("{}")
     monkeypatch.setattr(
-        "tiny_gpt.data_prep.build_tokenizer",
+        "dustylm.data_prep.build_tokenizer",
         lambda profile: FakeTokenizer(),
     )
 
@@ -192,7 +192,7 @@ def test_data_prep_dispatches_by_training_task(monkeypatch):
     calls = []
 
     monkeypatch.setattr(
-        "tiny_gpt.data_prep.prepare_scratch_text_dataset",
+        "dustylm.data_prep.prepare_scratch_text_dataset",
         lambda profile: calls.append(("pretrain", profile.name)),
     )
 

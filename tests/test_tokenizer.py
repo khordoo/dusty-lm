@@ -1,4 +1,4 @@
-from tiny_gpt.tokenizer import (
+from dustylm.tokenizer import (
     SPECIAL_TOKENS,
     prepare_tokenizer_training_files,
     train_tokenizer,
@@ -72,13 +72,13 @@ def test_train_tokenizer_uses_dusty_profile_vocab_size(monkeypatch, tmp_path):
         def save(self, path):
             captured["save_path"] = path
 
-    monkeypatch.setattr("tiny_gpt.tokenizer.ByteLevelBPETokenizer", FakeTokenizer)
+    monkeypatch.setattr("dustylm.tokenizer.ByteLevelBPETokenizer", FakeTokenizer)
     monkeypatch.setattr(
-        "tiny_gpt.tokenizer.prepare_tokenizer_training_files",
+        "dustylm.tokenizer.prepare_tokenizer_training_files",
         lambda tmp_path: [tmp_path / "prepared.txt"],
     )
     monkeypatch.setattr(
-        "tiny_gpt.tokenizer.OUTPUT_TOKENIZER_PATH",
+        "dustylm.tokenizer.OUTPUT_TOKENIZER_PATH",
         tmp_path / "dusty_tokenizer.json",
     )
 

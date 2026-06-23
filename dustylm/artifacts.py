@@ -1,7 +1,7 @@
 """CLI for downloading HuggingFace model weights and tokenizer files.
 
 Downloads are resolved from the ``HFArtifactSpec`` on each profile, cached
-locally under ``artifacts/``, and optionally converted to TinyGPT checkpoint
+locally under ``artifacts/``, and optionally converted to DustyLM checkpoint
 format in one step via the ``--convert`` flag.
 """
 
@@ -11,8 +11,8 @@ from pathlib import Path
 
 from huggingface_hub import hf_hub_download
 
-from tiny_gpt.adapter import map_smollm2_to_tinygpt_and_save
-from tiny_gpt.config import HFArtifactSpec, Profile, get_profile, list_profiles
+from dustylm.adapter import map_smollm2_to_dustylm_and_save
+from dustylm.config import HFArtifactSpec, Profile, get_profile, list_profiles
 
 
 def list_downloadable_profiles() -> list[str]:
@@ -66,7 +66,7 @@ def download_profile_artifacts(
     )
 
     if convert:
-        map_smollm2_to_tinygpt_and_save(
+        map_smollm2_to_dustylm_and_save(
             profile=profile,
             hf_model_path=weights_path,
         )
@@ -88,7 +88,7 @@ def parse_args(argv=None):
     download_parser.add_argument(
         "--convert",
         action="store_true",
-        help="Convert downloaded HF safetensors into a TinyGPT checkpoint.",
+        help="Convert downloaded HF safetensors into a DustyLM checkpoint.",
     )
     download_parser.add_argument(
         "--force",

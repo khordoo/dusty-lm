@@ -1,4 +1,4 @@
-"""Export a TinyGPT profile checkpoint to ONNX for browser experiments.
+"""Export a DustyLM profile checkpoint to ONNX for browser experiments.
 
 The export is intentionally simple: one forward pass maps ``input_ids`` to
 ``logits``. Browser generation can call the graph repeatedly and keep the
@@ -12,9 +12,9 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from tiny_gpt.config import get_profile, list_profiles
-from tiny_gpt.generate import resolve_generation_checkpoint_path
-from tiny_gpt.modeling import build_model
+from dustylm.config import get_profile, list_profiles
+from dustylm.generate import resolve_generation_checkpoint_path
+from dustylm.modeling import build_model
 
 
 class ExportableRMSNorm(nn.Module):
@@ -31,7 +31,7 @@ class ExportableRMSNorm(nn.Module):
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="Export TinyGPT checkpoint to ONNX")
+    parser = argparse.ArgumentParser(description="Export DustyLM checkpoint to ONNX")
     parser.add_argument(
         "--profile",
         default="sft_dusty8m",

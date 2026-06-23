@@ -1,6 +1,6 @@
 import pytest
 
-from tiny_gpt.config import (
+from dustylm.config import (
     ModelFamily,
     ModelSpec,
     Profile,
@@ -9,9 +9,9 @@ from tiny_gpt.config import (
     get_profile,
     list_profiles,
 )
-from tiny_gpt.modeling import build_model
-from tiny_gpt.models.scratch import TinyGPT as ScratchGPT
-from tiny_gpt.models.smollm2 import TinyGPT as SmolLM2
+from dustylm.modeling import build_model
+from dustylm.models.scratch import DustyLM as ScratchDustyLM
+from dustylm.models.smollm2 import DustyLM as SmolLM2DustyLM
 
 
 def test_profile_lookup_and_unknown_profile_errors():
@@ -131,7 +131,7 @@ def test_build_model_dispatches_scratch_family():
 
     model = build_model(profile)
 
-    assert isinstance(model, ScratchGPT)
+    assert isinstance(model, ScratchDustyLM)
     assert model.layers[0].mlp[0].out_features == 24
 
 
@@ -151,4 +151,4 @@ def test_build_model_dispatches_smollm2_family():
         ),
     )
 
-    assert isinstance(build_model(profile), SmolLM2)
+    assert isinstance(build_model(profile), SmolLM2DustyLM)

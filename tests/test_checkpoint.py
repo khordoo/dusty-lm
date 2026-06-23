@@ -2,7 +2,7 @@ import json
 
 import torch
 
-from tiny_gpt.checkpoint import (
+from dustylm.checkpoint import (
     detect_profile_from_state_dict,
     load_state_dict,
     read_sidecar_profile_name,

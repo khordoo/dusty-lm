@@ -13,14 +13,14 @@ from pathlib import Path
 from datasets import Dataset, load_dataset
 from huggingface_hub import login
 
-from tiny_gpt.config import (
+from dustylm.config import (
     IGNORE_INDEX,
     Profile,
     TrainingTask,
     get_profile,
     list_profiles,
 )
-from tiny_gpt.modeling import build_tokenizer
+from dustylm.modeling import build_tokenizer
 
 DEFAULT_PROFILE_NAME = "scratch_small"
 DOCUMENT_SEPARATOR = "<|endoftext|>"

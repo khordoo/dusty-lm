@@ -1,4 +1,4 @@
-from tiny_gpt.config import (
+from dustylm.config import (
     IGNORE_INDEX,
     GenerationSpec,
     HFArtifactSpec,
@@ -11,7 +11,7 @@ from tiny_gpt.config import (
     list_profiles,
     register,
 )
-from tiny_gpt.model import TinyGPT
+from dustylm.model import DustyLM
 
 __all__ = [
     "GenerationSpec",
@@ -20,7 +20,7 @@ __all__ = [
     "ModelFamily",
     "ModelSpec",
     "Profile",
-    "TinyGPT",
+    "DustyLM",
     "TokenizerSpec",
     "TrainingSpec",
     "get_profile",

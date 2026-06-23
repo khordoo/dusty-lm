@@ -1,13 +1,17 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DustyLM — Browser Demo</title>
-  <meta name="description" content="Chat with DustyLM, an 8M parameter language model running entirely in your browser via WebAssembly. No server, no API key.">
+  <meta name="description"
+    content="Chat with DustyLM, an 8M parameter language model running entirely in your browser via WebAssembly. No server, no API key.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.0/dist/ort.min.js"></script>
   <style>
     :root {
@@ -31,14 +35,19 @@
       --red: #dc3545;
       --radius: 20px;
       --radius-sm: 12px;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
-      --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
-      --shadow-lg: 0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    html, body {
+    html,
+    body {
       height: 100%;
       overflow: hidden;
     }
@@ -67,8 +76,15 @@
     }
 
     @keyframes bgShift {
-      0% { opacity: 0.7; transform: scale(1); }
-      100% { opacity: 1; transform: scale(1.05); }
+      0% {
+        opacity: 0.7;
+        transform: scale(1);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
     }
 
     /* Dust particles — subtle on light */
@@ -90,10 +106,24 @@
     }
 
     @keyframes float {
-      0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
-      10% { opacity: 0.6; transform: translateY(90vh) translateX(10px) scale(1); }
-      90% { opacity: 0.3; }
-      100% { transform: translateY(-10vh) translateX(-20px) scale(0.3); opacity: 0; }
+      0% {
+        transform: translateY(100vh) translateX(0) scale(0);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 0.6;
+        transform: translateY(90vh) translateX(10px) scale(1);
+      }
+
+      90% {
+        opacity: 0.3;
+      }
+
+      100% {
+        transform: translateY(-10vh) translateX(-20px) scale(0.3);
+        opacity: 0;
+      }
     }
 
     /* Main container */
@@ -108,8 +138,15 @@
     }
 
     @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* Header */
@@ -127,8 +164,15 @@
     }
 
     @keyframes logoFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-5px);
+      }
     }
 
     .title {
@@ -173,8 +217,17 @@
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.8); }
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(0.8);
+      }
     }
 
     .status.ready .dot {
@@ -193,6 +246,52 @@
       background: var(--red);
       box-shadow: 0 0 8px rgba(220, 53, 69, 0.2);
       animation: none;
+    }
+
+    /* Top-left info */
+    .top-info {
+      position: fixed;
+      top: 16px;
+      left: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+      opacity: 0.55;
+      z-index: 2;
+      letter-spacing: 0.01em;
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      text-align: center;
+      animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .empty-state-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 16px;
+      opacity: 0.15;
+    }
+
+    .empty-state h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-dim);
+      max-width: 320px;
+      line-height: 1.5;
     }
 
     /* Chat panel */
@@ -222,8 +321,14 @@
       scroll-behavior: smooth;
     }
 
-    .messages::-webkit-scrollbar { width: 6px; }
-    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
     .messages::-webkit-scrollbar-thumb {
       background: var(--line-solid);
       border-radius: 3px;
@@ -237,8 +342,15 @@
     }
 
     @keyframes turnIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .turn.user-turn {
@@ -261,8 +373,13 @@
       margin-bottom: 4px;
     }
 
-    .speaker.dusty { color: var(--teal); }
-    .speaker.user { color: var(--blue); }
+    .speaker.dusty {
+      color: var(--teal);
+    }
+
+    .speaker.user {
+      color: var(--blue);
+    }
 
     .turn-text {
       color: var(--text);
@@ -303,7 +420,10 @@
       background: #ffffff;
     }
 
-    input::placeholder { color: var(--text-dim); opacity: 0.7; }
+    input::placeholder {
+      color: var(--text-dim);
+      opacity: 0.7;
+    }
 
     button.send-btn {
       height: 44px;
@@ -331,7 +451,8 @@
       transform: translateY(0);
     }
 
-    button:disabled, input:disabled {
+    button:disabled,
+    input:disabled {
       cursor: not-allowed;
       opacity: 0.4;
     }
@@ -373,37 +494,54 @@
       opacity: 0.4;
     }
 
-    /* Footer */
-    .footer {
-      text-align: center;
-      padding: 14px 0 0;
-      flex-shrink: 0;
-    }
 
-    .footer-text {
-      color: var(--text-dim);
-      font-size: 12px;
-      font-weight: 500;
-      opacity: 0.7;
-    }
-
-    /* Responsive */
     @media (max-height: 700px) {
-      .logo { width: min(180px, 40vw); margin-bottom: 8px; }
-      .title { font-size: 26px; }
-      .header { padding-bottom: 12px; }
-      .messages { max-height: 42vh; min-height: 160px; }
+      .logo {
+        width: min(180px, 40vw);
+        margin-bottom: 8px;
+      }
+
+      .title {
+        font-size: 26px;
+      }
+
+      .header {
+        padding-bottom: 12px;
+      }
+
+      .messages {
+        max-height: 42vh;
+        min-height: 160px;
+      }
+
+      .top-info {
+        display: none;
+      }
     }
 
     @media (max-width: 480px) {
-      .container { width: calc(100vw - 24px); }
-      .logo { width: min(200px, 50vw); }
-      .title { font-size: 26px; }
-      .messages { padding: 18px 18px; font-size: 13px; }
+      .container {
+        width: calc(100vw - 24px);
+      }
+
+      .logo {
+        width: min(200px, 50vw);
+      }
+
+      .title {
+        font-size: 26px;
+      }
+
+      .messages {
+        padding: 18px 18px;
+        font-size: 13px;
+      }
     }
   </style>
 </head>
+
 <body>
+  <p class="top-info">Runs entirely via WebAssembly · No server · No API key</p>
 
   <!-- Floating dust particles -->
   <div class="particles" id="particles"></div>
@@ -412,17 +550,23 @@
     <header class="header">
       <img class="logo" src="images/logo.png" alt="DustyLM logo">
       <h1 class="title">DustyLM</h1>
-      <p class="tagline">8M parameter LLM · running in your browser · no server required</p>
+      <p class="tagline">8M parameter language model · running in your browser · no server required</p>
       <div id="status" class="status"><span class="dot"></span><span>loading model…</span></div>
     </header>
 
     <section class="chat" aria-label="DustyLM chat">
-      <div id="messages" class="messages"></div>
+      <div id="messages" class="messages">
+        <div class="empty-state" id="empty-state">
+          <img class="empty-state-icon" src="images/logo.png" alt="">
+          <h2>Talk to Dusty</h2>
+          <p>Ask the tiny vacuum robot anything — it runs entirely in your browser.</p>
+        </div>
+      </div>
       <div class="suggestions" id="suggestions">
-        <button type="button" data-prompt="where are you?" disabled>where are you?</button>
+        <button type="button" data-prompt="who are you?" disabled>who are you?</button>
         <button type="button" data-prompt="are you scared?" disabled>are you scared?</button>
         <button type="button" data-prompt="what do you dream about?" disabled>what do you dream about?</button>
-        <button type="button" data-prompt="go charge" disabled>go charge</button>
+        <button type="button" data-prompt="what makes you happy?" disabled>what makes you happy?</button>
       </div>
       <div class="input-area">
         <form id="chat-form">
@@ -431,10 +575,6 @@
         </form>
       </div>
     </section>
-
-    <footer class="footer">
-      <p class="footer-text">Runs entirely via WebAssembly · First token may take a moment to warm up</p>
-    </footer>
   </div>
 
   <script>
@@ -459,9 +599,9 @@
     const TOKENIZER_PATH = "tokenizer.json";
     const MAX_SEQ_LEN = 256;
     const MAX_NEW_TOKENS = 64;
-    const TOP_K = 40;
+    const TOP_K = 5;
     const TOP_P = 0.8;
-    const TEMPERATURE = 0.8;
+    const TEMPERATURE = 0.6;
     const IM_START = "<|im_start|>";
     const IM_END = "<|im_end|>";
 
@@ -753,13 +893,24 @@
         promptEl.disabled = false;
         sendEl.disabled = false;
         document.querySelectorAll("[data-prompt]").forEach(b => b.disabled = false);
+        hideEmptyState();
         appendTurn("Dusty", "beep. i am awake. i see the floor.");
         promptEl.focus();
       } catch (error) {
         setStatus("failed to load");
         statusEl.classList.add("error");
+        hideEmptyState();
         appendTurn("Dusty", "beep. my browser wheels are stuck.");
         console.error(error);
+      }
+    }
+
+    function hideEmptyState() {
+      const el = document.getElementById('empty-state');
+      if (el) {
+        el.style.transition = 'opacity 0.3s ease';
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
       }
     }
 
@@ -778,4 +929,5 @@
     init();
   </script>
 </body>
+
 </html>

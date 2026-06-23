@@ -260,7 +260,7 @@ class TransformerBlock(nn.Module):
         return x, present_kv
 
 
-class TinyGPT(nn.Module):
+class DustyLM(nn.Module):
     """Decoder-only transformer (scratch variant).
 
     Architecture: Embedding → [TransformerBlock × N] → RMSNorm → Linear → logits.

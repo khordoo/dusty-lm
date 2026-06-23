@@ -1,9 +1,9 @@
-from tiny_gpt.models.scratch import (
+from dustylm.models.scratch import (
     ForwardContext,
     KvCache,
     MultiHeadAttention,
     RotaryPositionalEmbedding,
-    TinyGPT,
+    DustyLM,
     TransformerBlock,
 )
 
@@ -12,6 +12,6 @@ __all__ = [
     "KvCache",
     "MultiHeadAttention",
     "RotaryPositionalEmbedding",
-    "TinyGPT",
+    "DustyLM",
     "TransformerBlock",
 ]

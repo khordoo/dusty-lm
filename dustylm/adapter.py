@@ -1,7 +1,7 @@
-"""Convert HuggingFace SmolLM2 safetensors checkpoints to TinyGPT state dict format.
+"""Convert HuggingFace SmolLM2 safetensors checkpoints to DustyLM state dict format.
 
 HuggingFace uses key names like ``model.layers.0.self_attn.o_proj.weight``;
-this module maps them to TinyGPT's flattened naming convention
+this module maps them to DustyLM's flattened naming convention
 (e.g., ``layers.0.self_attn.out_proj.weight``).  After conversion, the state
 dict is validated by loading it into a freshly constructed model.
 """
@@ -12,8 +12,8 @@ from pathlib import Path
 import torch
 from safetensors.torch import load_file
 
-from tiny_gpt.config import REPO_ROOT, Profile, get_profile, list_profiles
-from tiny_gpt.modeling import build_model
+from dustylm.config import REPO_ROOT, Profile, get_profile, list_profiles
+from dustylm.modeling import build_model
 
 
 
@@ -47,28 +47,28 @@ def resolve_hf_model_path(profile: Profile, hf_model_path: str | Path | None) ->
     return REPO_ROOT / "artifacts" / "hf" / f"{profile.name}.safetensors"
 
 
-def map_smollm2_to_tinygpt_and_save(
+def map_smollm2_to_dustylm_and_save(
     profile: Profile,
     hf_model_path: str | Path | None,
-    tiny_gpt_save_path: str | Path | None = None,
+    dustylm_save_path: str | Path | None = None,
 ):
     if profile.generation is None:
         raise ValueError(f"Profile '{profile.name}' does not define generation config")
 
     hf_model_path = resolve_hf_model_path(profile, hf_model_path)
-    tiny_gpt_save_path = Path(tiny_gpt_save_path or profile.generation.checkpoint_path)
+    dustylm_save_path = Path(dustylm_save_path or profile.generation.checkpoint_path)
 
     print("Loading Hugging Face model weights from:", hf_model_path)
     hf_weights = load_file(str(hf_model_path))
     state_dict = convert_smollm2_state_dict(hf_weights)
 
-    print("Validating converted state dict against TinyGPT model")
+    print("Validating converted state dict against DustyLM model")
     model = build_model(profile)
     model.load_state_dict(state_dict)
 
-    tiny_gpt_save_path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), tiny_gpt_save_path)
-    print("Saved converted TinyGPT checkpoint to:", tiny_gpt_save_path)
+    dustylm_save_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), dustylm_save_path)
+    print("Saved converted DustyLM checkpoint to:", dustylm_save_path)
 
 
 def parse_args(argv=None):
@@ -90,10 +90,10 @@ def parse_args(argv=None):
 
 def main(argv=None):
     args = parse_args(argv)
-    map_smollm2_to_tinygpt_and_save(
+    map_smollm2_to_dustylm_and_save(
         profile=get_profile(args.profile),
         hf_model_path=args.hf_model_path,
-        tiny_gpt_save_path=args.output,
+        dustylm_save_path=args.output,
     )
 
 

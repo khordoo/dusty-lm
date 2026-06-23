@@ -36,7 +36,7 @@ ONNX_TOKENIZER_OUT ?= docs/tokenizer.json
 .PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train dusty-export-onnx tensorboard
 
 help:
-	@echo "TinyGPT commands"
+	@echo "DustyLM commands"
 	@echo ""
 	@echo "Dusty 8M workflow:"
 	@echo "  make download-datasets          Download TinyStories + Dusty SFT data"
@@ -99,25 +99,25 @@ dusty-flatten-sft-pretrain:
 		--output $(DUSTY_SFT_CHATML_PRETRAIN_OUT)
 
 dusty-tokenizer:
-	uv run python -m tiny_gpt.tokenizer
+	uv run python -m dustylm.tokenizer
 
 dusty-pretrain-data:
-	uv run python -m tiny_gpt.data_prep --profile dusty8m
+	uv run python -m dustylm.data_prep --profile dusty8m
 
 dusty-pretrain:
-	uv run python -m tiny_gpt.train --profile dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
+	uv run python -m dustylm.train --profile dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
 
 dusty-generate:
-	uv run python tiny_gpt/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
+	uv run python dustylm/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
 
 chat:
-	uv run python -m tiny_gpt.inference $(if $(CHAT_PROFILE),--profile $(CHAT_PROFILE),)$(if $(CHECKPOINT_PATH), --checkpoint-path $(CHECKPOINT_PATH),)$(if $(TOKENIZER_PATH), --tokenizer-path $(TOKENIZER_PATH),)$(if $(DEVICE), --device $(DEVICE),)$(if $(TEMPERATURE), --temperature $(TEMPERATURE),)$(if $(MAX_TOKENS), --max-tokens $(MAX_TOKENS),)$(if $(TOP_P), --top-p $(TOP_P),)$(if $(MAX_CHAT_TURNS), --max-chat-turns $(MAX_CHAT_TURNS),)
+	uv run python -m dustylm.inference $(if $(CHAT_PROFILE),--profile $(CHAT_PROFILE),)$(if $(CHECKPOINT_PATH), --checkpoint-path $(CHECKPOINT_PATH),)$(if $(TOKENIZER_PATH), --tokenizer-path $(TOKENIZER_PATH),)$(if $(DEVICE), --device $(DEVICE),)$(if $(TEMPERATURE), --temperature $(TEMPERATURE),)$(if $(MAX_TOKENS), --max-tokens $(MAX_TOKENS),)$(if $(TOP_P), --top-p $(TOP_P),)$(if $(MAX_CHAT_TURNS), --max-chat-turns $(MAX_CHAT_TURNS),)
 
 dusty-sft-data:
-	uv run python -m tiny_gpt.data_prep --profile sft_dusty8m
+	uv run python -m dustylm.data_prep --profile sft_dusty8m
 
 dusty-sft-train:
-	uv run python -m tiny_gpt.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
+	uv run python -m dustylm.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
 
 dusty-export-onnx:
 	uv run --extra onnx python tools/export_onnx.py \

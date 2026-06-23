@@ -1,4 +1,4 @@
-from tiny_gpt.adapter import map_smollm2_key
+from dustylm.adapter import map_smollm2_key
 
 
 def test_adapter_maps_representative_hf_keys():

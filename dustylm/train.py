@@ -20,8 +20,8 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from tiny_gpt.config import IGNORE_INDEX, Profile, get_profile, list_profiles
-from tiny_gpt.modeling import build_model
+from dustylm.config import IGNORE_INDEX, Profile, get_profile, list_profiles
+from dustylm.modeling import build_model
 
 
 def get_device_and_dtype():
