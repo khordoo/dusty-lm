@@ -19,16 +19,21 @@ DUSTY_SFT_FILTER_TARGET ?= 2000
 DUSTY_SFT_MAX_ANSWER_TOKENS ?= 256
 DUSTY_SFT_SAMPLING_MODE ?= balanced
 DUSTY_SFT_CHATML_PRETRAIN_OUT ?= artifacts/datasets/dusty_sft_chatml_pretrain.txt
+DUSTY_CHAT_REPO ?= mkhordoo/dusty-chat
+DUSTY_CHAT_FILE ?= dusty_sft.jsonl
+TINYSTORIES_SLICE ?= train[:100000]
+TINYSTORIES_OUT ?= artifacts/datasets/tinystories_base.txt
 ONNX_PROFILE ?= sft_dusty8m
 ONNX_OUT ?= docs/model.onnx
 ONNX_TOKENIZER_OUT ?= docs/tokenizer.json
 
-.PHONY: help dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train dusty-export-onnx tensorboard
+.PHONY: help download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train dusty-export-onnx tensorboard
 
 help:
 	@echo "TinyGPT commands"
 	@echo ""
 	@echo "Dusty 8M workflow:"
+	@echo "  make download-datasets          Download TinyStories + Dusty SFT data"
 	@echo "  make dusty-generate-pretrain   Generate artifacts/datasets/dusty_pretrain.txt"
 	@echo "  make dusty-generate-sft        Generate artifacts/datasets/dusty_sft.jsonl"
 	@echo "  make dusty-filter-sft          Filter/sample SFT JSONL to artifacts/datasets/dusty_sft_2000.jsonl"
@@ -41,6 +46,15 @@ help:
 	@echo "  make dusty-generate             Generate with PROFILE=dusty8m PROMPT='i wake up.'"
 	@echo "  make dusty-export-onnx          Export ONNX browser-demo artifacts to docs/"
 	@echo "  make tensorboard                Plot training logs from runs/"
+
+download-datasets:
+	uv run python dataset_generation/download_hf_dataset.py \
+		--tinystories-slice "$(TINYSTORIES_SLICE)" \
+		--tinystories-out $(TINYSTORIES_OUT) \
+		--dusty-pretrain-out $(DUSTY_PRETRAIN_OUT) \
+		--dusty-chat-repo $(DUSTY_CHAT_REPO) \
+		--dusty-chat-file $(DUSTY_CHAT_FILE) \
+		--dusty-sft-out $(DUSTY_SFT_OUT)
 
 dusty-generate-pretrain:
 	uv run python dataset_generation/generate_pretrain_dataset_gen_async.py \
