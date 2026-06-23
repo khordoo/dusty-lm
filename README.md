@@ -378,9 +378,12 @@ make dusty-generate PROFILE=sft_dusty8m PROMPT="where are you?"
 
 # generate from a specific SFT step checkpoint
 make dusty-generate PROFILE=sft_dusty8m CHECKPOINT_STEP=100 PROMPT="where are you?"
+
+# override nucleus sampling if needed; Dusty profiles default to top_p=0.8
+make dusty-generate PROFILE=sft_dusty8m TOP_P=0.9 PROMPT="where are you?"
 ```
 
-If `CHECKPOINT_STEP` is omitted, generation loads the final profile checkpoint. For SFT generation, `tiny_gpt/generate.py` automatically formats raw prompts as ChatML and stops on the `<|im_end|>` token ID.
+If `CHECKPOINT_STEP` is omitted, generation loads the final profile checkpoint. Dusty profiles use `top_p=0.8` from `tiny_gpt/config.py` by default; override it with `TOP_P=...` in Make or `--top-p ...` when running `tiny_gpt/generate.py` directly. For SFT generation, `tiny_gpt/generate.py` automatically formats raw prompts as ChatML and stops on the `<|im_end|>` token ID.
 
 Example pretraining-only output, before SFT:
 

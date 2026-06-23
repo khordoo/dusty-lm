@@ -17,8 +17,9 @@ from tokenizers import Tokenizer
 from tiny_gpt.config import GenerationSpec, Profile, get_profile, list_profiles
 from tiny_gpt.modeling import build_model, build_tokenizer
 
-DEFAULT_PROMPT = """The capital of France is Paris. The capital of Italy is """
+DEFAULT_PROMPT = "Once upon a time "
 CHATML_START_TOKEN = "<|im_start|>"
+EOS_TEXT_LOOKBACK_TOKENS = 10
 
 
 def get_device():
@@ -48,25 +49,25 @@ def parse_args(argv=None):
         ),
     )
     parser.add_argument(
-        "--repetition-penalty",
-        type=float,
-        default=1.0,
-        help="Penalty for tokens already generated in this response. 1.0 disables it.",
-    )
-    parser.add_argument(
         "--top-p",
         type=float,
-        default=1.0,
-        help="Nucleus sampling probability mass. 1.0 disables it.",
+        default=None,
+        help="Override profile nucleus sampling probability mass. 1.0 disables it.",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=None,
+        help="Override profile generation temperature.",
     )
     return parser.parse_args(argv)
 
 
-def validate_generation_options(repetition_penalty: float, top_p: float) -> None:
-    if repetition_penalty < 1.0:
-        raise ValueError("repetition_penalty must be at least 1.0")
+def validate_generation_options(top_p: float, temperature: float) -> None:
     if top_p <= 0.0 or top_p > 1.0:
         raise ValueError("top_p must be greater than 0 and at most 1.0")
+    if temperature <= 0.0:
+        raise ValueError("temperature must be greater than 0")
 
 
 def encode_prompt(tokenizer, prompt: str, spec: GenerationSpec) -> list[int]:
@@ -81,6 +82,35 @@ def encode_prompt(tokenizer, prompt: str, spec: GenerationSpec) -> list[int]:
 
 def decode_tokens(tokenizer, token_ids: list[int]) -> str:
     return tokenizer.decode(token_ids)
+
+
+def get_token_id(tokenizer, text: str) -> int | None:
+    if hasattr(tokenizer, "token_to_id"):
+        token_id = tokenizer.token_to_id(text)
+        if token_id is not None:
+            return token_id
+
+    if not hasattr(tokenizer, "encode"):
+        return None
+
+    token_ids = tokenizer.encode(text)
+    return token_ids[0] if token_ids else None
+
+
+def validate_prompt_length(token_ids: list[int], max_seq_len: int) -> None:
+    prompt_length = len(token_ids)
+    if prompt_length >= max_seq_len:
+        raise ValueError(
+            f"Prompt contains {prompt_length} tokens. Model maximum is {max_seq_len}."
+        )
+
+
+def resolve_num_new_tokens(
+    max_new_tokens: int,
+    prompt_length: int,
+    max_seq_len: int,
+) -> int:
+    return min(max_new_tokens, max_seq_len - prompt_length)
 
 
 def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
@@ -135,24 +165,6 @@ def load_model(profile: Profile, device=None, checkpoint_step: int | None = None
     return model, tokenizer, device
 
 
-def apply_repetition_penalty(
-    next_token_logits: torch.Tensor,
-    generated_ids: list[int],
-    repetition_penalty: float,
-) -> torch.Tensor:
-    if repetition_penalty == 1.0 or not generated_ids:
-        return next_token_logits
-
-    for token_id in set(generated_ids):
-        token_logits = next_token_logits[:, token_id]
-        next_token_logits[:, token_id] = torch.where(
-            token_logits < 0,
-            token_logits * repetition_penalty,
-            token_logits / repetition_penalty,
-        )
-    return next_token_logits
-
-
 def apply_top_p_filter(next_token_logits: torch.Tensor, top_p: float) -> torch.Tensor:
     if top_p >= 1.0:
         return next_token_logits
@@ -176,9 +188,8 @@ def apply_top_p_filter(next_token_logits: torch.Tensor, top_p: float) -> torch.T
 def sample_next_token(
     logits,
     spec: GenerationSpec,
-    generated_ids: list[int] | None = None,
-    repetition_penalty: float = 1.0,
-    top_p: float = 1.0,
+    top_p: float | None = None,
+    temperature: float | None = None,
 ):
     """Sample the next token using temperature-scaled top-k sampling.
 
@@ -189,20 +200,15 @@ def sample_next_token(
     Returns:
         [B] sampled token IDs.
     """
-    validate_generation_options(repetition_penalty, top_p)
-    generated_ids = generated_ids or []
+    top_p = spec.top_p if top_p is None else top_p
+    temperature = spec.temperature if temperature is None else temperature
+    validate_generation_options(top_p, temperature)
 
     # Step 1: Extract logits for the last position only.
     next_token_logits = logits[:, -1, :]  # [B, vocab_size]
 
-    next_token_logits = apply_repetition_penalty(
-        next_token_logits,
-        generated_ids=generated_ids,
-        repetition_penalty=repetition_penalty,
-    )
-
     # Step 2: Apply temperature — higher temperature → more uniform distribution.
-    next_token_logits = next_token_logits / spec.temperature
+    next_token_logits = next_token_logits / temperature
 
     # Step 3: Find the top-k highest logit values.
     values, _ = torch.topk(next_token_logits, spec.top_k)  # [B, top_k]
@@ -211,35 +217,46 @@ def sample_next_token(
     # values[:, [-1]] is the smallest value in the top-k set.
     next_token_logits[next_token_logits < values[:, [-1]]] = float("-inf")
 
+    # Step 5 Apply top_p filter
     next_token_logits = apply_top_p_filter(next_token_logits, top_p=top_p)
 
-    # Step 5: Convert filtered logits to a probability distribution.
+    # Step 6: Convert filtered logits to a probability distribution.
     probabilities = torch.softmax(next_token_logits, dim=-1)  # [B, vocab_size]
 
-    # Step 6: Sample one token per batch element from the distribution.
-    return torch.multinomial(probabilities, num_samples=1).squeeze(0)  # [B]
+    # Step 7: Sample one token per batch element from the distribution.
+    return torch.multinomial(probabilities, num_samples=1).squeeze(-1)  # [B]
 
 
 def generate_text(
     prompt=DEFAULT_PROMPT,
     profile_name="scratch_small",
     checkpoint_step: int | None = None,
-    repetition_penalty: float = 1.0,
-    top_p: float = 1.0,
+    top_p: float | None = None,
+    temperature: float | None = None,
 ):
     """Generate text autoregressively from a prompt using KV-cached decoding."""
-    validate_generation_options(repetition_penalty, top_p)
     profile = get_profile(profile_name)
     if profile.generation is None:
         raise ValueError(f"Profile '{profile.name}' does not define generation config")
 
     spec = profile.generation
+    top_p = spec.top_p if top_p is None else top_p
+    temperature = spec.temperature if temperature is None else temperature
+    print("generating with temperature:", temperature)
+    validate_generation_options(top_p, temperature)
     model, tokenizer, device = load_model(profile, checkpoint_step=checkpoint_step)
 
     prompt = prepare_generation_prompt(prompt, profile)
     token_ids = encode_prompt(tokenizer, prompt, spec)
+    validate_prompt_length(token_ids, profile.model.max_seq_len)
+    num_new_tokens = resolve_num_new_tokens(
+        max_new_tokens=spec.max_new_tokens,
+        prompt_length=len(token_ids),
+        max_seq_len=profile.model.max_seq_len,
+    )
     tokens = torch.tensor(token_ids, dtype=torch.long, device=device).unsqueeze(0)
     generated_ids = []
+    im_end_id = get_token_id(tokenizer, "<|im_end|>")
 
     # --- Prefill: process the entire prompt in one forward pass ---
     # The empty cache is a list of None entries (one per layer).  After
@@ -251,38 +268,30 @@ def generate_text(
     print("Predicting...")
     print(prompt, end="", flush=True)
     with torch.inference_mode():
-        for _ in range(spec.max_new_tokens):
+        for _ in range(num_new_tokens):
             # On the first iteration this is the full prompt (prefill).
             # On subsequent iterations this is a single token (decode).
             logits, kv_cache = model(x=input_tokens, kv_cache=kv_cache)
             next_token = sample_next_token(
                 logits,
                 spec,
-                generated_ids=generated_ids,
-                repetition_penalty=repetition_penalty,
                 top_p=top_p,
+                temperature=temperature,
             )
             next_token_id = next_token.item()
             generated_ids.append(next_token_id)
 
-            # Get the ID for <|im_end|> directly from the tokenizer
-            if isinstance(tokenizer, Tokenizer):
-                im_end_id = tokenizer.token_to_id("<|im_end|>")
-            else:
-                im_end_id = tokenizer.encode("<|im_end|>")[0]
-
             # Stop if we hit the config's EOS token OR the ChatML end token
             if (
                 spec.eos_token_id is not None and next_token_id == spec.eos_token_id
-            ) or next_token_id == im_end_id:
+            ) or (im_end_id is not None and next_token_id == im_end_id):
                 print("\n\n[Generation stopped: Stop token detected]")
                 break
 
-            # if spec.eos_token_id is not None and next_token_id == spec.eos_token_id:
-            #     print(f"\n\n[Generation stopped: eos={spec.eos_token_id} detected]")
-            #     break
-
-            tail_text = decode_tokens(tokenizer, generated_ids[-10:])
+            tail_text = decode_tokens(
+                tokenizer,
+                generated_ids[-EOS_TEXT_LOOKBACK_TOKENS:],
+            )
             if spec.eos_text is not None and spec.eos_text in tail_text:
                 print(f"\n\n[Generation stopped: {spec.eos_text} detected]")
                 break
@@ -292,6 +301,10 @@ def generate_text(
             # --- Decode: feed only the new token; the cache has the history ---
             input_tokens = next_token.unsqueeze(0)  # [1, 1]
             print(next_word, end="", flush=True)
+        else:
+            print(
+                f"\n\n[Generation stopped: Max new tokens reached ({num_new_tokens})]"
+            )
 
     return decode_tokens(tokenizer, generated_ids)
 
@@ -302,8 +315,8 @@ def main(argv=None):
         prompt=args.prompt,
         profile_name=args.profile,
         checkpoint_step=args.checkpoint_step,
-        repetition_penalty=args.repetition_penalty,
         top_p=args.top_p,
+        temperature=args.temperature,
     )
 
 

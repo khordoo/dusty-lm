@@ -3,6 +3,8 @@ CHECKPOINT_EVERY_STEPS ?= 100
 CHECKPOINT_STEP ?=
 PROMPT ?= i wake up.
 PROFILE ?= dusty8m
+TOP_P ?=
+TEMPERATURE ?=
 DUSTY_MODEL ?= qwen/qwen3-235b-a22b-2507:floor
 DUSTY_FALLBACK_MODEL ?= openai/gpt-oss-120b:floor
 DUSTY_SFT_PER_CATEGORY ?= 500
@@ -81,7 +83,7 @@ dusty-pretrain:
 	uv run python -m tiny_gpt.train --profile dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
 
 dusty-generate:
-	uv run python tiny_gpt/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
+	uv run python tiny_gpt/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
 
 dusty-sft-data:
 	uv run python -m tiny_gpt.data_prep --profile sft_dusty8m

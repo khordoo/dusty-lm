@@ -73,6 +73,7 @@ class GenerationSpec:
     max_new_tokens: int
     temperature: float
     top_k: int
+    top_p: float = 1.0
     bos_token_id: int | None = None
     eos_token_id: int | None = None
     eos_text: str | None = None
@@ -214,9 +215,10 @@ register(
         ),
         generation=GenerationSpec(
             checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
-            max_new_tokens=100,
-            temperature=0.8,
-            top_k=10,
+            max_new_tokens=200,
+            temperature=0.7,
+            top_k=20,
+            top_p=0.9,
             eos_text="<|endoftext|>",
         ),
     )
@@ -261,10 +263,7 @@ register(
         model=dusty_8m_model,
         training=TrainingSpec(
             task=TrainingTask.SFT,
-            dataset_path=REPO_ROOT
-            / "artifacts"
-            / "datasets"
-            / "dusty_sft_tokenized",
+            dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_tokenized",
             batch_size=32,
             learning_rate=1e-5,
             output_checkpoint=REPO_ROOT
@@ -275,21 +274,16 @@ register(
             weight_decay=0.01,
             raw_sft_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft.jsonl",
             sft_assistant_field="dusty",
-            init_checkpoint_path=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "dusty8m.pt",
+            init_checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
             checkpoint_every_steps=100,
             checkpoint_dir=REPO_ROOT / "artifacts" / "checkpoints",
         ),
         generation=GenerationSpec(
-            checkpoint_path=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "dusty8m_sft.pt",
-            max_new_tokens=100,
+            checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m_sft.pt",
+            max_new_tokens=200,
             temperature=0.8,
-            top_k=10,
+            top_k=5,
+            top_p=0.8,
             eos_token_id=2,
         ),
     )

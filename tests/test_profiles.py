@@ -42,6 +42,7 @@ def test_dusty8m_profile_is_scratch_pretrain_profile():
     assert profile.training.checkpoint_dir.name == "checkpoints"
     assert profile.generation is not None
     assert profile.generation.checkpoint_path.name == "dusty8m.pt"
+    assert profile.generation.top_p == 0.9
     assert profile.generation.eos_text == "<|endoftext|>"
 
 
@@ -62,6 +63,7 @@ def test_sft_dusty8m_profile_finetunes_dusty_checkpoint_separately():
     assert sft.generation is not None
     assert sft.generation.checkpoint_path.name == "dusty8m_sft.pt"
     assert sft.generation.eos_token_id == 2
+    assert sft.generation.top_p == 0.8
     assert sft.generation.eos_text is None
 
 
