@@ -4,74 +4,163 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DustyLM — Browser Demo</title>
+  <meta name="description" content="Chat with DustyLM, an 8M parameter language model running entirely in your browser via WebAssembly. No server, no API key.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.0/dist/ort.min.js"></script>
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #0d1117;
-      --panel: #141b22;
-      --line: #303943;
-      --text: #e6edf3;
-      --muted: #9aa4b2;
-      --accent: #f59e0b;
-      --accent-2: #5eead4;
+      color-scheme: light;
+      --bg: #ffffff;
+      --bg-subtle: #f8f9fb;
+      --panel: #ffffff;
+      --glass: rgba(255, 255, 255, 0.8);
+      --line: rgba(0, 0, 0, 0.08);
+      --line-solid: #e2e5ea;
+      --text: #1a1d23;
+      --text-secondary: #4a5060;
+      --text-dim: #8891a0;
+      --accent: #e8820e;
+      --accent-soft: rgba(232, 130, 14, 0.1);
+      --teal: #0d9488;
+      --teal-soft: rgba(13, 148, 136, 0.08);
+      --teal-glow: rgba(13, 148, 136, 0.15);
+      --blue: #3b7dd8;
+      --blue-soft: rgba(59, 125, 216, 0.07);
+      --red: #dc3545;
+      --radius: 20px;
+      --radius-sm: 12px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
     }
 
-    * {
-      box-sizing: border-box;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
     }
 
     body {
-      margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    main {
-      width: min(920px, calc(100vw - 32px));
-      margin: 0 auto;
-      padding: 36px 0 48px;
+    /* Subtle background pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 15% 5%, rgba(13, 148, 136, 0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 95%, rgba(59, 125, 216, 0.03) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 50% 50%, rgba(232, 130, 14, 0.02) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: bgShift 25s ease-in-out infinite alternate;
     }
 
-    header {
+    @keyframes bgShift {
+      0% { opacity: 0.7; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* Dust particles — subtle on light */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(13, 148, 136, 0.15);
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+      10% { opacity: 0.6; transform: translateY(90vh) translateX(10px) scale(1); }
+      90% { opacity: 0.3; }
+      100% { transform: translateY(-10vh) translateX(-20px) scale(0.3); opacity: 0; }
+    }
+
+    /* Main container */
+    .container {
+      position: relative;
+      z-index: 1;
+      width: min(800px, calc(100vw - 48px));
+      max-height: calc(100vh - 48px);
+      display: flex;
+      flex-direction: column;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    .header {
       text-align: center;
-      border-bottom: 6px solid var(--line);
-      padding-bottom: 28px;
-      margin-bottom: 28px;
+      padding: 0 0 20px;
+      flex-shrink: 0;
     }
 
     .logo {
+      width: min(260px, 55vw);
+      margin: 0 auto 10px;
       display: block;
-      width: min(520px, 92vw);
-      margin: 0 auto 20px;
-      background: #fff;
+      animation: logoFloat 6s ease-in-out infinite;
     }
 
-    h1 {
-      margin: 0;
-      font-size: 48px;
-      line-height: 1;
-      letter-spacing: 0;
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      line-height: 1.1;
     }
 
     .tagline {
-      color: var(--muted);
-      font-size: 18px;
-      margin: 12px 0 16px;
+      color: var(--text-dim);
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 6px;
+      letter-spacing: 0.01em;
     }
 
+    /* Status pill */
     .status {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-height: 28px;
-      color: var(--muted);
-      font-size: 14px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 5px 10px;
-      background: rgba(255, 255, 255, 0.03);
+      margin-top: 12px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--line-solid);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      transition: all 0.5s ease;
     }
 
     .dot {
@@ -79,159 +168,293 @@
       height: 8px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 16px var(--accent);
+      box-shadow: 0 0 8px var(--accent-soft);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
     }
 
     .status.ready .dot {
-      background: var(--accent-2);
-      box-shadow: 0 0 16px var(--accent-2);
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+      animation: none;
     }
 
-    .intro {
-      border-left: 4px solid #64748b;
-      color: var(--muted);
-      font-size: 18px;
-      line-height: 1.55;
-      padding: 2px 0 2px 20px;
-      margin: 0 0 28px;
+    .status.ready {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.06);
+      color: #047857;
     }
 
+    .status.error .dot {
+      background: var(--red);
+      box-shadow: 0 0 8px rgba(220, 53, 69, 0.2);
+      animation: none;
+    }
+
+    /* Chat panel */
     .chat {
       background: var(--panel);
-      border: 1px solid #1f2933;
-      border-radius: 8px;
+      border: 1px solid var(--line-solid);
+      border-radius: var(--radius);
       overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1;
     }
 
     .messages {
-      min-height: 360px;
-      max-height: 58vh;
-      overflow: auto;
-      padding: 22px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 16px;
-      line-height: 1.55;
+      flex: 1;
+      min-height: 260px;
+      max-height: 54vh;
+      overflow-y: auto;
+      padding: 24px 28px;
+      background: var(--bg-subtle);
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+      font-size: 14px;
+      line-height: 1.65;
       white-space: pre-wrap;
+      scroll-behavior: smooth;
+    }
+
+    .messages::-webkit-scrollbar { width: 6px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb {
+      background: var(--line-solid);
+      border-radius: 3px;
     }
 
     .turn {
-      margin: 0 0 18px;
+      margin: 0 0 14px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      animation: turnIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes turnIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .turn.user-turn {
+      background: var(--blue-soft);
+      border: 1px solid rgba(59, 125, 216, 0.12);
+    }
+
+    .turn.dusty-turn {
+      background: #ffffff;
+      border: 1px solid var(--line-solid);
+      box-shadow: var(--shadow-sm);
     }
 
     .speaker {
-      color: var(--accent-2);
       font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 4px;
     }
 
-    .speaker.user {
-      color: #93c5fd;
+    .speaker.dusty { color: var(--teal); }
+    .speaker.user { color: var(--blue); }
+
+    .turn-text {
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    /* Input area */
+    .input-area {
+      border-top: 1px solid var(--line-solid);
+      padding: 16px 20px;
+      background: var(--panel);
     }
 
     form {
       display: flex;
       gap: 10px;
-      border-top: 1px solid var(--line);
-      padding: 14px;
-      background: rgba(0, 0, 0, 0.16);
     }
 
     input {
       flex: 1;
       min-width: 0;
       height: 44px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #0b1015;
+      border: 1px solid var(--line-solid);
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
       color: var(--text);
-      font: inherit;
-      padding: 0 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 0 14px;
       outline: none;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
     }
 
     input:focus {
-      border-color: var(--accent-2);
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px var(--teal-soft);
+      background: #ffffff;
     }
 
-    button {
+    input::placeholder { color: var(--text-dim); opacity: 0.7; }
+
+    button.send-btn {
       height: 44px;
       border: 0;
-      border-radius: 6px;
-      background: var(--accent-2);
-      color: #06201d;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0 18px;
+      border-radius: var(--radius-sm);
+      background: var(--teal);
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      padding: 0 22px;
       cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
     }
 
-    button:disabled,
-    input:disabled {
+    button.send-btn:hover:not(:disabled) {
+      background: #0f766e;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(13, 148, 136, 0.25);
+    }
+
+    button.send-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled, input:disabled {
       cursor: not-allowed;
-      opacity: 0.55;
+      opacity: 0.4;
     }
 
+    /* Suggestions */
     .suggestions {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin: 14px 0 0;
+      gap: 10px;
+      padding: 14px 20px;
+      background: var(--panel);
+      border-top: 1px solid var(--line);
     }
 
     .suggestions button {
-      height: 32px;
-      background: #202a34;
-      color: var(--text);
-      border: 1px solid var(--line);
-      letter-spacing: 0;
-      text-transform: none;
-      font-weight: 600;
-      padding: 0 10px;
+      height: 34px;
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      border: 1px solid var(--line-solid);
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 0 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    footer {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 16px;
+    .suggestions button:hover:not(:disabled) {
+      color: var(--teal);
+      border-color: var(--teal);
+      background: var(--teal-soft);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .suggestions button:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+
+    /* Footer */
+    .footer {
       text-align: center;
+      padding: 14px 0 0;
+      flex-shrink: 0;
+    }
+
+    .footer-text {
+      color: var(--text-dim);
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.7;
+    }
+
+    /* Responsive */
+    @media (max-height: 700px) {
+      .logo { width: min(180px, 40vw); margin-bottom: 8px; }
+      .title { font-size: 26px; }
+      .header { padding-bottom: 12px; }
+      .messages { max-height: 42vh; min-height: 160px; }
+    }
+
+    @media (max-width: 480px) {
+      .container { width: calc(100vw - 24px); }
+      .logo { width: min(200px, 50vw); }
+      .title { font-size: 26px; }
+      .messages { padding: 18px 18px; font-size: 13px; }
     }
   </style>
 </head>
 <body>
-  <main>
-    <header>
-      <img class="logo" src="images/logo.png" alt="DustyLM logo">
-      <h1>DustyLM</h1>
-      <p class="tagline">8M parameter LLM running locally in your browser</p>
-      <div id="status" class="status"><span class="dot"></span><span>loading model...</span></div>
-    </header>
 
-    <p class="intro">
-      This demo runs the exported ONNX model in your browser with WebAssembly.
-      No server, no API key, no cloud inference.
-    </p>
+  <!-- Floating dust particles -->
+  <div class="particles" id="particles"></div>
+
+  <div class="container">
+    <header class="header">
+      <img class="logo" src="images/logo.png" alt="DustyLM logo">
+      <h1 class="title">DustyLM</h1>
+      <p class="tagline">8M parameter LLM · running in your browser · no server required</p>
+      <div id="status" class="status"><span class="dot"></span><span>loading model…</span></div>
+    </header>
 
     <section class="chat" aria-label="DustyLM chat">
       <div id="messages" class="messages"></div>
-      <form id="chat-form">
-        <input id="prompt" autocomplete="off" placeholder="ask dusty something" disabled>
-        <button id="send" type="submit" disabled>Send</button>
-      </form>
+      <div class="suggestions" id="suggestions">
+        <button type="button" data-prompt="where are you?" disabled>where are you?</button>
+        <button type="button" data-prompt="are you scared?" disabled>are you scared?</button>
+        <button type="button" data-prompt="what do you dream about?" disabled>what do you dream about?</button>
+        <button type="button" data-prompt="go charge" disabled>go charge</button>
+      </div>
+      <div class="input-area">
+        <form id="chat-form">
+          <input id="prompt" autocomplete="off" placeholder="ask dusty something…" disabled>
+          <button id="send" class="send-btn" type="submit" disabled>Send</button>
+        </form>
+      </div>
     </section>
 
-    <div class="suggestions">
-      <button type="button" data-prompt="where are you?">where are you?</button>
-      <button type="button" data-prompt="are you scared?">are you scared?</button>
-      <button type="button" data-prompt="what do you dream about?">what do you dream about?</button>
-      <button type="button" data-prompt="go charge">go charge</button>
-    </div>
-
-    <footer>
-      First token can take a moment while WebAssembly warms up.
+    <footer class="footer">
+      <p class="footer-text">Runs entirely via WebAssembly · First token may take a moment to warm up</p>
     </footer>
-  </main>
+  </div>
 
   <script>
+    /* ── Particles ── */
+    (function initParticles() {
+      const container = document.getElementById('particles');
+      const count = 18;
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = (12 + Math.random() * 18) + 's';
+        p.style.animationDelay = (Math.random() * 15) + 's';
+        p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
+        p.style.opacity = 0.15 + Math.random() * 0.2;
+        container.appendChild(p);
+      }
+    })();
+
+    /* ── Config ── */
     const MODEL_PATH = "model.onnx";
     const TOKENIZER_PATH = "tokenizer.json";
     const MAX_SEQ_LEN = 256;
@@ -257,6 +480,7 @@
       statusEl.querySelector("span:last-child").textContent = text;
     }
 
+    /* ── Tokenizer ── */
     function bytesToUnicode() {
       const bs = [];
       for (let i = 33; i <= 126; i++) bs.push(i);
@@ -401,6 +625,7 @@
       }
     }
 
+    /* ── Sampling ── */
     function softmax(logits) {
       const max = Math.max(...logits);
       const exps = logits.map((x) => Math.exp(x - max));
@@ -437,6 +662,7 @@
       return `${IM_START}user\n${prompt}${IM_END}\n${IM_START}assistant\n`;
     }
 
+    /* ── Model ── */
     async function runModel(ids) {
       const cropped = ids.slice(-MAX_SEQ_LEN);
       const input = BigInt64Array.from(cropped, (id) => BigInt(id));
@@ -463,11 +689,13 @@
       return tokenizer.decode(generated).trim();
     }
 
+    /* ── UI ── */
     function appendTurn(speaker, text) {
       const div = document.createElement("div");
-      div.className = "turn";
-      const labelClass = speaker === "You" ? "speaker user" : "speaker";
-      div.innerHTML = `<span class="${labelClass}">${speaker}&gt;</span> ${escapeHtml(text)}`;
+      const isUser = speaker === "You";
+      div.className = `turn ${isUser ? 'user-turn' : 'dusty-turn'}`;
+      const labelClass = isUser ? "speaker user" : "speaker dusty";
+      div.innerHTML = `<span class="${labelClass}">${speaker}</span><span class="turn-text">${escapeHtml(text)}</span>`;
       messagesEl.appendChild(div);
       messagesEl.scrollTop = messagesEl.scrollHeight;
       return div;
@@ -489,17 +717,19 @@
       promptEl.value = "";
       promptEl.disabled = true;
       sendEl.disabled = true;
+      document.querySelectorAll("[data-prompt]").forEach(b => b.disabled = true);
       appendTurn("You", cleaned);
-      const pending = appendTurn("Dusty", "...");
+      const pending = appendTurn("Dusty", "…");
       try {
         const response = await generate(cleaned);
-        pending.innerHTML = `<span class="speaker">Dusty&gt;</span> ${escapeHtml(response || "beep.")}`;
+        pending.querySelector('.turn-text').textContent = response || "beep.";
       } catch (error) {
-        pending.innerHTML = `<span class="speaker">Dusty&gt;</span> beep. something is stuck.`;
+        pending.querySelector('.turn-text').textContent = "beep. something is stuck.";
         console.error(error);
       } finally {
         promptEl.disabled = false;
         sendEl.disabled = false;
+        document.querySelectorAll("[data-prompt]").forEach(b => b.disabled = false);
         promptEl.focus();
         messagesEl.scrollTop = messagesEl.scrollHeight;
       }
@@ -507,12 +737,12 @@
 
     async function init() {
       try {
-        setStatus("loading tokenizer...");
+        setStatus("loading tokenizer…");
         const tokenizerConfig = await fetch(TOKENIZER_PATH).then((res) => res.json());
         tokenizer = new ByteLevelBPETokenizer(tokenizerConfig);
         imEndId = tokenizer.tokenToId(IM_END);
 
-        setStatus("loading model...");
+        setStatus("loading model…");
         ort.env.wasm.numThreads = 1;
         session = await ort.InferenceSession.create(MODEL_PATH, {
           executionProviders: ["wasm"],
@@ -522,10 +752,12 @@
         setStatus("ready", true);
         promptEl.disabled = false;
         sendEl.disabled = false;
+        document.querySelectorAll("[data-prompt]").forEach(b => b.disabled = false);
         appendTurn("Dusty", "beep. i am awake. i see the floor.");
         promptEl.focus();
       } catch (error) {
         setStatus("failed to load");
+        statusEl.classList.add("error");
         appendTurn("Dusty", "beep. my browser wheels are stuck.");
         console.error(error);
       }

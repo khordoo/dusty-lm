@@ -14,6 +14,10 @@
   <a href="#-hardware--memory-optimization"><img src="https://img.shields.io/badge/Apple_Silicon-ready-black?style=flat-square&logo=apple&logoColor=white" alt="Apple Silicon ready"></a>
 </p>
 
+<p>
+  <a href="https://khordoo.github.io/dustyLLM/"><img src="https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white" alt="Browser Demo"></a>
+</p>
+
 </div>
 
 ---
