@@ -3,8 +3,14 @@ CHECKPOINT_EVERY_STEPS ?= 100
 CHECKPOINT_STEP ?=
 PROMPT ?= i wake up.
 PROFILE ?= dusty8m
+CHAT_PROFILE ?=
 TOP_P ?=
 TEMPERATURE ?=
+MAX_TOKENS ?=
+MAX_CHAT_TURNS ?=
+CHECKPOINT_PATH ?=
+TOKENIZER_PATH ?=
+DEVICE ?=
 DUSTY_MODEL ?= qwen/qwen3-235b-a22b-2507:floor
 DUSTY_FALLBACK_MODEL ?= openai/gpt-oss-120b:floor
 DUSTY_SFT_PER_CATEGORY ?= 500
@@ -27,7 +33,7 @@ ONNX_PROFILE ?= sft_dusty8m
 ONNX_OUT ?= docs/model.onnx
 ONNX_TOKENIZER_OUT ?= docs/tokenizer.json
 
-.PHONY: help download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train dusty-export-onnx tensorboard
+.PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train dusty-export-onnx tensorboard
 
 help:
 	@echo "TinyGPT commands"
@@ -43,6 +49,7 @@ help:
 	@echo "  make dusty-pretrain EPOCHS=1    Train the dusty8m profile"
 	@echo "  make dusty-sft-data             Tokenize artifacts/datasets/dusty_sft.jsonl"
 	@echo "  make dusty-sft-train EPOCHS=1   Train the sft_dusty8m profile"
+	@echo "  make chat                       Chat with the local SFT inference CLI"
 	@echo "  make dusty-generate             Generate with PROFILE=dusty8m PROMPT='i wake up.'"
 	@echo "  make dusty-export-onnx          Export ONNX browser-demo artifacts to docs/"
 	@echo "  make tensorboard                Plot training logs from runs/"
@@ -102,6 +109,9 @@ dusty-pretrain:
 
 dusty-generate:
 	uv run python tiny_gpt/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
+
+chat:
+	uv run python -m tiny_gpt.inference $(if $(CHAT_PROFILE),--profile $(CHAT_PROFILE),)$(if $(CHECKPOINT_PATH), --checkpoint-path $(CHECKPOINT_PATH),)$(if $(TOKENIZER_PATH), --tokenizer-path $(TOKENIZER_PATH),)$(if $(DEVICE), --device $(DEVICE),)$(if $(TEMPERATURE), --temperature $(TEMPERATURE),)$(if $(MAX_TOKENS), --max-tokens $(MAX_TOKENS),)$(if $(TOP_P), --top-p $(TOP_P),)$(if $(MAX_CHAT_TURNS), --max-chat-turns $(MAX_CHAT_TURNS),)
 
 dusty-sft-data:
 	uv run python -m tiny_gpt.data_prep --profile sft_dusty8m
