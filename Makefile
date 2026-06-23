@@ -19,8 +19,11 @@ DUSTY_SFT_FILTER_TARGET ?= 2000
 DUSTY_SFT_MAX_ANSWER_TOKENS ?= 256
 DUSTY_SFT_SAMPLING_MODE ?= balanced
 DUSTY_SFT_CHATML_PRETRAIN_OUT ?= artifacts/datasets/dusty_sft_chatml_pretrain.txt
+ONNX_PROFILE ?= sft_dusty8m
+ONNX_OUT ?= docs/model.onnx
+ONNX_TOKENIZER_OUT ?= docs/tokenizer.json
 
-.PHONY: help dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train tensorboard
+.PHONY: help dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train dusty-export-onnx tensorboard
 
 help:
 	@echo "TinyGPT commands"
@@ -34,8 +37,9 @@ help:
 	@echo "  make dusty-pretrain-data        Tokenize artifacts/datasets/dusty_pretrain.txt"
 	@echo "  make dusty-pretrain EPOCHS=1    Train the dusty8m profile"
 	@echo "  make dusty-sft-data             Tokenize artifacts/datasets/dusty_sft.jsonl"
-	@echo "  make dusty-sft EPOCHS=1         Train the sft_dusty8m profile"
+	@echo "  make dusty-sft-train EPOCHS=1   Train the sft_dusty8m profile"
 	@echo "  make dusty-generate             Generate with PROFILE=dusty8m PROMPT='i wake up.'"
+	@echo "  make dusty-export-onnx          Export ONNX browser-demo artifacts to docs/"
 	@echo "  make tensorboard                Plot training logs from runs/"
 
 dusty-generate-pretrain:
@@ -90,6 +94,12 @@ dusty-sft-data:
 
 dusty-sft-train:
 	uv run python -m tiny_gpt.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
+
+dusty-export-onnx:
+	uv run --extra onnx python tools/export_onnx.py \
+		--profile $(ONNX_PROFILE) \
+		--output $(ONNX_OUT) \
+		--tokenizer-output $(ONNX_TOKENIZER_OUT)
 
 tensorboard:
 	uv run tensorboard --logdir runs
