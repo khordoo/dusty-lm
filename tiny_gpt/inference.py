@@ -7,8 +7,11 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-import torch
-
+from tiny_gpt.checkpoint import (
+    CHAT_PROFILE_DEFAULT,
+    load_state_dict,
+    resolve_profile_name_for_checkpoint,
+)
 from tiny_gpt.config import (
     GenerationSpec,
     Profile,
@@ -27,16 +30,16 @@ from tiny_gpt.modeling import build_model, build_tokenizer
 
 CHATML_END_TOKEN = "<|im_end|>"
 SUPPORTED_ROLES = {"system", "user", "assistant"}
-DEFAULT_PROFILE = "sft_dusty8m"
+DEFAULT_PROFILE = CHAT_PROFILE_DEFAULT
 
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--profile",
-        default=DEFAULT_PROFILE,
+        default=None,
         choices=list_profiles(),
-        help="SFT chat profile to run.",
+        help="SFT chat profile to run. Defaults to checkpoint config/detection or Dusty.",
     )
     parser.add_argument(
         "--checkpoint-path",
@@ -154,8 +157,14 @@ class Inference:
         checkpoint_path=None,
         tokenizer_path=None,
         device=None,
-        profile_name=DEFAULT_PROFILE,
+        profile_name=None,
     ):
+        profile_name = resolve_profile_name_for_checkpoint(
+            checkpoint_path,
+            explicit_profile=profile_name,
+            default_profile=DEFAULT_PROFILE,
+            mode="chat",
+        )
         self.profile = get_profile(profile_name)
         require_sft_profile(self.profile)
         self.profile_name = self.profile.name
@@ -187,10 +196,9 @@ class Inference:
 
     def _load_model(self):
         model = build_model(self.profile)
-        state_dict = torch.load(
+        state_dict = load_state_dict(
             self.checkpoint_path,
             map_location=self.device,
-            weights_only=True,
         )
         state_dict.pop("rope.sin_cache", None)
         state_dict.pop("rope.cos_cache", None)

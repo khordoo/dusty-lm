@@ -15,10 +15,16 @@ from pathlib import Path
 import torch
 from tokenizers import Tokenizer
 
+from tiny_gpt.checkpoint import (
+    GENERATION_PROFILE_DEFAULT,
+    load_state_dict,
+    resolve_profile_name_for_checkpoint,
+)
 from tiny_gpt.config import GenerationSpec, Profile, get_profile, list_profiles
 from tiny_gpt.modeling import build_model, build_tokenizer
 
 DEFAULT_PROMPT = "Once upon a time "
+DEFAULT_PROFILE = GENERATION_PROFILE_DEFAULT
 CHATML_START_TOKEN = "<|im_start|>"
 EOS_TEXT_LOOKBACK_TOKENS = 10
 
@@ -43,11 +49,17 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--profile",
-        default="scratch_small",
+        default=None,
         choices=list_profiles(),
-        help="Registered generation profile to run.",
+        help="Generation profile to run. Defaults to checkpoint config/detection or Dusty.",
     )
     parser.add_argument("--prompt", default=DEFAULT_PROMPT)
+    parser.add_argument(
+        "--checkpoint-path",
+        type=Path,
+        default=None,
+        help="Load a specific checkpoint path instead of the profile default.",
+    )
     parser.add_argument(
         "--checkpoint-step",
         type=int,
@@ -133,9 +145,12 @@ def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
 def resolve_generation_checkpoint_path(
     profile: Profile,
     checkpoint_step: int | None = None,
+    checkpoint_path: str | Path | None = None,
 ) -> Path:
     if profile.generation is None:
         raise ValueError(f"Profile '{profile.name}' does not define generation config")
+    if checkpoint_path is not None:
+        return Path(checkpoint_path)
     if checkpoint_step is None:
         return profile.generation.checkpoint_path
     if checkpoint_step < 1:
@@ -146,7 +161,12 @@ def resolve_generation_checkpoint_path(
     return final_checkpoint_path.parent / checkpoint_name
 
 
-def load_model(profile: Profile, device=None, checkpoint_step: int | None = None):
+def load_model(
+    profile: Profile,
+    device=None,
+    checkpoint_step: int | None = None,
+    checkpoint_path: str | Path | None = None,
+):
     """Build the model, load a checkpoint, and prepare for inference.
 
     RoPE sin/cos caches are not part of the learned weights, so they are
@@ -159,9 +179,13 @@ def load_model(profile: Profile, device=None, checkpoint_step: int | None = None
     device = device or get_device()
     tokenizer = build_tokenizer(profile)
     model = build_model(profile)
-    checkpoint_path = resolve_generation_checkpoint_path(profile, checkpoint_step)
+    checkpoint_path = resolve_generation_checkpoint_path(
+        profile,
+        checkpoint_step=checkpoint_step,
+        checkpoint_path=checkpoint_path,
+    )
     print("loading checkpoint from:", checkpoint_path)
-    state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
+    state_dict = load_state_dict(checkpoint_path, map_location=device)
     # RoPE caches are derived buffers, not learned parameters.
     state_dict.pop("rope.sin_cache", None)
     state_dict.pop("rope.cos_cache", None)
@@ -317,12 +341,19 @@ def generate_token_ids(
 
 def generate_text(
     prompt=DEFAULT_PROMPT,
-    profile_name="scratch_small",
+    profile_name=None,
     checkpoint_step: int | None = None,
+    checkpoint_path: str | Path | None = None,
     top_p: float | None = None,
     temperature: float | None = None,
 ):
     """Generate text autoregressively from a prompt using KV-cached decoding."""
+    profile_name = resolve_profile_name_for_checkpoint(
+        checkpoint_path,
+        explicit_profile=profile_name,
+        default_profile=DEFAULT_PROFILE,
+        mode="generation",
+    )
     profile = get_profile(profile_name)
     if profile.generation is None:
         raise ValueError(f"Profile '{profile.name}' does not define generation config")
@@ -332,7 +363,11 @@ def generate_text(
     temperature = spec.temperature if temperature is None else temperature
     print("generating with temperature:", temperature)
     validate_generation_options(top_p, temperature)
-    model, tokenizer, device = load_model(profile, checkpoint_step=checkpoint_step)
+    model, tokenizer, device = load_model(
+        profile,
+        checkpoint_step=checkpoint_step,
+        checkpoint_path=checkpoint_path,
+    )
 
     prompt = prepare_generation_prompt(prompt, profile)
     token_ids = encode_prompt(tokenizer, prompt, spec)
@@ -403,6 +438,7 @@ def main(argv=None):
         prompt=args.prompt,
         profile_name=args.profile,
         checkpoint_step=args.checkpoint_step,
+        checkpoint_path=args.checkpoint_path,
         top_p=args.top_p,
         temperature=args.temperature,
     )

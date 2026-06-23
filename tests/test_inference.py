@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import pytest
+import torch
 
 from tiny_gpt.config import get_profile
 from tiny_gpt.generate import GenerationResult
@@ -49,7 +50,13 @@ class FakeTokenizer:
         return "reply"
 
 
-def build_inference(monkeypatch, tmp_path, state_dict=None, tokenizer_path=None):
+def build_inference(
+    monkeypatch,
+    tmp_path,
+    state_dict=None,
+    tokenizer_path=None,
+    profile_name="sft_dusty8m",
+):
     checkpoint_path = tmp_path / "checkpoint.pt"
     resolved_tokenizer_path = tokenizer_path or tmp_path / "tokenizer.json"
     checkpoint_path.write_text("checkpoint")
@@ -63,7 +70,7 @@ def build_inference(monkeypatch, tmp_path, state_dict=None, tokenizer_path=None)
     )
     monkeypatch.setattr("tiny_gpt.inference.build_model", lambda profile: model)
     monkeypatch.setattr(
-        "tiny_gpt.inference.torch.load",
+        "tiny_gpt.inference.load_state_dict",
         lambda *args, **kwargs: dict(state_dict or {"weight": object()}),
     )
 
@@ -71,6 +78,7 @@ def build_inference(monkeypatch, tmp_path, state_dict=None, tokenizer_path=None)
         checkpoint_path=checkpoint_path,
         tokenizer_path=tokenizer_path or resolved_tokenizer_path,
         device="cpu",
+        profile_name=profile_name,
     )
     return engine, model, tokenizer_calls
 
@@ -78,7 +86,7 @@ def build_inference(monkeypatch, tmp_path, state_dict=None, tokenizer_path=None)
 def test_inference_cli_parses_defaults():
     args = parse_args([])
 
-    assert args.profile == "sft_dusty8m"
+    assert args.profile is None
     assert args.checkpoint_path is None
     assert args.tokenizer_path is None
     assert args.device is None
@@ -218,6 +226,92 @@ def test_inference_loads_checkpoint_and_removes_rope_cache(monkeypatch, tmp_path
     )
     assert model.device == "cpu"
     assert model.evaluated is True
+
+
+def test_inference_auto_detects_dusty_checkpoint_when_profile_is_omitted(
+    monkeypatch,
+    tmp_path,
+):
+    checkpoint_path = tmp_path / "dusty.pt"
+    tokenizer_path = tmp_path / "tokenizer.json"
+    torch.save(
+        {
+            "embed.weight": torch.tensor([1.0]),
+            "layers.0.attention.qkv_proj.weight": torch.tensor([1.0]),
+        },
+        checkpoint_path,
+    )
+    tokenizer_path.write_text("{}")
+    model = FakeModel()
+
+    monkeypatch.setattr(
+        "tiny_gpt.inference.build_tokenizer",
+        lambda profile: FakeTokenizer(),
+    )
+    monkeypatch.setattr("tiny_gpt.inference.build_model", lambda profile: model)
+    monkeypatch.setattr(
+        "tiny_gpt.inference.load_state_dict",
+        lambda *args, **kwargs: {"embed.weight": object()},
+    )
+
+    engine = Inference(
+        checkpoint_path=checkpoint_path,
+        tokenizer_path=tokenizer_path,
+        device="cpu",
+    )
+
+    assert engine.profile_name == "sft_dusty8m"
+
+
+def test_inference_auto_detects_smollm2_sft_checkpoint_when_profile_is_omitted(
+    monkeypatch,
+    tmp_path,
+):
+    checkpoint_path = tmp_path / "smol.pt"
+    tokenizer_path = tmp_path / "tokenizer.json"
+    torch.save(
+        {
+            "embed_tokens.weight": torch.tensor([1.0]),
+            "layers.0.gate_proj.weight": torch.tensor([1.0]),
+            "layers.0.up_proj.weight": torch.tensor([1.0]),
+        },
+        checkpoint_path,
+    )
+    tokenizer_path.write_text("{}")
+    model = FakeModel()
+
+    monkeypatch.setattr(
+        "tiny_gpt.inference.build_tokenizer",
+        lambda profile: FakeTokenizer(),
+    )
+    monkeypatch.setattr("tiny_gpt.inference.build_model", lambda profile: model)
+    monkeypatch.setattr(
+        "tiny_gpt.inference.load_state_dict",
+        lambda *args, **kwargs: {
+            "embed_tokens.weight": object(),
+            "layers.0.gate_proj.weight": object(),
+        },
+    )
+
+    engine = Inference(
+        checkpoint_path=checkpoint_path,
+        tokenizer_path=tokenizer_path,
+        device="cpu",
+    )
+
+    assert engine.profile_name == "sft_smollm2_360m"
+
+
+def test_inference_rejects_detected_non_sft_profile(monkeypatch, tmp_path):
+    checkpoint_path = tmp_path / "model.pt"
+    checkpoint_path.write_text("placeholder")
+    monkeypatch.setattr(
+        "tiny_gpt.inference.resolve_profile_name_for_checkpoint",
+        lambda *args, **kwargs: "smollm2_360m",
+    )
+
+    with pytest.raises(ValueError, match="chat/SFT profiles only"):
+        Inference(checkpoint_path=checkpoint_path, device="cpu")
 
 
 def test_inference_loads_tokenizer_through_factory(monkeypatch, tmp_path):

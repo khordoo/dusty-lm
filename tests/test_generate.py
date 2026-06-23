@@ -22,12 +22,25 @@ def test_generation_cli_parses_profile_without_loading_checkpoint():
     assert args.checkpoint_step is None
 
 
+def test_generation_cli_defaults_to_profile_detection():
+    args = parse_args([])
+
+    assert args.profile is None
+
+
 def test_generation_cli_parses_checkpoint_step_without_loading_checkpoint():
     args = parse_args(["--profile", "dusty8m", "--checkpoint-step", "100"])
 
     assert args.checkpoint_step == 100
+    assert args.checkpoint_path is None
     assert args.top_p is None
     assert args.temperature is None
+
+
+def test_generation_cli_parses_checkpoint_path_without_loading_checkpoint():
+    args = parse_args(["--checkpoint-path", "model.pt"])
+
+    assert args.checkpoint_path.name == "model.pt"
 
 
 def test_generation_cli_parses_top_p():
@@ -150,6 +163,16 @@ def test_resolve_generation_checkpoint_path_defaults_to_final_checkpoint():
     profile = get_profile("dusty8m")
 
     assert resolve_generation_checkpoint_path(profile) == profile.generation.checkpoint_path
+
+
+def test_resolve_generation_checkpoint_path_accepts_explicit_checkpoint_path(tmp_path):
+    profile = get_profile("dusty8m")
+    checkpoint_path = tmp_path / "custom.pt"
+
+    assert (
+        resolve_generation_checkpoint_path(profile, checkpoint_path=checkpoint_path)
+        == checkpoint_path
+    )
 
 
 def test_resolve_generation_checkpoint_path_uses_pretrain_step_checkpoint():
