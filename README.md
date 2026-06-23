@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🧠 TinyGPT
 
@@ -579,4 +579,3 @@ artifacts/
 Built with ❤️ and pure PyTorch.
 
 </div>
-]]>
