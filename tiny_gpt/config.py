@@ -77,6 +77,7 @@ class GenerationSpec:
     bos_token_id: int | None = None
     eos_token_id: int | None = None
     eos_text: str | None = None
+    max_chat_turns: int | None = None
 
 
 @dataclass(frozen=True)
@@ -286,6 +287,7 @@ register(
             top_k=5,
             top_p=0.8,
             eos_token_id=2,
+            max_chat_turns=1,
         ),
     )
 )
@@ -336,6 +338,7 @@ register(
             / "artifacts"
             / "checkpoints"
             / "sft_smollm2_360m.pt",
+            max_chat_turns=5,
         ),
         base_profile="smollm2_360m",
     )

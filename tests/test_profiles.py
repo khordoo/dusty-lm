@@ -66,6 +66,7 @@ def test_sft_dusty8m_profile_finetunes_dusty_checkpoint_separately():
     assert sft.generation.eos_token_id == 2
     assert sft.generation.top_p == 0.8
     assert sft.generation.eos_text is None
+    assert sft.generation.max_chat_turns == 1
 
 
 def test_smollm2_profiles_share_tokenizer_path():
@@ -90,6 +91,7 @@ def test_sft_profile_uses_base_model_spec():
     assert sft.model == base.model
     assert sft.training is not None
     assert sft.generation is not None
+    assert sft.generation.max_chat_turns == 5
     assert sft.hf_artifacts == base.hf_artifacts
 
 

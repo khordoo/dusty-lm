@@ -11,12 +11,14 @@ from tiny_gpt.config import (
     list_profiles,
     register,
 )
+from tiny_gpt.inference import Inference
 from tiny_gpt.model import TinyGPT
 
 __all__ = [
     "GenerationSpec",
     "HFArtifactSpec",
     "IGNORE_INDEX",
+    "Inference",
     "ModelFamily",
     "ModelSpec",
     "Profile",

@@ -9,6 +9,7 @@ the full sequence at every step:
 """
 
 import argparse
+from dataclasses import dataclass
 from pathlib import Path
 
 import torch
@@ -20,6 +21,14 @@ from tiny_gpt.modeling import build_model, build_tokenizer
 DEFAULT_PROMPT = "Once upon a time "
 CHATML_START_TOKEN = "<|im_start|>"
 EOS_TEXT_LOOKBACK_TOKENS = 10
+
+
+@dataclass(frozen=True)
+class GenerationResult:
+    text: str
+    token_ids: list[int]
+    finish_reason: str
+    prompt_tokens: int
 
 
 def get_device():
@@ -190,6 +199,7 @@ def sample_next_token(
     spec: GenerationSpec,
     top_p: float | None = None,
     temperature: float | None = None,
+    top_k: int | None = None,
 ):
     """Sample the next token using temperature-scaled top-k sampling.
 
@@ -202,7 +212,10 @@ def sample_next_token(
     """
     top_p = spec.top_p if top_p is None else top_p
     temperature = spec.temperature if temperature is None else temperature
+    top_k = spec.top_k if top_k is None else top_k
     validate_generation_options(top_p, temperature)
+    if top_k < 1:
+        raise ValueError("top_k must be at least 1")
 
     # Step 1: Extract logits for the last position only.
     next_token_logits = logits[:, -1, :]  # [B, vocab_size]
@@ -211,7 +224,8 @@ def sample_next_token(
     next_token_logits = next_token_logits / temperature
 
     # Step 3: Find the top-k highest logit values.
-    values, _ = torch.topk(next_token_logits, spec.top_k)  # [B, top_k]
+    top_k = min(top_k, next_token_logits.shape[-1])
+    values, _ = torch.topk(next_token_logits, top_k)  # [B, top_k]
 
     # Step 4: Zero out everything below the k-th highest value (top-k filtering).
     # values[:, [-1]] is the smallest value in the top-k set.
@@ -225,6 +239,80 @@ def sample_next_token(
 
     # Step 7: Sample one token per batch element from the distribution.
     return torch.multinomial(probabilities, num_samples=1).squeeze(-1)  # [B]
+
+
+def generate_token_ids(
+    model,
+    tokenizer,
+    token_ids: list[int],
+    spec: GenerationSpec,
+    max_seq_len: int,
+    device,
+    max_new_tokens: int | None = None,
+    top_p: float | None = None,
+    temperature: float | None = None,
+    top_k: int | None = None,
+) -> GenerationResult:
+    """Generate text from already-tokenized input without printing.
+
+    This is the library-friendly generation path used by higher-level
+    inference APIs. The CLI wrapper below keeps its streaming print behavior.
+    """
+    top_p = spec.top_p if top_p is None else top_p
+    temperature = spec.temperature if temperature is None else temperature
+    max_new_tokens = spec.max_new_tokens if max_new_tokens is None else max_new_tokens
+    if max_new_tokens < 1:
+        raise ValueError("max_new_tokens must be at least 1")
+    validate_generation_options(top_p, temperature)
+    validate_prompt_length(token_ids, max_seq_len)
+    num_new_tokens = resolve_num_new_tokens(
+        max_new_tokens=max_new_tokens,
+        prompt_length=len(token_ids),
+        max_seq_len=max_seq_len,
+    )
+
+    tokens = torch.tensor(token_ids, dtype=torch.long, device=device).unsqueeze(0)
+    generated_ids = []
+    input_tokens = tokens
+    kv_cache = model.empty_kv_cache()
+    im_end_id = get_token_id(tokenizer, "<|im_end|>")
+    finish_reason = "length"
+
+    with torch.inference_mode():
+        for _ in range(num_new_tokens):
+            logits, kv_cache = model(x=input_tokens, kv_cache=kv_cache)
+            next_token = sample_next_token(
+                logits,
+                spec,
+                top_p=top_p,
+                temperature=temperature,
+                top_k=top_k,
+            )
+            next_token_id = next_token.item()
+            generated_ids.append(next_token_id)
+
+            if (
+                spec.eos_token_id is not None and next_token_id == spec.eos_token_id
+            ) or (im_end_id is not None and next_token_id == im_end_id):
+                finish_reason = "stop"
+                break
+
+            tail_text = decode_tokens(
+                tokenizer,
+                generated_ids[-EOS_TEXT_LOOKBACK_TOKENS:],
+            )
+            if spec.eos_text is not None and spec.eos_text in tail_text:
+                finish_reason = "stop"
+                break
+
+            input_tokens = next_token.unsqueeze(0)
+
+    return GenerationResult(
+        text=decode_tokens(tokenizer, generated_ids),
+        token_ids=generated_ids,
+        finish_reason=finish_reason,
+        prompt_tokens=len(token_ids),
+    )
 
 
 def generate_text(
