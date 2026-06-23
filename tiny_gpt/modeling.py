@@ -28,6 +28,7 @@ def build_model(profile: Profile, max_seq_len: int | None = None):
             embed_dim=spec.embed_dim,
             num_heads=spec.num_heads,
             num_kv_heads=spec.num_kv_heads,
+            hidden_dim=spec.hidden_dim,
             rope_base=spec.rope_base,
             rms_eps=spec.rms_eps,
         )

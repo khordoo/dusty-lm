@@ -23,6 +23,24 @@ def test_forward_without_cache_returns_logits():
     assert tuple(logits.shape) == (1, 4, 128)
 
 
+def test_scratch_model_uses_configured_hidden_dim():
+    model = TinyGPT(
+        num_layers=1,
+        vocab_size=128,
+        max_seq_len=32,
+        embed_dim=64,
+        num_heads=4,
+        num_kv_heads=2,
+        hidden_dim=96,
+    )
+
+    first_mlp_layer = model.layers[0].mlp[0]
+    second_mlp_layer = model.layers[0].mlp[2]
+
+    assert first_mlp_layer.out_features == 96
+    assert second_mlp_layer.in_features == 96
+
+
 def test_cached_prefill_returns_one_cache_entry_per_layer():
     model = build_tiny_model()
     tokens = torch.randint(0, 128, (1, 4))

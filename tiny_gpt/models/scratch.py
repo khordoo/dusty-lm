@@ -223,8 +223,9 @@ class MultiHeadAttention(nn.Module):
 class TransformerBlock(nn.Module):
     """Pre-norm transformer block: RMSNorm → Attention → Residual → RMSNorm → FFN → Residual.
 
-    The feed-forward network is a simple two-layer MLP with GELU activation
-    and a 4× hidden expansion (contrast with SwiGLU in smollm2.py).
+    The feed-forward network is a simple two-layer MLP with GELU activation.
+    When no hidden dimension is provided, it uses the standard 4× expansion
+    (contrast with SwiGLU in smollm2.py).
     """
 
     def __init__(
@@ -233,18 +234,20 @@ class TransformerBlock(nn.Module):
         num_heads,
         num_kv_heads,
         max_seq_len,
+        hidden_dim=None,
         rope_base=10000,
         rms_eps=1e-4,
     ):
         super().__init__()
+        hidden_dim = hidden_dim if hidden_dim else 4 * embed_dim
         self.att_norm = nn.RMSNorm(embed_dim, eps=rms_eps)
         self.attention = MultiHeadAttention(
             embed_dim, num_heads, num_kv_heads, max_seq_len, rope_base
         )
         self.mlp = nn.Sequential(
-            nn.Linear(embed_dim, 4 * embed_dim, bias=False),
+            nn.Linear(embed_dim, hidden_dim, bias=False),
             nn.GELU(),
-            nn.Linear(4 * embed_dim, embed_dim, bias=False),
+            nn.Linear(hidden_dim, embed_dim, bias=False),
         )
         # Keep this attribute name for compatibility with existing checkpoints.
         self.mlp_nrom = nn.RMSNorm(embed_dim, eps=rms_eps)
@@ -272,6 +275,7 @@ class TinyGPT(nn.Module):
         embed_dim,
         num_heads,
         num_kv_heads,
+        hidden_dim=None,
         rope_base=10000,
         rms_eps=1e-4,
     ):
@@ -282,7 +286,13 @@ class TinyGPT(nn.Module):
         self.layers = nn.ModuleList(
             [
                 TransformerBlock(
-                    embed_dim, num_heads, num_kv_heads, max_seq_len, rope_base, rms_eps
+                    embed_dim,
+                    num_heads,
+                    num_kv_heads,
+                    max_seq_len,
+                    hidden_dim,
+                    rope_base,
+                    rms_eps,
                 )
                 for _ in range(num_layers)
             ]

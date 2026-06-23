@@ -189,6 +189,7 @@ dusty_8m_model = ModelSpec(
     num_layers=8,
     num_heads=8,
     num_kv_heads=4,
+    hidden_dim=1024,
     max_seq_len=256,
     vocab_size=4096,
     tokenizer=DUSTY_TOKENIZER,

@@ -35,6 +35,7 @@ def test_dusty8m_profile_is_scratch_pretrain_profile():
 
     assert profile.model.family == ModelFamily.SCRATCH_GPT
     assert profile.model.vocab_size == 4096
+    assert profile.model.hidden_dim == 1024
     assert profile.training is not None
     assert profile.training.task == TrainingTask.PRETRAIN
     assert profile.training.output_checkpoint.name == "dusty8m.pt"
@@ -121,11 +122,15 @@ def test_build_model_dispatches_scratch_family():
             num_heads=4,
             num_kv_heads=2,
             num_layers=1,
+            hidden_dim=24,
             tokenizer=TokenizerSpec(kind="tiktoken", path_or_name="r50k_base"),
         ),
     )
 
-    assert isinstance(build_model(profile), ScratchGPT)
+    model = build_model(profile)
+
+    assert isinstance(model, ScratchGPT)
+    assert model.layers[0].mlp[0].out_features == 24
 
 
 def test_build_model_dispatches_smollm2_family():
