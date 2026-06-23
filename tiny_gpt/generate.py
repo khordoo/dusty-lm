@@ -47,7 +47,26 @@ def parse_args(argv=None):
             "for example --checkpoint-step 100 loads dusty8m_step_100.pt."
         ),
     )
+    parser.add_argument(
+        "--repetition-penalty",
+        type=float,
+        default=1.0,
+        help="Penalty for tokens already generated in this response. 1.0 disables it.",
+    )
+    parser.add_argument(
+        "--top-p",
+        type=float,
+        default=1.0,
+        help="Nucleus sampling probability mass. 1.0 disables it.",
+    )
     return parser.parse_args(argv)
+
+
+def validate_generation_options(repetition_penalty: float, top_p: float) -> None:
+    if repetition_penalty < 1.0:
+        raise ValueError("repetition_penalty must be at least 1.0")
+    if top_p <= 0.0 or top_p > 1.0:
+        raise ValueError("top_p must be greater than 0 and at most 1.0")
 
 
 def encode_prompt(tokenizer, prompt: str, spec: GenerationSpec) -> list[int]:
@@ -116,7 +135,51 @@ def load_model(profile: Profile, device=None, checkpoint_step: int | None = None
     return model, tokenizer, device
 
 
-def sample_next_token(logits, spec: GenerationSpec):
+def apply_repetition_penalty(
+    next_token_logits: torch.Tensor,
+    generated_ids: list[int],
+    repetition_penalty: float,
+) -> torch.Tensor:
+    if repetition_penalty == 1.0 or not generated_ids:
+        return next_token_logits
+
+    for token_id in set(generated_ids):
+        token_logits = next_token_logits[:, token_id]
+        next_token_logits[:, token_id] = torch.where(
+            token_logits < 0,
+            token_logits * repetition_penalty,
+            token_logits / repetition_penalty,
+        )
+    return next_token_logits
+
+
+def apply_top_p_filter(next_token_logits: torch.Tensor, top_p: float) -> torch.Tensor:
+    if top_p >= 1.0:
+        return next_token_logits
+
+    sorted_logits, sorted_indices = torch.sort(next_token_logits, descending=True)
+    sorted_probabilities = torch.softmax(sorted_logits, dim=-1)
+    cumulative_probabilities = torch.cumsum(sorted_probabilities, dim=-1)
+    sorted_indices_to_remove = cumulative_probabilities > top_p
+    sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
+    sorted_indices_to_remove[..., 0] = False
+
+    indices_to_remove = sorted_indices_to_remove.scatter(
+        dim=-1,
+        index=sorted_indices,
+        src=sorted_indices_to_remove,
+    )
+    next_token_logits[indices_to_remove] = float("-inf")
+    return next_token_logits
+
+
+def sample_next_token(
+    logits,
+    spec: GenerationSpec,
+    generated_ids: list[int] | None = None,
+    repetition_penalty: float = 1.0,
+    top_p: float = 1.0,
+):
     """Sample the next token using temperature-scaled top-k sampling.
 
     Args:
@@ -126,8 +189,17 @@ def sample_next_token(logits, spec: GenerationSpec):
     Returns:
         [B] sampled token IDs.
     """
+    validate_generation_options(repetition_penalty, top_p)
+    generated_ids = generated_ids or []
+
     # Step 1: Extract logits for the last position only.
     next_token_logits = logits[:, -1, :]  # [B, vocab_size]
+
+    next_token_logits = apply_repetition_penalty(
+        next_token_logits,
+        generated_ids=generated_ids,
+        repetition_penalty=repetition_penalty,
+    )
 
     # Step 2: Apply temperature — higher temperature → more uniform distribution.
     next_token_logits = next_token_logits / spec.temperature
@@ -138,6 +210,8 @@ def sample_next_token(logits, spec: GenerationSpec):
     # Step 4: Zero out everything below the k-th highest value (top-k filtering).
     # values[:, [-1]] is the smallest value in the top-k set.
     next_token_logits[next_token_logits < values[:, [-1]]] = float("-inf")
+
+    next_token_logits = apply_top_p_filter(next_token_logits, top_p=top_p)
 
     # Step 5: Convert filtered logits to a probability distribution.
     probabilities = torch.softmax(next_token_logits, dim=-1)  # [B, vocab_size]
@@ -150,8 +224,11 @@ def generate_text(
     prompt=DEFAULT_PROMPT,
     profile_name="scratch_small",
     checkpoint_step: int | None = None,
+    repetition_penalty: float = 1.0,
+    top_p: float = 1.0,
 ):
     """Generate text autoregressively from a prompt using KV-cached decoding."""
+    validate_generation_options(repetition_penalty, top_p)
     profile = get_profile(profile_name)
     if profile.generation is None:
         raise ValueError(f"Profile '{profile.name}' does not define generation config")
@@ -178,7 +255,13 @@ def generate_text(
             # On the first iteration this is the full prompt (prefill).
             # On subsequent iterations this is a single token (decode).
             logits, kv_cache = model(x=input_tokens, kv_cache=kv_cache)
-            next_token = sample_next_token(logits, spec)
+            next_token = sample_next_token(
+                logits,
+                spec,
+                generated_ids=generated_ids,
+                repetition_penalty=repetition_penalty,
+                top_p=top_p,
+            )
             next_token_id = next_token.item()
             generated_ids.append(next_token_id)
 
@@ -219,6 +302,8 @@ def main(argv=None):
         prompt=args.prompt,
         profile_name=args.profile,
         checkpoint_step=args.checkpoint_step,
+        repetition_penalty=args.repetition_penalty,
+        top_p=args.top_p,
     )
 
 
