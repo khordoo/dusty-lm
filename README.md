@@ -1,23 +1,117 @@
 <div align="center">
 
-# 🧠 TinyGPT
+<img src="docs/images/logo.png" alt="DustyLLM logo" width="520">
 
-**A from-scratch Llama-style LLM in pure PyTorch — no Hugging Face runtime, no magic.**
+<h1>DustyLLM</h1>
 
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.12+-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![Python](https://img.shields.io/badge/Python-3.14+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
-[![Apple Silicon](https://img.shields.io/badge/Apple_Silicon-Optimized-000000?style=for-the-badge&logo=apple&logoColor=white)](#-hardware--memory-optimization)
+<p><strong>An ~8M parameter LLM that talks like a tiny vacuum robot.</strong></p>
 
-*Every attention head, every rotary embedding, every KV-cache append — written by hand, tested, and optimized for consumer hardware.*
+<p>
+  <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-2.12+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"></a>
+  <a href="https://python.org/"><img src="https://img.shields.io/badge/Python-3.14+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License: MIT"></a>
+  <a href="#-the-profile-registry--zero-yaml-pure-python"><img src="https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square" alt="Model: dusty8m"></a>
+  <a href="#-hardware--memory-optimization"><img src="https://img.shields.io/badge/Apple_Silicon-ready-black?style=flat-square&logo=apple&logoColor=white" alt="Apple Silicon ready"></a>
+</p>
 
 </div>
 
 ---
 
-## 🔍 What Is This?
+> **This project exists to show that training your own small language model is not magic.**
+> No massive GPU cluster required. The repo includes data generation, tokenizer training,
+> model architecture, pretraining, SFT, and generation for a tiny character model built
+> from scratch in PyTorch.
 
-TinyGPT is a **custom, ground-up implementation** of a modern decoder-only large language model. It implements the same architecture class that powers **Llama, SmolLM2, and Mistral** — but every line of the forward pass, attention stack, caching strategy, and generation loop is **hand-written in pure PyTorch**.
+```text
+You> where are you?
+Dusty> i am under the couch. there are crumbs here.
+
+You> are you scared?
+Dusty> i am a little scared of stairs. i beep and stay away.
+
+You> what do you dream about?
+Dusty> i dream of a clean floor with no dust.
+
+You> go charge
+Dusty> beep. i see the dock. i am going to the dock.
+```
+
+---
+
+## What Is DustyLM?
+
+DustyLM is a tiny language model that pretends to be a vacuum robot named Dusty. It speaks in short, lowercase sentences about crumbs, floors, fur, socks, battery levels, the charging dock, and the small world under furniture. It does not understand human abstractions like money, phones, romance, or politics — and it is not trying to.
+
+It is trained from scratch on synthetic Dusty conversations across 60 topics, using an ~8M parameter model small enough for local experimentation on consumer hardware.
+
+---
+
+## Architecture
+
+| Setting | Value |
+|---|---|
+| Parameters | ~8M |
+| Layers | 8 |
+| Hidden dim | 256 |
+| Heads | 8 query / 4 KV |
+| FFN | 1,024 (GELU) |
+| Vocab | 4,096 (BPE) |
+| Max sequence | 256 tokens |
+| Norm | RMSNorm |
+| Position | RoPE |
+| LM head | Separate linear projection |
+
+Compact transformer with grouped-query attention, rotary position embeddings, GELU feed-forward layers, RMSNorm, fused QKV projection, and KV-cache generation. Small enough to train and inspect without hiding the model behind a framework runtime.
+
+---
+
+## Personality
+
+Dusty:
+
+- Speaks in short, lowercase sentences
+- Experiences the world through crumbs, floors, dust, fur, cables, socks, battery, and the dock
+- Does not understand human abstractions
+- Is friendly, nervous, helpful, and a little confused
+- Thinks clean floors are the meaning of life
+- Gets scared of stairs, wet floors, cables, and being stuck
+
+60 topics: crumbs, chips, cereal, popcorn, sugar, rice, cookie, pizza, bread, carpet, hardwood, tile, rug, corners, under the couch, under the bed, kitchen floor, bathroom floor, going home, low battery, charging, full battery, home dock, cat hair, dog hair, pets blocking the path, being full of fur, socks, legos, cables, wet floor, stairs, big pieces, chair legs, stuck in a corner, stuck under furniture, needing help, being rescued, why Dusty cleans, dirty floors, clean floors, being thanked, being ignored, Dusty's thoughts, money, love, politics, weather, internet, school, movies, music, sleep, food for humans, Dusty's introduction, Dusty's feelings, Dusty's dreams, Dusty's fears, Dusty's friends, tomorrow.
+
+---
+
+## Quick Start
+
+### Chat locally
+
+```bash
+uv sync
+make dusty-generate PROFILE=sft_dusty8m PROMPT="where are you?"
+```
+
+```text
+You> where are you?
+Dusty> i am under the couch. there are crumbs here.
+```
+
+### Train Dusty
+
+```bash
+make dusty-tokenizer
+make dusty-pretrain-data
+make dusty-pretrain EPOCHS=20
+make dusty-sft-data
+make dusty-sft-train EPOCHS=5
+```
+
+Training artifacts are local-only under `artifacts/`. Model checkpoints and generated datasets are intentionally not committed to Git.
+
+---
+
+## 🔍 What Is TinyGPT?
+
+DustyLLM is built on **TinyGPT**, a custom, ground-up implementation of a modern decoder-only language model. It implements the same architecture class that powers **Llama, SmolLM2, and Mistral** — but every line of the forward pass, attention stack, caching strategy, and generation loop is **hand-written in pure PyTorch**.
 
 > **This is not a wrapper.** Hugging Face `.safetensors` files are used only as _source artifacts_ for weight conversion. The runtime path — from token embedding to logit projection — is entirely custom.
 
@@ -213,7 +307,7 @@ The KV-cache stores per-layer key/value tensors, growing linearly with sequence 
 
 ---
 
-## 🚀 Quickstart
+## 🚀 Detailed Workflow
 
 ### Prerequisites
 
