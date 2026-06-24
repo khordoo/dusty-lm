@@ -3,7 +3,7 @@ license: mit
 language:
 - en
 datasets:
-- khordoo/dusty-chat
+- mkhordoo/dusty-chat
 - roneneldan/TinyStories
 pipeline_tag: text-generation
 tags:
@@ -82,7 +82,7 @@ print("Ready for inference!")
 ### Browser Deployment (ONNX)
 Dusty is explicitly designed to be exported to ONNX for secure, zero-latency inference directly inside the browser using web UI wrappers. Because the model footprint is microscopic, it executes seamlessly on unified memory architectures and edge devices.
 
-## 📄 License & Limitations
+## 📄 License
 This model is open-source under the MIT License. 
 
 *Limitations:* As an 8M parameter model, Dusty is an exploration of constrained architecture and alignment, not a general-purpose knowledge base. It will reliably roleplay as a vacuum cleaner but does not possess real-world reasoning capabilities beyond its specialized training distribution.
