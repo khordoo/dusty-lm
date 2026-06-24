@@ -10,24 +10,10 @@ import shutil
 from pathlib import Path
 
 import torch
-import torch.nn as nn
 
 from dustylm.config import get_profile, list_profiles
 from dustylm.generate import resolve_generation_checkpoint_path
 from dustylm.modeling import build_model
-
-
-class ExportableRMSNorm(nn.Module):
-    """RMSNorm expressed with primitive ops supported by ONNX export."""
-
-    def __init__(self, source: nn.RMSNorm):
-        super().__init__()
-        self.eps = source.eps
-        self.weight = nn.Parameter(source.weight.detach().clone())
-
-    def forward(self, x):
-        variance = x.pow(2).mean(dim=-1, keepdim=True)
-        return x * torch.rsqrt(variance + self.eps) * self.weight
 
 
 def parse_args(argv=None):
@@ -64,7 +50,7 @@ def parse_args(argv=None):
     parser.add_argument(
         "--opset",
         type=int,
-        default=17,
+        default=23,
         help="ONNX opset version.",
     )
     return parser.parse_args(argv)
@@ -75,14 +61,6 @@ def load_state_dict(path: Path):
     state_dict.pop("rope.sin_cache", None)
     state_dict.pop("rope.cos_cache", None)
     return state_dict
-
-
-def replace_rms_norm_modules(module: nn.Module) -> None:
-    for name, child in list(module.named_children()):
-        if isinstance(child, nn.RMSNorm):
-            setattr(module, name, ExportableRMSNorm(child))
-        else:
-            replace_rms_norm_modules(child)
 
 
 def quantize_onnx_model(output_path: Path) -> None:
@@ -96,8 +74,31 @@ def quantize_onnx_model(output_path: Path) -> None:
 
     fp32_path = output_path.with_name(f"{output_path.stem}_fp32{output_path.suffix}")
     output_path.rename(fp32_path)
-    quantize_dynamic(str(fp32_path), str(output_path), weight_type=QuantType.QUInt8)
+    quantize_dynamic(
+        str(fp32_path),
+        str(output_path),
+        op_types_to_quantize=None,
+        per_channel=True,
+        reduce_range=False,
+        weight_type=QuantType.QInt8,
+    )
     fp32_path.unlink()
+
+
+def validate_onnx_model(output_path: Path, dummy_input: torch.Tensor) -> None:
+    try:
+        import onnxruntime as ort
+    except ImportError as exc:
+        raise RuntimeError(
+            "ONNX validation requires onnxruntime. "
+            "Install the ONNX extras with `uv sync --extra onnx`."
+        ) from exc
+
+    session = ort.InferenceSession(
+        str(output_path),
+        providers=["CPUExecutionProvider"],
+    )
+    session.run(["logits"], {"input_ids": dummy_input.cpu().numpy()})
 
 
 def export_onnx(
@@ -119,7 +120,6 @@ def export_onnx(
 
     model = build_model(profile)
     model.load_state_dict(load_state_dict(checkpoint_path))
-    replace_rms_norm_modules(model)
     model.eval()
 
     total_params = sum(parameter.numel() for parameter in model.parameters())
@@ -138,23 +138,23 @@ def export_onnx(
         model,
         (dummy_input,),
         str(output_path),
+        dynamo=True,
         input_names=["input_ids"],
         output_names=["logits"],
-        dynamic_axes={
-            "input_ids": {0: "batch", 1: "seq_len"},
-            "logits": {0: "batch", 1: "seq_len"},
-        },
+        dynamic_shapes=({0: "batch_size", 1: "seq_len"},),
         opset_version=opset,
-        dynamo=False,
+        external_data=False,
     )
     print(f"Exported {output_path} ({output_path.stat().st_size / 1_000_000:.1f} MB)")
 
     if quantize:
         quantize_onnx_model(output_path)
         print(
-            f"Quantized {output_path} "
-            f"({output_path.stat().st_size / 1_000_000:.1f} MB)"
+            f"Quantized {output_path} ({output_path.stat().st_size / 1_000_000:.1f} MB)"
         )
+
+    validate_onnx_model(output_path, dummy_input)
+    print(f"Validated ONNX Runtime inference for {output_path}")
 
     tokenizer_output_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(tokenizer_path, tokenizer_output_path)
