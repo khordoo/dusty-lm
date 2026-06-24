@@ -73,8 +73,8 @@ You can pull the weights and the custom vocabulary directly into your local pipe
 ```python
 from huggingface_hub import hf_hub_download
 
-checkpoint_path = hf_hub_download(repo_id="khordoo/dusty-8m-sft", filename="dusty8m_sft.pt")
-tokenizer_path = hf_hub_download(repo_id="khordoo/dusty-8m-sft", filename="tokenizer.json")
+checkpoint_path = hf_hub_download(repo_id="mkhordoo/dusty-8m-sft", filename="model.pt")
+tokenizer_path = hf_hub_download(repo_id="mkhordoo/dusty-8m-sft", filename="tokenizer.json")
 
 print("Ready for inference!")
 ```

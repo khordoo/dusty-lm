@@ -9,7 +9,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.12+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
-[![Model: dusty8m](https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square)](https://huggingface.co/khordoo/dusty-8m-sft)
+[![Model: dusty8m](https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square)](https://huggingface.co/mkhordoo/dusty-8m-sft)
 
 [![Try in Browser](https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white)](https://khordoo.github.io/dusty-lm/)
 [![Open in Colab](https://img.shields.io/badge/Open_in-Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mkhordoo/dusty-lm/blob/main/run_dusty.ipynb)
