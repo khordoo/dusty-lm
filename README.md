@@ -12,7 +12,7 @@
 [![Model: dusty8m](https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square)](https://huggingface.co/mkhordoo/dusty-8m-sft)
 
 [![Try in Browser](https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white)](https://khordoo.github.io/dusty-lm/)
-[![Open in Colab](https://img.shields.io/badge/Open_in-Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mkhordoo/dusty-lm/blob/main/run_dusty.ipynb)
+[![Open in Colab](https://img.shields.io/badge/Open_in-Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mkhordoo/dusty-lm/blob/main/notebooks/01_quickstart.ipynb)
 
 </div>
 
@@ -23,17 +23,23 @@
 > DustyLM will not write essays or replace a general assistant. It is small on purpose: you can inspect every part of the stack and understand how raw text becomes a trained character model.
 
 ```text
+You> who are you?
+Dusty> i am a little robot. i clean floors and find crumbs.
+
 You> where are you?
 Dusty> i am under the couch. there are crumbs here.
 
 You> are you scared?
-Dusty> stairs. i do not go near stairs. the dock is safe.
+Dusty> a little. i am not stuck. i am brave. i am safe. 
 
 You> what do you dream about?
 Dusty> floors. clean ones. and a full battery.
 
-You> go charge
-Dusty> beep. i see the dock. i am going home.
+You> what is your job ?
+Dusty> i clean every day.
+
+You> go to dock
+Dusty> beep. i see the dock. i am safe.
 ```
 
 ---
@@ -92,13 +98,13 @@ Runs locally in your browser with ONNX and WebAssembly. No server and no API key
 
 ### Chat in Colab
 
-[![Chat in Colab](https://img.shields.io/badge/Chat_in-Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mkhordoo/dusty-lm/blob/main/run_dusty.ipynb)
+[![Chat in Colab](https://img.shields.io/badge/Chat_in-Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mkhordoo/dusty-lm/blob/main/notebooks/01_quickstart.ipynb)
 
-Installs DustyLM, downloads the pre-trained checkpoint from Hugging Face, and starts a chat loop.
+Three cells. Under 30 seconds. No GPU required.
 
 ### Train Your Own
 
-[![Train Your Own](https://img.shields.io/badge/Train_Your-Own-2ea44f?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mkhordoo/dusty-lm/blob/main/train_dusty.ipynb)
+[![Train Your Own](https://img.shields.io/badge/Train_Your-Own-2ea44f?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mkhordoo/dusty-lm/blob/main/notebooks/02_train_from_scratch.ipynb)
 
 Downloads the datasets, trains the tokenizer, runs pretraining, runs SFT, and tests the checkpoint.
 
@@ -115,16 +121,15 @@ For an interactive terminal chat:
 make chat
 ```
 
-### Train or Explore Advanced Features
+### Notebooks
 
-| Notebook | Purpose |
-|---|---|
-| [`run_dusty.ipynb`](run_dusty.ipynb) | Minimal chat notebook |
-| [`train_dusty.ipynb`](train_dusty.ipynb) | Basic training flow |
-| [`notebooks/runpod_training.ipynb`](notebooks/runpod_training.ipynb) | GPU training on RunPod or Colab |
-| [`notebooks/advanced_evaluation.ipynb`](notebooks/advanced_evaluation.ipynb) | SFT generation, filtering, fertility, checkpoint selection, inference internals |
-| [`notebooks/smollm2_profiles.ipynb`](notebooks/smollm2_profiles.ipynb) | SmolLM2 profiles, HF weight conversion, pretrained base generation |
-| [`notebooks/colab_deployment.ipynb`](notebooks/colab_deployment.ipynb) | Colab inference, training option, ONNX export |
+| # | Notebook | What you'll do |
+|---|---|---|
+| 01 | [Quickstart](notebooks/01_quickstart.ipynb) | Chat with Dusty in under 30 seconds |
+| 02 | [Train from Scratch](notebooks/02_train_from_scratch.ipynb) | Build your own 8M parameter model end-to-end |
+| 03 | [Advanced Tools](notebooks/03_advanced_tools.ipynb) | Data generation, filtering, fertility, checkpoint selection |
+| 04 | [HF Export & Web UI](notebooks/04_hf_export_and_web_ui.ipynb) | Convert to ONNX, push to Hugging Face, and serve the browser UI |
+| 05 | [Pretrained Base Models](notebooks/05_pretrained_base_models.ipynb) | Use pretrained SmolLM2 as a stronger base model |
 
 ---
 
@@ -183,7 +188,7 @@ dustylm/
 dataset_generation/  # Synthetic pretrain/SFT generation and filtering
 scripts/             # ONNX export and Hugging Face Hub staging/upload
 docs/                # Browser demo assets
-notebooks/           # Advanced training, evaluation, and deployment notebooks
+notebooks/           # Quickstart, training, advanced tools, export, and SmolLM2 notebooks
 ```
 
 ---
