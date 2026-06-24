@@ -228,39 +228,6 @@ register(
 
 register(
     Profile(
-        name="scratch_small",
-        model=scratch_small_model,
-        training=TrainingSpec(
-            task=TrainingTask.PRETRAIN,
-            dataset_path=REPO_ROOT
-            / "artifacts"
-            / "datasets"
-            / "scratch_text_tokenized",
-            batch_size=16,
-            learning_rate=1e-4,
-            output_checkpoint=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "scratch_small.pt",
-            max_seq_len=256,
-            weight_decay=0.01,
-            raw_text_path=REPO_ROOT / "demo_text",
-        ),
-        generation=GenerationSpec(
-            checkpoint_path=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "scratch_small.pt",
-            max_new_tokens=1000,
-            temperature=0.75,
-            top_k=10,
-            eos_text="<|im_end|>",
-        ),
-    )
-)
-
-register(
-    Profile(
         name="sft_dusty8m",
         model=dusty_8m_model,
         training=TrainingSpec(
@@ -288,6 +255,39 @@ register(
             top_p=0.8,
             eos_token_id=2,
             max_chat_turns=1,
+        ),
+    )
+)
+
+register(
+    Profile(
+        name="scratch_small",
+        model=scratch_small_model,
+        training=TrainingSpec(
+            task=TrainingTask.PRETRAIN,
+            dataset_path=REPO_ROOT
+            / "artifacts"
+            / "datasets"
+            / "scratch_text_tokenized",
+            batch_size=16,
+            learning_rate=1e-4,
+            output_checkpoint=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "scratch_small.pt",
+            max_seq_len=256,
+            weight_decay=0.01,
+            raw_text_path=REPO_ROOT / "demo_text",
+        ),
+        generation=GenerationSpec(
+            checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "scratch_small.pt",
+            max_new_tokens=1000,
+            temperature=0.75,
+            top_k=10,
+            eos_text="<|im_end|>",
         ),
     )
 )
