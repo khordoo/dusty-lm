@@ -4,12 +4,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tiny_gpt.data_prep import DOCUMENT_SEPARATOR, normalize_pretrain_text
-    from tiny_gpt.data_prep import read_jsonl_sft_rows
+    from dustylm.data_prep import DOCUMENT_SEPARATOR, normalize_pretrain_text
+    from dustylm.data_prep import read_jsonl_sft_rows
 except ModuleNotFoundError:
     sys.path.append(str(Path(__file__).resolve().parents[1]))
-    from tiny_gpt.data_prep import DOCUMENT_SEPARATOR, normalize_pretrain_text
-    from tiny_gpt.data_prep import read_jsonl_sft_rows
+    from dustylm.data_prep import DOCUMENT_SEPARATOR, normalize_pretrain_text
+    from dustylm.data_prep import read_jsonl_sft_rows
 
 DEFAULT_INPUT_PATH = Path("artifacts/datasets/dusty_sft.jsonl")
 DEFAULT_OUTPUT_PATH = Path("artifacts/datasets/dusty_sft_chatml_pretrain.txt")

@@ -1,4 +1,4 @@
-from tiny_gpt.artifacts import list_downloadable_profiles, parse_args
+from dustylm.artifacts import list_downloadable_profiles, parse_args
 
 
 def test_artifacts_cli_lists_only_downloadable_profiles():

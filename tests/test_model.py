@@ -1,10 +1,10 @@
 import torch
 
-from tiny_gpt.model import TinyGPT
+from dustylm.model import DustyLM
 
 
 def build_tiny_model():
-    return TinyGPT(
+    return DustyLM(
         num_layers=2,
         vocab_size=128,
         max_seq_len=32,
@@ -24,7 +24,7 @@ def test_forward_without_cache_returns_logits():
 
 
 def test_scratch_model_uses_configured_hidden_dim():
-    model = TinyGPT(
+    model = DustyLM(
         num_layers=1,
         vocab_size=128,
         max_seq_len=32,

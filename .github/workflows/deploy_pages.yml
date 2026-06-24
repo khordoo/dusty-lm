@@ -1,0 +1,43 @@
+name: Deploy Web UI to Pages
+
+on:
+  # TODO: Uncomment the push block below once the repository is made public.
+  # push:
+  #   branches:
+  #     - main
+
+  # This allows you to trigger the action manually from the GitHub UI for testing.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Model Assets from Hugging Face
+        # Keep model weights out of git history; fetch the deploy assets at release time.
+        run: |
+          echo "Fetching latest weights from mkhordoo/dusty-8m-sft..."
+          wget -q https://huggingface.co/mkhordoo/dusty-8m-sft/resolve/main/model_int8.onnx -O docs/model.onnx
+          wget -q https://huggingface.co/mkhordoo/dusty-8m-sft/resolve/main/tokenizer.json -O docs/tokenizer.json
+          wget -q https://huggingface.co/mkhordoo/dusty-8m-sft/resolve/main/tokenizer_config.json -O docs/tokenizer_config.json
+          echo "Assets downloaded successfully."
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Web Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -3,9 +3,9 @@ from types import SimpleNamespace
 import pytest
 import torch
 
-from tiny_gpt.config import get_profile
-from tiny_gpt.generate import GenerationResult
-from tiny_gpt.inference import (
+from dustylm.config import get_profile
+from dustylm.generate import GenerationResult
+from dustylm.inference import (
     Inference,
     format_chatml_messages,
     parse_args,
@@ -65,12 +65,12 @@ def build_inference(
     tokenizer_calls = []
 
     monkeypatch.setattr(
-        "tiny_gpt.inference.build_tokenizer",
+        "dustylm.inference.build_tokenizer",
         lambda profile: tokenizer_calls.append(profile) or FakeTokenizer(),
     )
-    monkeypatch.setattr("tiny_gpt.inference.build_model", lambda profile: model)
+    monkeypatch.setattr("dustylm.inference.build_model", lambda profile: model)
     monkeypatch.setattr(
-        "tiny_gpt.inference.load_state_dict",
+        "dustylm.inference.load_state_dict",
         lambda *args, **kwargs: dict(state_dict or {"weight": object()}),
     )
 
@@ -245,12 +245,12 @@ def test_inference_auto_detects_dusty_checkpoint_when_profile_is_omitted(
     model = FakeModel()
 
     monkeypatch.setattr(
-        "tiny_gpt.inference.build_tokenizer",
+        "dustylm.inference.build_tokenizer",
         lambda profile: FakeTokenizer(),
     )
-    monkeypatch.setattr("tiny_gpt.inference.build_model", lambda profile: model)
+    monkeypatch.setattr("dustylm.inference.build_model", lambda profile: model)
     monkeypatch.setattr(
-        "tiny_gpt.inference.load_state_dict",
+        "dustylm.inference.load_state_dict",
         lambda *args, **kwargs: {"embed.weight": object()},
     )
 
@@ -281,12 +281,12 @@ def test_inference_auto_detects_smollm2_sft_checkpoint_when_profile_is_omitted(
     model = FakeModel()
 
     monkeypatch.setattr(
-        "tiny_gpt.inference.build_tokenizer",
+        "dustylm.inference.build_tokenizer",
         lambda profile: FakeTokenizer(),
     )
-    monkeypatch.setattr("tiny_gpt.inference.build_model", lambda profile: model)
+    monkeypatch.setattr("dustylm.inference.build_model", lambda profile: model)
     monkeypatch.setattr(
-        "tiny_gpt.inference.load_state_dict",
+        "dustylm.inference.load_state_dict",
         lambda *args, **kwargs: {
             "embed_tokens.weight": object(),
             "layers.0.gate_proj.weight": object(),
@@ -306,7 +306,7 @@ def test_inference_rejects_detected_non_sft_profile(monkeypatch, tmp_path):
     checkpoint_path = tmp_path / "model.pt"
     checkpoint_path.write_text("placeholder")
     monkeypatch.setattr(
-        "tiny_gpt.inference.resolve_profile_name_for_checkpoint",
+        "dustylm.inference.resolve_profile_name_for_checkpoint",
         lambda *args, **kwargs: "smollm2_360m",
     )
 
@@ -350,7 +350,7 @@ def test_chat_completion_returns_openai_like_response(monkeypatch, tmp_path):
         )
 
     monkeypatch.setattr(
-        "tiny_gpt.inference.generate_token_ids",
+        "dustylm.inference.generate_token_ids",
         fake_generate_token_ids,
     )
 
@@ -391,7 +391,7 @@ def test_chat_completion_uses_profile_chat_turn_limit(monkeypatch, tmp_path):
     prompts = []
 
     monkeypatch.setattr(
-        "tiny_gpt.inference.generate_token_ids",
+        "dustylm.inference.generate_token_ids",
         lambda **kwargs: GenerationResult(
             text="reply",
             token_ids=[1],
@@ -400,7 +400,7 @@ def test_chat_completion_uses_profile_chat_turn_limit(monkeypatch, tmp_path):
         ),
     )
     monkeypatch.setattr(
-        "tiny_gpt.inference.encode_prompt",
+        "dustylm.inference.encode_prompt",
         lambda tokenizer, prompt, spec: prompts.append(prompt) or [1],
     )
 
@@ -422,7 +422,7 @@ def test_chat_completion_accepts_max_chat_turns_override(monkeypatch, tmp_path):
     prompts = []
 
     monkeypatch.setattr(
-        "tiny_gpt.inference.generate_token_ids",
+        "dustylm.inference.generate_token_ids",
         lambda **kwargs: GenerationResult(
             text="reply",
             token_ids=[1],
@@ -431,7 +431,7 @@ def test_chat_completion_accepts_max_chat_turns_override(monkeypatch, tmp_path):
         ),
     )
     monkeypatch.setattr(
-        "tiny_gpt.inference.encode_prompt",
+        "dustylm.inference.encode_prompt",
         lambda tokenizer, prompt, spec: prompts.append(prompt) or [1],
     )
 

@@ -2,8 +2,8 @@ from dataclasses import replace
 
 import pytest
 
-from tiny_gpt.config import get_profile
-from tiny_gpt.train import (
+from dustylm.config import get_profile
+from dustylm.train import (
     get_step_checkpoint_path,
     initialize_random_seed,
     load_init_checkpoint_if_configured,
@@ -40,18 +40,18 @@ def test_train_parse_args_accepts_dusty8m_profile():
 def test_initialize_random_seed_locks_python_numpy_and_torch(monkeypatch, capsys):
     calls = []
 
-    monkeypatch.setattr("tiny_gpt.train.random.randint", lambda start, end: 7102)
+    monkeypatch.setattr("dustylm.train.random.randint", lambda start, end: 7102)
     monkeypatch.setattr(
-        "tiny_gpt.train.random.seed", lambda seed: calls.append(("python", seed))
+        "dustylm.train.random.seed", lambda seed: calls.append(("python", seed))
     )
     monkeypatch.setattr(
-        "tiny_gpt.train.np.random.seed", lambda seed: calls.append(("numpy", seed))
+        "dustylm.train.np.random.seed", lambda seed: calls.append(("numpy", seed))
     )
     monkeypatch.setattr(
-        "tiny_gpt.train.torch.manual_seed", lambda seed: calls.append(("torch", seed))
+        "dustylm.train.torch.manual_seed", lambda seed: calls.append(("torch", seed))
     )
     monkeypatch.setattr(
-        "tiny_gpt.train.torch.backends.mps.is_available", lambda: False
+        "dustylm.train.torch.backends.mps.is_available", lambda: False
     )
 
     assert initialize_random_seed() == 7102
@@ -103,7 +103,7 @@ def test_load_init_checkpoint_if_configured_loads_state_dict(monkeypatch, tmp_pa
             calls.append(state_dict)
 
     monkeypatch.setattr(
-        "tiny_gpt.train.torch.load",
+        "dustylm.train.torch.load",
         lambda *args, **kwargs: expected_state,
     )
     checkpoint.write_text("placeholder")
@@ -164,7 +164,7 @@ def test_save_step_checkpoint_if_due_saves_only_on_interval(monkeypatch, tmp_pat
             return {"weight": "value"}
 
     monkeypatch.setattr(
-        "tiny_gpt.train.torch.save",
+        "dustylm.train.torch.save",
         lambda state_dict, path: saved.append((state_dict, path)),
     )
 
@@ -183,7 +183,7 @@ def test_save_step_checkpoint_if_due_saves_only_on_interval(monkeypatch, tmp_pat
 def test_save_step_checkpoint_if_due_can_be_disabled(monkeypatch):
     saved = []
     monkeypatch.setattr(
-        "tiny_gpt.train.torch.save",
+        "dustylm.train.torch.save",
         lambda state_dict, path: saved.append((state_dict, path)),
     )
 
