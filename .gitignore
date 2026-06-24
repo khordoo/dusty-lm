@@ -14,7 +14,10 @@ wheels/
 .antigravitycli/
 
 # Generated ML artifacts
-artifacts/
+artifacts/*
+!artifacts/hf/
+artifacts/hf/*
+!artifacts/hf/HF_MODEL_CARD.md
 checkpoints/
 data/
 runs/

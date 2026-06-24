@@ -21,6 +21,9 @@ onnx = [
     "onnxruntime>=1.23.0",
     "onnxscript>=0.5.0",
 ]
+hub = [
+    "transformers>=4.57.0",
+]
 
 [dependency-groups]
 dev = [

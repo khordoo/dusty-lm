@@ -181,7 +181,7 @@ dustylm/
     └── smollm2.py   # SmolLM2-compatible transformer
 
 dataset_generation/  # Synthetic pretrain/SFT generation and filtering
-tools/               # ONNX export
+scripts/             # ONNX export and Hugging Face Hub staging/upload
 docs/                # Browser demo assets
 notebooks/           # Advanced training, evaluation, and deployment notebooks
 ```

@@ -32,8 +32,12 @@ TINYSTORIES_OUT ?= artifacts/datasets/tinystories_base.txt
 ONNX_PROFILE ?= sft_dusty8m
 ONNX_OUT ?= docs/model.onnx
 ONNX_TOKENIZER_OUT ?= docs/tokenizer.json
+WEB_PORT ?= 8000
+HF_REPO_ID ?=
+HF_PROFILE ?= sft_dusty8m
+HF_STAGING_DIR ?= artifacts/hub_upload/$(HF_PROFILE)
 
-.PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train dusty-export-onnx tensorboard
+.PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train serve-web dusty-export-onnx stage-hub push-hub tensorboard
 
 help:
 	@echo "DustyLM commands"
@@ -51,7 +55,10 @@ help:
 	@echo "  make dusty-sft-train EPOCHS=1   Train the sft_dusty8m profile"
 	@echo "  make chat                       Chat with the local SFT inference CLI"
 	@echo "  make dusty-generate             Generate with PROFILE=dusty8m PROMPT='i wake up.'"
+	@echo "  make serve-web                  Serve the browser demo locally"
 	@echo "  make dusty-export-onnx          Export ONNX browser-demo artifacts to docs/"
+	@echo "  make stage-hub HF_REPO_ID=mkhordoo/dusty-8m-sft"
+	@echo "  make push-hub HF_REPO_ID=mkhordoo/dusty-8m-sft"
 	@echo "  make tensorboard                Plot training logs from runs/"
 
 download-datasets:
@@ -120,10 +127,34 @@ dusty-sft-train:
 	uv run python -m dustylm.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
 
 dusty-export-onnx:
-	uv run --extra onnx python tools/export_onnx.py \
-		--profile $(ONNX_PROFILE) \
-		--output $(ONNX_OUT) \
-		--tokenizer-output $(ONNX_TOKENIZER_OUT)
+	uv run --extra onnx python scripts/export_onnx.py --profile $(ONNX_PROFILE) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),) --output $(ONNX_OUT) --tokenizer-output $(ONNX_TOKENIZER_OUT)
+
+serve-web:
+	uv run --extra onnx python scripts/export_onnx.py --profile $(ONNX_PROFILE) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),) --output $(ONNX_OUT) --tokenizer-output $(ONNX_TOKENIZER_OUT)
+	@echo "Starting local web server..."
+	@echo "Open http://localhost:$(WEB_PORT) in your browser to chat with DustyLM."
+	uv run python -m http.server $(WEB_PORT) --directory docs
+
+stage-hub:
+ifndef HF_REPO_ID
+	$(error HF_REPO_ID is undefined. Please run: make stage-hub HF_REPO_ID=your-username/repo-name)
+endif
+	@echo "Staging Hugging Face Hub artifacts locally for $(HF_REPO_ID) (dry run; no upload)."
+	uv run --extra onnx --extra hub python scripts/push_to_hub.py \
+		--repo-id $(HF_REPO_ID) \
+		--profile $(HF_PROFILE) \
+		--staging-dir $(HF_STAGING_DIR) \
+		--dry-run
+
+push-hub:
+ifndef HF_REPO_ID
+	$(error HF_REPO_ID is undefined. Please run: make push-hub HF_REPO_ID=your-username/repo-name)
+endif
+	@echo "Pushing staged DustyLM artifacts to Hugging Face Hub repo $(HF_REPO_ID)."
+	uv run --extra onnx --extra hub python scripts/push_to_hub.py \
+		--repo-id $(HF_REPO_ID) \
+		--profile $(HF_PROFILE) \
+		--staging-dir $(HF_STAGING_DIR)
 
 tensorboard:
 	uv run tensorboard --logdir runs

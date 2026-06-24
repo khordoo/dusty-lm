@@ -31,6 +31,12 @@ def parse_args(argv=None):
         help="Export a step checkpoint instead of the profile's final checkpoint.",
     )
     parser.add_argument(
+        "--checkpoint-path",
+        type=Path,
+        default=None,
+        help="Export a specific checkpoint path instead of the profile default.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=Path("docs/model.onnx"),
@@ -105,12 +111,17 @@ def export_onnx(
     profile_name: str,
     checkpoint_step: int | None,
     output_path: Path,
-    tokenizer_output_path: Path,
+    tokenizer_output_path: Path | None,
     quantize: bool,
     opset: int,
+    checkpoint_path: Path | None = None,
 ) -> None:
     profile = get_profile(profile_name)
-    checkpoint_path = resolve_generation_checkpoint_path(profile, checkpoint_step)
+    checkpoint_path = resolve_generation_checkpoint_path(
+        profile,
+        checkpoint_step=checkpoint_step,
+        checkpoint_path=checkpoint_path,
+    )
     if not checkpoint_path.exists():
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
@@ -156,9 +167,10 @@ def export_onnx(
     validate_onnx_model(output_path, dummy_input)
     print(f"Validated ONNX Runtime inference for {output_path}")
 
-    tokenizer_output_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(tokenizer_path, tokenizer_output_path)
-    print(f"Copied tokenizer to {tokenizer_output_path}")
+    if tokenizer_output_path is not None:
+        tokenizer_output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(tokenizer_path, tokenizer_output_path)
+        print(f"Copied tokenizer to {tokenizer_output_path}")
 
 
 def main(argv=None):
@@ -170,6 +182,7 @@ def main(argv=None):
         tokenizer_output_path=args.tokenizer_output,
         quantize=not args.no_quantize,
         opset=args.opset,
+        checkpoint_path=args.checkpoint_path,
     )
 
 
