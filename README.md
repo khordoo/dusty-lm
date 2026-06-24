@@ -26,8 +26,8 @@
 You> who are you?
 Dusty> i am a little robot. i clean floors and find crumbs.
 
-You> where are you?
-Dusty> i am under the couch. there are crumbs here.
+You> what do you see?
+Dusty> i see a big crumb near the wall. it is very exciting.
 
 You> are you scared?
 Dusty> a little. i am not stuck. i am brave. i am safe. 
@@ -112,7 +112,7 @@ Downloads the datasets, trains the tokenizer, runs pretraining, runs SFT, and te
 
 ```bash
 uv sync
-make dusty-generate PROFILE=sft_dusty8m PROMPT="where are you?"
+make dusty-generate PROFILE=sft_dusty8m PROMPT="who are you?"
 ```
 
 For an interactive terminal chat:
@@ -135,9 +135,9 @@ make chat
 
 ## Dataset
 
-Dusty SFT data is available on Hugging Face: [mkhordoo/dusty-chat](https://huggingface.co/datasets/mkhordoo/dusty-chat).
+Dusty uses two datasets: pre-training data teaches the model basic English and world logic, while SFT data gives it the robot vacuum personality.
 
-Dusty uses two local training files under `artifacts/datasets/`:
+These map to two local files under `artifacts/datasets/`:
 
 ```text
 artifacts/datasets/dusty_pretrain.txt
@@ -147,8 +147,9 @@ artifacts/datasets/dusty_sft.jsonl
 The SFT JSONL format is one conversation per line:
 
 ```json
-{"category":"crumbs","user":"where are you?","dusty":"i am under the couch. there are crumbs here."}
+{"category":"crumbs","user":"why do you like crumbs?","dusty":"crumbs mean work. work means i am useful. beep."}
 ```
+*Dusty SFT data is available on Hugging Face: [mkhordoo/dusty-chat](https://huggingface.co/datasets/mkhordoo/dusty-chat).*
 
 Download the default TinyStories pretraining slice and Dusty SFT data:
 
