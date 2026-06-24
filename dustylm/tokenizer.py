@@ -16,7 +16,10 @@ TOKENIZER_SFT_JSONL_CORPORA = [
     base / "artifacts/datasets/dusty_sft.jsonl",
 ]
 OUTPUT_TOKENIZER_PATH = base / "artifacts/tokenizers/dusty_tokenizer.json"
-SPECIAL_TOKENS = ["<|endoftext|>", "<|im_start|>", "<|im_end|>"]
+END_OF_TEXT_TOKEN = "<|endoftext|>"
+CHATML_START_TOKEN = "<|im_start|>"
+CHATML_END_TOKEN = "<|im_end|>"
+SPECIAL_TOKENS = [END_OF_TEXT_TOKEN, CHATML_START_TOKEN, CHATML_END_TOKEN]
 
 
 def write_normalized_pretrain_corpus(input_path: Path, output_path: Path) -> None:
@@ -31,8 +34,8 @@ def write_normalized_sft_corpus(input_path: Path, output_path: Path) -> None:
         for row in rows:
             user = normalize_pretrain_text(str(row["user"]))
             dusty = normalize_pretrain_text(str(row["dusty"]))
-            file.write(f"<|im_start|>user\n{user}<|im_end|>\n")
-            file.write(f"<|im_start|>assistant\n{dusty}<|im_end|>\n")
+            file.write(f"{CHATML_START_TOKEN}user\n{user}{CHATML_END_TOKEN}\n")
+            file.write(f"{CHATML_START_TOKEN}assistant\n{dusty}{CHATML_END_TOKEN}\n")
 
 
 def prepare_tokenizer_training_files(

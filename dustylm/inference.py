@@ -21,14 +21,13 @@ from dustylm.config import (
     list_profiles,
 )
 from dustylm.generate import (
-    CHATML_START_TOKEN,
     encode_prompt,
     generate_token_ids,
     get_device,
 )
 from dustylm.modeling import build_model, build_tokenizer
+from dustylm.tokenizer import CHATML_END_TOKEN, CHATML_START_TOKEN
 
-CHATML_END_TOKEN = "<|im_end|>"
 SUPPORTED_ROLES = {"system", "user", "assistant"}
 DEFAULT_PROFILE = CHAT_PROFILE_DEFAULT
 

@@ -22,10 +22,10 @@ from dustylm.checkpoint import (
 )
 from dustylm.config import GenerationSpec, Profile, get_profile, list_profiles
 from dustylm.modeling import build_model, build_tokenizer
+from dustylm.tokenizer import CHATML_END_TOKEN, CHATML_START_TOKEN
 
 DEFAULT_PROMPT = "Once upon a time "
 DEFAULT_PROFILE = GENERATION_PROFILE_DEFAULT
-CHATML_START_TOKEN = "<|im_start|>"
 EOS_TEXT_LOOKBACK_TOKENS = 10
 
 
@@ -139,7 +139,10 @@ def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
     if profile.name != "sft_dusty8m" or CHATML_START_TOKEN in prompt:
         return prompt
 
-    return f"<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
+    return (
+        f"{CHATML_START_TOKEN}user\n{prompt}{CHATML_END_TOKEN}\n"
+        f"{CHATML_START_TOKEN}assistant\n"
+    )
 
 
 def resolve_generation_checkpoint_path(
