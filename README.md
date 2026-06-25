@@ -2,7 +2,10 @@
 
 <img src="docs/images/logo_sm.png" alt="DustyLM logo" width="520">
 
+<br>
+
 <h1 style="color: #FFFFFF;">DustyLM</h1>
+
 
 <p><strong>An ~8M parameter language model that talks like a tiny robot vacuum.</strong></p>
 
@@ -155,6 +158,18 @@ make dusty-filter-sft         # Filter and sample SFT
 ```
 
 The advanced notebook covers data-generation prompts, model choice, cost notes, filtering, tokenizer fertility, and personality customization.
+
+---
+
+## Browser Web UI
+
+DustyLM compiles directly to WebAssembly (WASM). You can serve the entire 8M parameter model locally in your browser with zero external API calls, or **[try the live demo](https://khordoo.github.io/dusty-lm/)**.
+
+<div align="center">
+  <a href="https://khordoo.github.io/dusty-lm/">
+    <img src="docs/images/dusty-web-ui.png" alt="Dusty Web Interface" width="800">
+  </a>
+</div>
 
 ---
 
