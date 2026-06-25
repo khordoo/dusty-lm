@@ -68,7 +68,7 @@
       height: 100%;
       background: transparent;
       display: grid;
-      grid-template-rows: auto 1fr auto auto auto;
+      grid-template-rows: auto 1fr auto auto auto auto;
       overflow: visible;
     }
 
@@ -130,15 +130,6 @@
       align-items: center;
       gap: 10px;
       margin-left: auto;
-    }
-
-    .header-sub {
-      margin: 0;
-      padding: 8px 24px 0 calc(24px + 36px + 10px);
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-dim);
-      box-sizing: border-box;
     }
 
     .github-link {
@@ -361,8 +352,8 @@
     }
 
     .empty-state-icon {
-      width: 100px;
-      height: 100px;
+      width: 130px;
+      height: 130px;
       object-fit: contain;
       opacity: 0.7;
       margin-bottom: 24px;
@@ -590,13 +581,13 @@
       background: transparent;
       color: var(--text);
       font-family: 'Inter', sans-serif;
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 500;
     }
 
     input::placeholder {
       color: var(--text-dim);
-      opacity: 1;
+      opacity: 0.55;
     }
 
     .send-btn {
@@ -630,10 +621,10 @@
     }
 
     .speed-readout {
-      padding: 2px 24px 8px;
+      padding: 16px 24px 18px;
       text-align: center;
       color: var(--text-dim);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
     }
 
@@ -651,10 +642,6 @@
       .header {
         padding: 12px 16px;
         min-height: 44px;
-      }
-
-      .header-sub {
-        padding: 6px 16px 0 calc(16px + 32px + 10px);
       }
 
       .title {
@@ -681,8 +668,8 @@
       }
 
       .empty-state-icon {
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 100px;
       }
 
       .empty-state h2 {
@@ -760,8 +747,6 @@
           </a>
         </div>
       </header>
-      <p class="header-sub">running locally in your browser</p>
-
       <div id="messages" class="messages">
         <div class="empty-state" id="empty-state">
           <img class="empty-state-icon" src="images/logo.png" alt="">
@@ -775,12 +760,12 @@
               <path d="M20 21a8 8 0 0 0-16 0" />
               <circle cx="12" cy="8" r="4" />
             </svg></span> who are you?</button>
-        <button type="button" data-prompt="are you scared?" disabled><span class="icon" aria-hidden="true"><svg
+        <button type="button" data-prompt="what do you do?" disabled><span class="icon" aria-hidden="true"><svg
               viewBox="0 0 24 24">
-              <path d="M12 9v4" />
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
               <path d="M12 17h.01" />
-              <path d="M10.3 3.9 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-            </svg></span> are you scared?</button>
+            </svg></span> what do you do?</button>
         <button type="button" data-prompt="what do you dream about?" disabled><span class="icon" aria-hidden="true"><svg
               viewBox="0 0 24 24">
               <path d="M12 3a6.8 6.8 0 1 0 7.8 9.2A8.4 8.4 0 0 1 12 3Z" />
@@ -816,7 +801,7 @@
           </button>
         </form>
       </div>
-      <p id="speed-readout" class="speed-readout">Generation speed appears here after Dusty replies.</p>
+      <p id="speed-readout" class="speed-readout">Generation speed appears here after Dusty replies. • DustyLM runs locally. No data leaves this page.</p>
     </section>
 
     <div class="topics-overlay" id="topics-overlay">
@@ -1089,7 +1074,7 @@
       if (isUser) {
         div.innerHTML = `<span class="${labelClass}">${speaker}</span><span class="turn-text">${escapeHtml(text)}</span>`;
       } else {
-        div.innerHTML = `<span class="dusty-avatar"><img src="images/logo.png" alt=""></span><div class="turn-body"><span class="${labelClass}">${speaker}</span><span class="turn-text">${escapeHtml(text)}</span></div>`;
+        div.innerHTML = `<span class="dusty-avatar"><img src="images/logo_sm.png" alt=""></span><div class="turn-body"><span class="${labelClass}">${speaker}</span><span class="turn-text">${escapeHtml(text)}</span></div>`;
       }
       messagesEl.appendChild(div);
       messagesEl.scrollTop = messagesEl.scrollHeight;
