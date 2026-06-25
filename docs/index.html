@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DustyLM — Browser Demo</title>
+  <title>DustyLM: A Tiny 8M Robot in Your Browser</title>
   <meta name="description"
     content="Chat with DustyLM, an 8M parameter language model running entirely in your browser via WebAssembly. No server, no API key.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -125,6 +125,12 @@
       letter-spacing: 0.01em;
     }
 
+    .badge-local {
+      color: #0b7b5a;
+      background: rgba(33, 197, 139, 0.09);
+      border-color: rgba(33, 197, 139, 0.35);
+    }
+
     .header-right {
       display: flex;
       align-items: center;
@@ -135,18 +141,26 @@
     .github-link {
       display: inline-flex;
       align-items: center;
-      color: var(--text-secondary);
-      transition: color 0.18s ease;
+      gap: 6px;
+      padding: 5px 10px 5px 8px;
+      border-radius: 8px;
+      background: #1b1b1f;
+      color: #fff;
       text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      transition: background 0.18s ease;
     }
 
     .github-link:hover {
-      color: var(--text);
+      background: #2d2d33;
+      color: #fff;
     }
 
     .github-link svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       display: block;
     }
 
@@ -378,6 +392,7 @@
     }
 
     .turn {
+      width: fit-content;
       max-width: 78%;
       margin: 0 0 14px;
       padding: 14px 18px;
@@ -401,6 +416,10 @@
       margin-left: auto;
       background: var(--blue-soft);
       border-bottom-right-radius: 4px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      flex-direction: row-reverse;
     }
 
     .turn.dusty-turn {
@@ -446,6 +465,24 @@
       width: 85%;
       height: 85%;
       object-fit: contain;
+    }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--text-secondary);
+    }
+
+    .user-avatar svg {
+      width: 18px;
+      height: 18px;
       display: block;
     }
 
@@ -705,6 +742,7 @@
       }
 
       .turn {
+        width: fit-content;
         max-width: 90%;
         padding: 12px 14px;
       }
@@ -734,16 +772,18 @@
             <img class="logo" src="images/logo.png" alt="DustyLM logo">
           </span>
           <h1 class="title">DustyLM</h1>
-          <span class="badge">8M params · wasm</span>
+          <span class="badge" title="DustyLM is an 8M parameter language model">~8M params</span>
+          <span class="badge badge-local" title="Runs locally. No data leaves this page.">100% Local / WASM</span>
         </div>
         <div class="header-right">
           <div id="status" class="status"><span class="dot"></span><span>loading</span></div>
           <a class="github-link" href="https://github.com/khordoo/dusty-lm" target="_blank" rel="noopener"
             aria-label="View source on GitHub">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
               <path
                 d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
             </svg>
+            khordoo/dusty-lm
           </a>
         </div>
       </header>
@@ -751,7 +791,7 @@
         <div class="empty-state" id="empty-state">
           <img class="empty-state-icon" src="images/logo.png" alt="">
           <h2>Chat with Dusty.</h2>
-          <p>DustyLM is an 8M parameter language model.</p>
+          <p>Dusty is a tiny robot vacuum powered by a local, browser-based 8M parameter language model.</p>
         </div>
       </div>
       <div class="suggestions" id="suggestions">
@@ -801,7 +841,8 @@
           </button>
         </form>
       </div>
-      <p id="speed-readout" class="speed-readout">Generation speed appears here after Dusty replies. • DustyLM runs locally. No data leaves this page.</p>
+      <p id="speed-readout" class="speed-readout">Generation speed appears here after Dusty replies. • DustyLM runs
+        locally. No data leaves this page.</p>
     </section>
 
     <div class="topics-overlay" id="topics-overlay">
@@ -1072,7 +1113,7 @@
       div.className = `turn ${isUser ? 'user-turn' : 'dusty-turn'}`;
       const labelClass = isUser ? "speaker user" : "speaker dusty";
       if (isUser) {
-        div.innerHTML = `<span class="${labelClass}">${speaker}</span><span class="turn-text">${escapeHtml(text)}</span>`;
+        div.innerHTML = `<div class="turn-body"><span class="${labelClass}">${speaker}</span><span class="turn-text">${escapeHtml(text)}</span></div><span class="user-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></span>`;
       } else {
         div.innerHTML = `<span class="dusty-avatar"><img src="images/logo_sm.png" alt=""></span><div class="turn-body"><span class="${labelClass}">${speaker}</span><span class="turn-text">${escapeHtml(text)}</span></div>`;
       }
