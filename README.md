@@ -2,7 +2,7 @@
 
 <img src="docs/images/logo.png" alt="DustyLM logo" width="520">
 
-<h1 style="color: #000000;">DustyLM</h1>
+<h1 style="color: #FFFFFF;">DustyLM</h1>
 
 <p><strong>An ~8M parameter language model that talks like a tiny robot vacuum.</strong></p>
 
@@ -10,23 +10,19 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 [![Model: dusty8m](https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square)](https://huggingface.co/mkhordoo/dusty-8m-sft)
+[![Dataset: dusty-chat](https://img.shields.io/badge/Dataset-dusty_chat-FFD21E?style=flat-square&logo=huggingface&logoColor=white)](https://huggingface.co/datasets/mkhordoo/dusty-chat)
+<div style="height: 12px;"></div>
 
-<a href="https://khordoo.github.io/dusty-lm/" style="display: inline-flex; align-items: center; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 700; border-radius: 8px; overflow: hidden; border: none; margin: 4px 0;">
-  <span style="background: #6b7280; color: #fff; padding: 10px 16px;">Try in</span>
-  <span style="background: #64ffda; color: #0d1117; padding: 10px 16px;">Browser</span>
-</a>
-
+[![Try in Browser](https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white)](https://khordoo.github.io/dusty-lm/)
+<br>
 </div>
-
----
-
-<blockquote style="border-left: 4px solid #64ffda; border-top: 2px solid #e5e7eb; border-bottom: 2px solid #e5e7eb; padding: 16px 20px; margin: 24px 0; background: #f9fafb; border-radius: 0;">
-<p><strong>This project exists to show that training your own language model is not magic.</strong> No massive GPU cluster required. One Colab notebook, under 10 minutes, and you have an 8M parameter transformer trained from scratch — synthetic data generation, BPE tokenizer, pretraining, SFT, and a browser-ready WebAssembly demo.</p>
+<div style="background: #0d1117; border-radius: 8px; padding: 16px 28px; margin: 8px 0;">
+<blockquote style="border-left: 4px solid #64ffda; border-top: 4px solid #30363d; border-bottom: 4px solid #30363d; padding: 16px 20px; margin: 0 0 20px 0; background: transparent; border-radius: 0; color: #8b949e;">
+<p><strong style="color: #9ea6b0;">This project exists to show that training your own language model is not magic.</strong> No massive GPU cluster required. One Colab notebook, under 10 minutes, and you have an 8M parameter transformer trained from scratch — synthetic data generation, BPE tokenizer, pretraining, SFT, and a browser-ready WebAssembly demo.</p>
 <p>DustyLM is small on purpose: you can inspect every line of the stack and understand how raw text becomes a trained character that talks back.</p>
 </blockquote>
 
-```text
-You> who are you?
+<pre style="background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 16px 20px; margin: 0; color: #ffffff; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap;"><code style="background: transparent; color: #ffffff; padding: 0; font-size: 14px;">You> who are you?
 Dusty> i am a little robot. i clean floors and find crumbs.
 
 You> what do you see?
@@ -45,8 +41,9 @@ You> what makes you happy?
 Dusty> a clean floor and a full battery. that is enough.
 
 You> do you feel safe on your dock?
-Dusty> beep beep. yes. the dock is safe.
-```
+Dusty> beep beep. yes. the dock is safe.</code></pre>
+
+</div>
 
 ---
 
@@ -54,10 +51,7 @@ Dusty> beep beep. yes. the dock is safe.
 
 ### Try in Browser
 
-<a href="https://khordoo.github.io/dusty-lm/" style="display: inline-flex; align-items: center; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; border-radius: 6px; overflow: hidden; border: none;">
-  <span style="background: #6b7280; color: #fff; padding: 8px 14px;">Try in</span>
-  <span style="background: #64ffda; color: #0d1117; padding: 8px 14px;">Browser</span>
-</a>
+[![Try in Browser](https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white)](https://khordoo.github.io/dusty-lm/)
 
 Runs entirely in your browser via ONNX and WebAssembly. No server, no API key, no data leaves the page.
 
