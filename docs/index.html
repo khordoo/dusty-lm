@@ -30,9 +30,9 @@
       --blue-soft: rgba(79, 111, 173, 0.08);
       --green: #21c58b;
       --red: #dc3545;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 2px 8px rgba(0,0,0,0.04);
-      --shadow-lg: 0 4px 16px rgba(0,0,0,0.05);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.05);
     }
 
     * {
@@ -90,16 +90,16 @@
     }
 
     .logo-mark {
-      width: 30px;
-      height: 30px;
+      width: 36px;
+      height: 36px;
       display: grid;
       place-items: center;
       flex: 0 0 auto;
     }
 
     .logo {
-      width: 28px;
-      height: 28px;
+      width: 34px;
+      height: 34px;
       object-fit: contain;
       display: block;
     }
@@ -113,12 +113,174 @@
       white-space: nowrap;
     }
 
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-dark);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .header-sub {
+      margin: 0;
+      padding: 8px 24px 0 calc(24px + 36px + 10px);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+      box-sizing: border-box;
+    }
+
+    .github-link {
+      display: inline-flex;
+      align-items: center;
+      color: var(--text-secondary);
+      transition: color 0.18s ease;
+      text-decoration: none;
+    }
+
+    .github-link:hover {
+      color: var(--text);
+    }
+
+    .github-link svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
+    .topics-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.3);
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .topics-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .topics-panel {
+      width: min(620px, calc(100vw - 48px));
+      max-height: min(540px, calc(100vh - 80px));
+      background: var(--panel);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topics-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topics-header h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .topics-close {
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .topics-close:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .topics-close svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
+    .topics-search {
+      margin: 12px 20px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      outline: 0;
+      transition: border-color 0.18s ease;
+    }
+
+    .topics-search:focus {
+      border-color: var(--accent);
+    }
+
+    .topics-search::placeholder {
+      color: var(--text-dim);
+    }
+
+    .topics-grid {
+      padding: 4px 20px 20px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 6px;
+    }
+
+    .topic-item {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+      text-decoration: none;
+    }
+
+    .topic-item:hover {
+      background: var(--surface);
+      color: var(--text);
+      border-color: var(--line-strong);
+    }
+
     .status {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       color: var(--text-dim);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -126,20 +288,30 @@
     }
 
     .dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 999px;
       background: #f59e0b;
       animation: pulse 1.8s ease-in-out infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.45; transform: scale(0.82); }
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.45;
+        transform: scale(0.82);
+      }
     }
 
     .status.ready .dot {
       background: var(--green);
+      box-shadow: 0 0 0 3px rgba(33, 197, 139, 0.14);
       animation: none;
     }
 
@@ -184,7 +356,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 8px 0;
+      padding: 8px 0 32px;
       color: var(--text-dim);
     }
 
@@ -223,8 +395,15 @@
     }
 
     @keyframes turnIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .turn.user-turn {
@@ -352,6 +531,31 @@
       fill: none;
     }
 
+    .form-topics-btn {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .form-topics-btn:hover {
+      background: var(--surface);
+      color: var(--text-secondary);
+    }
+
+    .form-topics-btn svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
     .input-area {
       width: min(670px, calc(100% - 48px));
       margin: 0 auto;
@@ -363,8 +567,8 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      height: 56px;
-      padding: 0 6px 0 18px;
+      height: 48px;
+      padding: 0 4px;
       border: 1px solid var(--line);
       border-radius: 12px;
       background: var(--panel);
@@ -396,8 +600,8 @@
     }
 
     .send-btn {
-      width: 42px;
-      height: 42px;
+      width: 36px;
+      height: 36px;
       border: 0;
       border-radius: 10px;
       background: var(--accent);
@@ -409,8 +613,8 @@
     }
 
     .send-btn svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       display: block;
     }
 
@@ -433,27 +637,6 @@
       font-weight: 500;
     }
 
-    .fine-print {
-      padding: 0 24px 18px;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .github-link {
-      display: inline-flex;
-      align-items: center;
-      color: var(--text-dim);
-      transition: color 0.18s ease;
-      text-decoration: none;
-      margin-left: 8px;
-    }
-
-    .github-link:hover {
-      color: var(--text);
-    }
-
     @media (max-width: 720px) {
       body {
         padding: 12px;
@@ -470,18 +653,22 @@
         min-height: 44px;
       }
 
+      .header-sub {
+        padding: 6px 16px 0 calc(16px + 32px + 10px);
+      }
+
       .title {
         font-size: 18px;
       }
 
       .logo-mark {
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
       }
 
       .logo {
-        width: 26px;
-        height: 26px;
+        width: 30px;
+        height: 30px;
       }
 
       .status {
@@ -523,11 +710,11 @@
       }
 
       form {
-        height: 52px;
+        height: 44px;
       }
 
       input {
-        font-size: 15px;
+        font-size: 14px;
       }
 
       .turn {
@@ -539,8 +726,13 @@
         padding-bottom: 6px;
       }
 
-      .fine-print {
-        padding-bottom: 14px;
+      .topics-panel {
+        width: calc(100vw - 32px);
+        max-height: calc(100vh - 60px);
+      }
+
+      .topics-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
       }
     }
   </style>
@@ -555,20 +747,26 @@
             <img class="logo" src="images/logo.png" alt="DustyLM logo">
           </span>
           <h1 class="title">DustyLM</h1>
+          <span class="badge">8M params · wasm</span>
         </div>
-        <div id="status" class="status"><span class="dot"></span><span>loading</span></div>
-        <a class="github-link" href="https://github.com/mahmoodkhordoo/tiny-gpt" target="_blank" rel="noopener" aria-label="View source on GitHub">
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
-            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-          </svg>
-        </a>
+        <div class="header-right">
+          <div id="status" class="status"><span class="dot"></span><span>loading</span></div>
+          <a class="github-link" href="https://github.com/khordoo/dusty-lm" target="_blank" rel="noopener"
+            aria-label="View source on GitHub">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+          </a>
+        </div>
       </header>
+      <p class="header-sub">running locally in your browser</p>
 
       <div id="messages" class="messages">
         <div class="empty-state" id="empty-state">
           <img class="empty-state-icon" src="images/logo.png" alt="">
-          <h2>Runs entirely in your browser.</h2>
-          <p>DustyLM is an 8M parameter language model. No server, no API key, no data leaves this page.</p>
+          <h2>Chat with Dusty.</h2>
+          <p>DustyLM is an 8M parameter language model.</p>
         </div>
       </div>
       <div class="suggestions" id="suggestions">
@@ -599,18 +797,44 @@
       </div>
       <div class="input-area">
         <form id="chat-form">
+          <button class="form-topics-btn" id="topics-btn" type="button" aria-label="Browse topics">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+          </button>
           <input id="prompt" autocomplete="off" placeholder="Say something to Dusty..." disabled>
           <button id="send" class="send-btn" type="submit" disabled aria-label="Send">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"/>
-              <path d="m12 5 7 7-7 7"/>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
             </svg>
           </button>
         </form>
       </div>
       <p id="speed-readout" class="speed-readout">Generation speed appears here after Dusty replies.</p>
-      <p class="fine-print">DustyLM may display inaccurate info. Verify outputs.</p>
     </section>
+
+    <div class="topics-overlay" id="topics-overlay">
+      <div class="topics-panel">
+        <div class="topics-header">
+          <h2>Topics</h2>
+          <button class="topics-close" id="topics-close" aria-label="Close topics">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+        <input class="topics-search" id="topics-search" type="text" placeholder="Search topics..." autocomplete="off">
+        <div class="topics-grid" id="topics-grid"></div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -961,6 +1185,120 @@
         promptEl.value = button.dataset.prompt;
         handlePrompt(button.dataset.prompt);
       });
+    });
+
+    const TOPICS = {
+      "crumbs": "Do you like finding crumbs on the floor?",
+      "chips": "What do you think about chip crumbs?",
+      "cereal": "Do you clean up cereal off the floor?",
+      "popcorn": "Do you enjoy cleaning popcorn pieces?",
+      "sugar": "What do you do with sugar on the floor?",
+      "rice": "Do you sweep up rice from the floor?",
+      "cookie": "Are cookie crumbs your favorite?",
+      "pizza": "Have you ever found pizza crust?",
+      "bread": "Do you like cleaning bread crumbs?",
+      "carpet": "Is cleaning carpet hard work?",
+      "hardwood": "Do you prefer hardwood floors?",
+      "tile": "What is cleaning tile like?",
+      "rug": "Are rugs confusing for you?",
+      "corners": "Do you clean dust from corners?",
+      "under_the_couch": "What is it like under the couch?",
+      "under_the_bed": "Do you go under the bed?",
+      "kitchen_floor": "Is the kitchen your favorite room?",
+      "bathroom_floor": "Do you clean the bathroom floor?",
+      "going_home": "Do you like going back to your dock?",
+      "low_battery": "What happens when your battery is low?",
+      "charging": "How do you feel when you are charging?",
+      "full_battery": "What do you do with a full battery?",
+      "home_dock": "Tell me about your dock.",
+      "cat_hair": "Do you clean up cat hair?",
+      "dog_hair": "What about dog hair on the floor?",
+      "pet_blocks_path": "What if a pet blocks your way?",
+      "full_of_fur": "Do you get clogged with fur?",
+      "socks": "What do you think about socks?",
+      "legos": "Are legos scary to clean?",
+      "cables": "Do you avoid cables on the floor?",
+      "wet_floor": "What do you do on wet floors?",
+      "stairs": "What do you think about stairs?",
+      "big_piece": "What if something is too big?",
+      "chair_legs": "Do you bump into chair legs?",
+      "stuck_in_corner": "What if you get stuck?",
+      "stuck_under_furniture": "Do you get stuck under furniture?",
+      "needs_help": "What do you do when you need help?",
+      "rescued": "How do you feel when rescued?",
+      "why_dusty_cleans": "Why do you clean?",
+      "dirty_floor": "What do you do with a dirty floor?",
+      "clean_floor": "How do you feel about a clean floor?",
+      "being_thanked": "Do you like being thanked?",
+      "being_ignored": "How do you feel when ignored?",
+      "dusty_thoughts": "What do you think about?",
+      "money": "Do you understand money?",
+      "love": "What does love mean to you?",
+      "politics": "What do you know about politics?",
+      "weather": "Do you know anything about weather?",
+      "internet": "Do you use the internet?",
+      "school": "What have you learned?",
+      "movies": "Do you watch movies?",
+      "music": "Do you like music?",
+      "sleep": "Do you ever sleep?",
+      "food_for_humans": "What do you think about human food?",
+      "dusty_introduction": "Who are you?",
+      "dusty_feelings": "How do you feel right now?",
+      "dusty_dreams": "What do you dream about?",
+      "dusty_fears": "What are you afraid of?",
+      "dusty_friends": "Who are your friends?",
+      "tomorrow": "What do you hope for tomorrow?",
+    };
+
+    function topicLabel(key) {
+      return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    const topicsOverlay = document.getElementById('topics-overlay');
+    const topicsGrid = document.getElementById('topics-grid');
+    const topicsSearch = document.getElementById('topics-search');
+    const topicsBtn = document.getElementById('topics-btn');
+    const topicsClose = document.getElementById('topics-close');
+
+    function renderTopics(filter) {
+      const keys = Object.keys(TOPICS);
+      const filtered = filter
+        ? keys.filter(k => topicLabel(k).toLowerCase().includes(filter.toLowerCase()))
+        : keys;
+      topicsGrid.innerHTML = filtered.map(key =>
+        `<button class="topic-item" data-key="${key}">${topicLabel(key)}</button>`
+      ).join('');
+    }
+
+    function openTopics() {
+      renderTopics('');
+      topicsSearch.value = '';
+      topicsOverlay.classList.add('open');
+      setTimeout(() => topicsSearch.focus(), 100);
+    }
+
+    function closeTopics() {
+      topicsOverlay.classList.remove('open');
+    }
+
+    topicsBtn.addEventListener('click', openTopics);
+    topicsClose.addEventListener('click', closeTopics);
+    topicsOverlay.addEventListener('click', (e) => {
+      if (e.target === topicsOverlay) closeTopics();
+    });
+
+    topicsSearch.addEventListener('input', () => {
+      renderTopics(topicsSearch.value);
+    });
+
+    topicsGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.topic-item');
+      if (!btn) return;
+      const key = btn.dataset.key;
+      const question = TOPICS[key];
+      closeTopics();
+      promptEl.value = question;
+      handlePrompt(question);
     });
 
     init();
