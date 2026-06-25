@@ -1,3 +1,4 @@
+"""Generate synthetic pretrain dataset via an OpenAI-compatible API."""
 import concurrent.futures
 import argparse
 import os
