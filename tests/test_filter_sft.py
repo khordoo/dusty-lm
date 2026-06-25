@@ -1,6 +1,6 @@
 import pytest
 
-from data_pipeline.filter_sft_dataset import (
+from data_pipeline.filter_sft import (
     filter_by_answer_length,
     sample_balanced_rows,
     sample_rows,

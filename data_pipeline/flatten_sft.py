@@ -35,7 +35,7 @@ def row_text(row: dict[str, Any], field: str, line_number: int, input_path: Path
     return value
 
 
-def flatten_sft_to_pretrain_text(
+def flatten_sft_text(
     input_path: Path,
     output_path: Path,
     user_field: str = DEFAULT_USER_FIELD,
@@ -78,7 +78,7 @@ def parse_args(argv=None):
 
 def main(argv=None) -> None:
     args = parse_args(argv)
-    row_count = flatten_sft_to_pretrain_text(
+    row_count = flatten_sft_text(
         input_path=args.input,
         output_path=args.output,
         user_field=args.user_field,
