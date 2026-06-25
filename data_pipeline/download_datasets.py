@@ -1,4 +1,4 @@
-"""Download public training datasets used by the Dusty quick-start flow."""
+# Downloads public training datasets used by the Dusty quick-start flow.
 
 import argparse
 import shutil

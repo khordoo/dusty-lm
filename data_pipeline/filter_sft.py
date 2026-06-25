@@ -1,4 +1,5 @@
-"""Filter and balance SFT dataset by category, token length, and quality."""
+# Filter and balance SFT dataset by category, token length, and quality.
+
 import argparse
 import json
 import random

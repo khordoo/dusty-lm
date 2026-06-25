@@ -1,4 +1,5 @@
-"""Flatten SFT JSONL into a flat pretrain-style text file (ChatML format)."""
+# Flatten SFT JSONL into a flat pretrain-style text file (ChatML format).
+
 import argparse
 import sys
 from pathlib import Path

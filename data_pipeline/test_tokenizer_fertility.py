@@ -1,4 +1,5 @@
-"""Train BPE tokenizers at various vocab sizes and report fertility scores."""
+# Train BPE tokenizers at various vocab sizes and report fertility scores.
+
 import argparse
 from pathlib import Path
 
