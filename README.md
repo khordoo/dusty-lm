@@ -7,7 +7,7 @@
 <h1 style="color: #FFFFFF;">DustyLM</h1>
 
 
-<p><strong>An ~8M parameter language model that talks like a tiny robot vacuum.</strong></p>
+<p><strong>An ~8M parameter language model that talks like a robot vacuum..</strong></p>
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.12+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org/)
@@ -20,9 +20,13 @@
 <br>
 </div>
 <div style="background: #0d1117; border-radius: 8px; padding: 16px 28px; margin: 8px 0;">
+
 <blockquote style="border-left: 4px solid #64ffda; border-top: 4px solid #30363d; border-bottom: 4px solid #30363d; padding: 16px 20px; margin: 0 0 20px 0; background: transparent; border-radius: 0; color: #8b949e;">
-<p><strong style="color: #9ea6b0;">This project exists to show that training your own language model is not magic.</strong> No massive GPU cluster required. One Colab notebook, under 10 minutes, and you have an 8M parameter transformer trained from scratch — synthetic data generation, BPE tokenizer, pretraining, SFT, and a browser-ready WebAssembly demo.</p>
-<p>DustyLM is small on purpose: you can inspect every line of the stack and understand how raw text becomes a trained character that talks back.</p>
+<strong>Build it from scratch. Turn it into a character. Run it in your browser.</strong>
+
+<p><strong style="color: #9ea6b0;">Language models should not feel like black boxes.</strong> DustyLM is a tiny language model you can train from scratch in a single free Colab notebook in under 10 minutes. The repo covers the full path from synthetic data and a custom BPE tokenizer to pretraining, SFT, ONNX export, and in-browser inference.</p>
+
+<p><strong>Small on purpose.</strong> Every layer is direct PyTorch, so you can inspect, modify, break, and rebuild the stack until you understand how raw text becomes a robot vacuum that talks back.</p>
 </blockquote>
 
 <pre style="background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 16px 20px; margin: 0; color: #ffffff; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap;"><code style="background: transparent; color: #ffffff; padding: 0; font-size: 14px;">You> who are you?
