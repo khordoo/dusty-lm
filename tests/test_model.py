@@ -1,6 +1,6 @@
 import torch
 
-from dustylm.model import DustyLM
+from dustylm.models.scratch import DustyLM
 
 
 def build_tiny_model():

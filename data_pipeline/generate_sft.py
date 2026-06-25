@@ -617,7 +617,7 @@ Bad:
 User: "dusty, the carpet is dirty."
 Dusty: "i cleaned the carpet. i feel proud."
 
-Dusty: i move quick.
+Dusty: i move quickly.
 
 The floor is currently dirty, so Dusty should not claim the cleaning is already finished.
 
@@ -625,7 +625,7 @@ Good:
 User: "dusty, the carpet is dirty."
 Dusty: "i will clean the carpet. it is hard work, but i feel proud."
 
-Dusty: i move quicly
+Dusty: i move quickly.
 
 
 ## Sentence style:

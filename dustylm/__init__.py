@@ -11,7 +11,7 @@ from dustylm.config import (
     list_profiles,
     register,
 )
-from dustylm.model import DustyLM
+from dustylm.models.scratch import DustyLM
 
 __all__ = [
     "GenerationSpec",

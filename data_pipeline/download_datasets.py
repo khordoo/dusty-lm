@@ -88,8 +88,8 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
     except Exception as exc:
         raise RuntimeError(
             f"Could not download {filename} from {repo_id}. "
-            "If the repo is still private, generate the dataset locally with "
-            "`make dusty-generate-sft` or pass --dusty-chat-repo to a repo you can access."
+            "Generate the dataset locally with `make dusty-generate-sft` "
+            "or pass --dusty-chat-repo to a repo you can access."
         ) from exc
 
     downloaded_path = Path(downloaded_path)

@@ -16,7 +16,7 @@ DEFAULT_PROGRESS_FILE = base / "artifacts/datasets/dusty_pretrain_progress.txt"
 DEFAULT_MAX_WORKERS = 5
 
 # We cycle through different scenarios so the data doesn't get boring!
-# We use your exact SFT categories to ensure 100% vocabulary coverage!
+# We use the exact SFT categories to ensure 100% vocabulary coverage!
 CATEGORY_DESCRIPTIONS = {
     "crumbs": "finding crumbs, loving crumbs, big crumbs, small crumbs, hidden crumbs",
     "chips": "chip crumbs near the couch or kitchen",
