@@ -24,7 +24,6 @@ DUSTY_SFT_FILTERED_OUT ?= artifacts/datasets/dusty_sft_2000.jsonl
 DUSTY_SFT_FILTER_TARGET ?= 2000
 DUSTY_SFT_MAX_ANSWER_TOKENS ?= 256
 DUSTY_SFT_SAMPLING_MODE ?= balanced
-DUSTY_SFT_CHATML_PRETRAIN_OUT ?= artifacts/datasets/dusty_sft_chatml_pretrain.txt
 DUSTY_CHAT_REPO ?= mkhordoo/dusty-chat
 DUSTY_CHAT_FILE ?= dusty_sft.jsonl
 TINYSTORIES_SLICE ?= train[:100000]
@@ -37,7 +36,7 @@ HF_REPO_ID ?=
 HF_PROFILE ?= sft_dusty8m
 HF_STAGING_DIR ?= artifacts/hub_upload/$(HF_PROFILE)
 
-.PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-flatten-sft-pretrain dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train serve-web dusty-export-onnx stage-hub push-hub tensorboard
+.PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train serve-web dusty-export-onnx stage-hub push-hub tensorboard
 
 help:
 	@echo "DustyLM commands"
@@ -47,7 +46,6 @@ help:
 	@echo "  make dusty-generate-pretrain   Generate artifacts/datasets/dusty_pretrain.txt"
 	@echo "  make dusty-generate-sft        Generate artifacts/datasets/dusty_sft.jsonl"
 	@echo "  make dusty-filter-sft          Filter/sample SFT JSONL to artifacts/datasets/dusty_sft_2000.jsonl"
-	@echo "  make dusty-flatten-sft-pretrain Flatten SFT JSONL to ChatML pretrain text"
 	@echo "  make dusty-tokenizer            Train artifacts/tokenizers/dusty_tokenizer.json"
 	@echo "  make dusty-pretrain-data        Tokenize artifacts/datasets/dusty_pretrain.txt"
 	@echo "  make dusty-pretrain EPOCHS=1    Train the dusty8m profile"
@@ -99,11 +97,6 @@ dusty-filter-sft:
 		--target-total $(DUSTY_SFT_FILTER_TARGET) \
 		--max-answer-tokens $(DUSTY_SFT_MAX_ANSWER_TOKENS) \
 		--sampling-mode $(DUSTY_SFT_SAMPLING_MODE)
-
-dusty-flatten-sft-pretrain:
-	uv run python data_pipeline/flatten_sft.py \
-		--input $(DUSTY_SFT_OUT) \
-		--output $(DUSTY_SFT_CHATML_PRETRAIN_OUT)
 
 dusty-tokenizer:
 	uv run python -m dustylm.tokenizer

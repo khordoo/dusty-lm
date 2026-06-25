@@ -8,7 +8,6 @@ from tokenizers import ByteLevelBPETokenizer
 DEFAULT_INPUT_PATH = Path("artifacts/datasets/tinystories_base.txt")
 DEFAULT_TRAINING_FILES = [
     Path("artifacts/datasets/tinystories_base.txt"),
-    Path("artifacts/datasets/dusty_sft_chatml_pretrain.txt"),
 ]
 DEFAULT_LINE_LIMIT = 10_000
 DEFAULT_VOCAB_SIZES = [4096, 8192]
