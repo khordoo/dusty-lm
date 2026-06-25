@@ -175,7 +175,7 @@ dustylm/
     ├── scratch.py   # Custom DustyLM transformer (GQA, RoPE, RMSNorm, KV cache)
     └── smollm2.py   # SmolLM2-compatible transformer
 
-dataset_generation/  # Synthetic pretrain/SFT generation and filtering
+data_pipeline/  # Synthetic pretrain/SFT generation and filtering
 scripts/             # ONNX export and Hugging Face Hub staging/upload
 docs/                # Browser demo assets
 notebooks/           # Quickstart, training, advanced tools, export, and SmolLM2 notebooks

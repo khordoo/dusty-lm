@@ -9,10 +9,10 @@ from typing import Any
 from tokenizers import Tokenizer
 
 try:
-    from dataset_generation.generate_sft_dataset_with_fallback import CATEGORIES
+    from data_pipeline.generate_sft_dataset_with_fallback import CATEGORIES
 except ModuleNotFoundError:
     sys.path.append(str(Path(__file__).resolve().parents[1]))
-    from dataset_generation.generate_sft_dataset_with_fallback import CATEGORIES
+    from data_pipeline.generate_sft_dataset_with_fallback import CATEGORIES
 
 DEFAULT_INPUT_PATH = Path("artifacts/datasets/dusty_sft.jsonl")
 DEFAULT_OUTPUT_PATH = Path("artifacts/datasets/dusty_sft_2000.jsonl")

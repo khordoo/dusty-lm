@@ -1,6 +1,6 @@
 import pytest
 
-from dataset_generation.flatten_sft_to_pretrain import (
+from data_pipeline.flatten_sft_to_pretrain import (
     flatten_sft_to_pretrain_text,
     format_chatml_example,
 )

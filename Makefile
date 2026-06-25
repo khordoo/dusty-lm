@@ -62,7 +62,7 @@ help:
 	@echo "  make tensorboard                Plot training logs from runs/"
 
 download-datasets:
-	uv run python dataset_generation/download_hf_dataset.py \
+	uv run python data_pipeline/download_hf_dataset.py \
 		--tinystories-slice "$(TINYSTORIES_SLICE)" \
 		--tinystories-out $(TINYSTORIES_OUT) \
 		--dusty-pretrain-out $(DUSTY_PRETRAIN_OUT) \
@@ -71,14 +71,14 @@ download-datasets:
 		--dusty-sft-out $(DUSTY_SFT_OUT)
 
 dusty-generate-pretrain:
-	uv run python dataset_generation/generate_pretrain_dataset_gen_async.py \
+	uv run python data_pipeline/generate_pretrain_dataset_gen_async.py \
 		--model $(DUSTY_MODEL) \
 		--workers $(DUSTY_PRETRAIN_WORKERS) \
 		--out $(DUSTY_PRETRAIN_OUT) \
 		--progress $(DUSTY_PRETRAIN_PROGRESS)
 
 dusty-generate-sft:
-	uv run python dataset_generation/generate_sft_dataset_with_fallback.py \
+	uv run python data_pipeline/generate_sft_dataset_with_fallback.py \
 		--mode generate \
 		--model $(DUSTY_MODEL) \
 		--fallback-model $(DUSTY_FALLBACK_MODEL) \
@@ -93,7 +93,7 @@ dusty-generate-sft:
 		--rejected $(DUSTY_SFT_REJECTED)
 
 dusty-filter-sft:
-	uv run python dataset_generation/filter_sft_dataset.py \
+	uv run python data_pipeline/filter_sft_dataset.py \
 		--input $(DUSTY_SFT_OUT) \
 		--output $(DUSTY_SFT_FILTERED_OUT) \
 		--target-total $(DUSTY_SFT_FILTER_TARGET) \
@@ -101,7 +101,7 @@ dusty-filter-sft:
 		--sampling-mode $(DUSTY_SFT_SAMPLING_MODE)
 
 dusty-flatten-sft-pretrain:
-	uv run python dataset_generation/flatten_sft_to_pretrain.py \
+	uv run python data_pipeline/flatten_sft_to_pretrain.py \
 		--input $(DUSTY_SFT_OUT) \
 		--output $(DUSTY_SFT_CHATML_PRETRAIN_OUT)
 
