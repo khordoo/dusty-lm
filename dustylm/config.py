@@ -63,7 +63,7 @@ class TrainingSpec:
     init_checkpoint_path: Path | None = None
     checkpoint_every_steps: int | None = None
     checkpoint_dir: Path | None = None
-    raw_python_dataset_path: str | Path = REPO_ROOT / "data" / "python_dataset"
+    raw_python_dataset_path: str | Path = REPO_ROOT / "artifacts" / "datasets" / "tiny_codes_python_raw"
     log_dir: str | Path = REPO_ROOT / "runs"
 
 
@@ -277,7 +277,7 @@ register(
             / "scratch_small.pt",
             max_seq_len=256,
             weight_decay=0.01,
-            raw_text_path=REPO_ROOT / "demo_text",
+            raw_text_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_pretrain.txt",
         ),
         generation=GenerationSpec(
             checkpoint_path=REPO_ROOT
@@ -311,36 +311,9 @@ register(
             local_weights_path=REPO_ROOT
             / "artifacts"
             / "hf"
-            / "smollm2_360m.safetensors",
+            / "smollm2_360.safetensors",
             local_tokenizer_path=SMOLLM2_TOKENIZER.path_or_name,
         ),
-    )
-)
-
-register(
-    Profile(
-        name="sft_smollm2_360m",
-        model=smollm2_360m_model,
-        training=TrainingSpec(
-            task=TrainingTask.SFT,
-            dataset_path=REPO_ROOT / "data" / "tiny_codes_python_tokenized",
-            batch_size=1,
-            learning_rate=1e-5,
-            output_checkpoint=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "sft_smollm2_360m.pt",
-            max_seq_len=2048,
-        ),
-        generation=replace(
-            get_profile("smollm2_360m").generation,
-            checkpoint_path=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "sft_smollm2_360m.pt",
-            max_chat_turns=5,
-        ),
-        base_profile="smollm2_360m",
     )
 )
 
@@ -366,5 +339,35 @@ register(
             / "smollm2_135m.safetensors",
             local_tokenizer_path=SMOLLM2_TOKENIZER.path_or_name,
         ),
+    )
+)
+
+register(
+    Profile(
+        name="sft_smollm2_135m",
+        model=smollm2_135m_model,
+        training=TrainingSpec(
+            task=TrainingTask.SFT,
+            dataset_path=REPO_ROOT
+            / "artifacts"
+            / "datasets"
+            / "tiny_codes_python_tokenized",
+            batch_size=1,
+            learning_rate=1e-5,
+            output_checkpoint=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "sft_smollm2_135m.pt",
+            max_seq_len=2048,
+        ),
+        generation=replace(
+            get_profile("smollm2_135m").generation,
+            checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "sft_smollm2_135m.pt",
+            max_chat_turns=5,
+        ),
+        base_profile="smollm2_135m",
     )
 )

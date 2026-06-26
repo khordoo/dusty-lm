@@ -84,10 +84,10 @@ def test_smollm2_profiles_share_tokenizer_path():
 
 
 def test_sft_profile_uses_base_model_spec():
-    base = get_profile("smollm2_360m")
-    sft = get_profile("sft_smollm2_360m")
+    base = get_profile("smollm2_135m")
+    sft = get_profile("sft_smollm2_135m")
 
-    assert sft.base_profile == "smollm2_360m"
+    assert sft.base_profile == "smollm2_135m"
     assert sft.model == base.model
     assert sft.training is not None
     assert sft.generation is not None
@@ -102,7 +102,7 @@ def test_smollm2_profiles_define_download_artifacts():
     assert profile_360m.hf_artifacts is not None
     assert profile_360m.hf_artifacts.repo_id == "HuggingFaceTB/SmolLM2-360M"
     assert profile_360m.hf_artifacts.weights_filename == "model.safetensors"
-    assert profile_360m.hf_artifacts.local_weights_path.name == "smollm2_360m.safetensors"
+    assert profile_360m.hf_artifacts.local_weights_path.name == "smollm2_360.safetensors"
 
     assert profile_135m.hf_artifacts is not None
     assert profile_135m.hf_artifacts.repo_id == "HuggingFaceTB/SmolLM2-135M"

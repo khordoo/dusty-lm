@@ -65,13 +65,13 @@ Runs entirely in your browser via ONNX and WebAssembly. No server, no API key, n
 
 ### Chat in Colab
 
-[![Open in Colab](https://img.shields.io/badge/Open_in-Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mkhordoo/dusty-lm/blob/main/notebooks/01_quickstart.ipynb)
+[![Open in Colab](https://img.shields.io/badge/Open_in-Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/khordoo/dusty-lm/blob/main/notebooks/01_quickstart.ipynb)
 
 Three cells. Under 30 seconds. No GPU required.
 
 ### Train Your Own
 
-[![Train in Colab](https://img.shields.io/badge/Train_in-Colab-2ea44f?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mkhordoo/dusty-lm/blob/main/notebooks/02_train_from_scratch.ipynb)
+[![Train in Colab](https://img.shields.io/badge/Train_in-Colab-2ea44f?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/khordoo/dusty-lm/blob/main/notebooks/02_train_from_scratch.ipynb)
 
 Downloads datasets, trains the tokenizer, runs pretraining, runs SFT, and tests the checkpoint.
 
@@ -183,7 +183,6 @@ DustyLM compiles directly to WebAssembly (WASM). You can serve the entire 8M par
 ```text
 dustylm/
 ├── config.py        # Profiles, model specs, training specs, generation specs
-├── model.py         # Compatibility import for the scratch DustyLM model
 ├── modeling.py      # Model/tokenizer factory
 ├── train.py         # Training loop
 ├── generate.py      # Prompt generation CLI
