@@ -1,4 +1,4 @@
-# Downloads public training datasets used by the Dusty quick-start flow.
+"""Download public training datasets used by the Dusty quick-start flow."""
 
 import argparse
 import shutil
@@ -6,6 +6,7 @@ from pathlib import Path
 
 from datasets import load_dataset
 from huggingface_hub import hf_hub_download
+from huggingface_hub.utils import HfHubHTTPError
 
 DEFAULT_TINYSTORIES_OUT = Path("artifacts/datasets/tinystories_base.txt")
 DEFAULT_DUSTY_PRETRAIN_OUT = Path("artifacts/datasets/dusty_pretrain.txt")
@@ -85,11 +86,12 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
             local_dir=output_path.parent,
             local_dir_use_symlinks=False,
         )
-    except Exception as exc:
+    except (OSError, HfHubHTTPError) as exc:
         raise RuntimeError(
             f"Could not download {filename} from {repo_id}. "
             "Generate the dataset locally with `make dusty-generate-sft` "
-            "or pass --dusty-chat-repo to a repo you can access."
+            "or pass --dusty-chat-repo to a repo you can access. "
+            f"Original error: {exc}"
         ) from exc
 
     downloaded_path = Path(downloaded_path)

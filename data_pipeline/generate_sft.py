@@ -1,4 +1,4 @@
-# Generate synthetic SFT dataset via an API, with fallback model support.
+"""Generate synthetic SFT dataset via an API, with fallback model support."""
 
 import argparse
 import json
