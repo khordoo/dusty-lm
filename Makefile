@@ -1,3 +1,10 @@
+CYAN   := \033[0;36m
+GREEN  := \033[0;32m
+YELLOW := \033[0;33m
+RED    := \033[0;31m
+BOLD   := \033[1m
+NC     := \033[0m
+
 EPOCHS ?= 23
 CHECKPOINT_EVERY_STEPS ?= 100
 CHECKPOINT_STEP ?=
@@ -36,30 +43,39 @@ HF_REPO_ID ?=
 HF_PROFILE ?= sft_dusty8m
 HF_STAGING_DIR ?= artifacts/hub_upload/$(HF_PROFILE)
 
-.PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train serve-web dusty-export-onnx stage-hub push-hub tensorboard
+.PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train serve-web dusty-export-onnx stage-hub push-hub tensorboard train-end-to-end
 
 help:
-	@echo "DustyLM commands"
-	@echo ""
-	@echo "Dusty 8M workflow:"
-	@echo "  make download-datasets          Download TinyStories + Dusty SFT data"
-	@echo "  make dusty-generate-pretrain   Generate artifacts/datasets/dusty_pretrain.txt"
-	@echo "  make dusty-generate-sft        Generate artifacts/datasets/dusty_sft.jsonl"
-	@echo "  make dusty-filter-sft          Filter/sample SFT JSONL to artifacts/datasets/dusty_sft_2000.jsonl"
-	@echo "  make dusty-tokenizer            Train artifacts/tokenizers/dusty_tokenizer.json"
-	@echo "  make dusty-pretrain-data        Tokenize artifacts/datasets/dusty_pretrain.txt"
-	@echo "  make dusty-pretrain EPOCHS=1    Train the dusty8m profile"
-	@echo "  make dusty-sft-data             Tokenize artifacts/datasets/dusty_sft.jsonl"
-	@echo "  make dusty-sft-train EPOCHS=1   Train the sft_dusty8m profile"
-	@echo "  make chat                       Chat with the local SFT inference CLI"
-	@echo "  make dusty-generate             Generate with PROFILE=dusty8m PROMPT='i wake up.'"
-	@echo "  make serve-web                  Serve the browser demo locally"
-	@echo "  make dusty-export-onnx          Export ONNX browser-demo artifacts to docs/"
-	@echo "  make stage-hub HF_REPO_ID=mkhordoo/dusty-8m-sft"
-	@echo "  make push-hub HF_REPO_ID=mkhordoo/dusty-8m-sft"
-	@echo "  make tensorboard                Plot training logs from runs/"
+	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
+	@printf "\n"
+	@printf "$(BOLD)Data:$(NC)\n"
+	@printf "  make download-datasets          Download TinyStories + Dusty SFT data\n"
+	@printf "  make dusty-generate-pretrain   Generate pretrain text\n"
+	@printf "  make dusty-generate-sft        Generate SFT chat data\n"
+	@printf "  make dusty-filter-sft          Filter/sample SFT JSONL\n"
+	@printf "\n"
+	@printf "$(BOLD)Tokenizer & Datasets:$(NC)\n"
+	@printf "  make dusty-tokenizer            Train tokenizer\n"
+	@printf "  make dusty-pretrain-data        Tokenize pretrain text\n"
+	@printf "  make dusty-sft-data             Tokenize SFT chat data\n"
+	@printf "\n"
+	@printf "$(BOLD)Training:$(NC)\n"
+	@printf "  make dusty-pretrain EPOCHS=1    Train the dusty8m profile\n"
+	@printf "  make dusty-sft-train EPOCHS=1   Train the sft_dusty8m profile\n"
+	@printf "\n"
+	@printf "$(BOLD)Inference & Export:$(NC)\n"
+	@printf "  make chat                       Chat with local SFT inference CLI\n"
+	@printf "  make dusty-generate             Generate with PROFILE=dusty8m PROMPT='hello'\n"
+	@printf "  make serve-web                  Serve browser demo locally\n"
+	@printf "  make dusty-export-onnx          Export ONNX artifacts to docs/\n"
+	@printf "\n"
+	@printf "$(BOLD)Hub:$(NC)\n"
+	@printf "  make stage-hub HF_REPO_ID=...   Stage artifacts locally (dry run)\n"
+	@printf "  make push-hub HF_REPO_ID=...    Push staged artifacts to Hugging Face Hub\n"
+	@printf "  make tensorboard                Plot training logs from runs/\n"
 
 download-datasets:
+	@printf "$(YELLOW)Downloading TinyStories and Dusty SFT datasets...$(NC)\n"
 	uv run python data_pipeline/download_datasets.py \
 		--tinystories-slice "$(TINYSTORIES_SLICE)" \
 		--tinystories-out $(TINYSTORIES_OUT) \
@@ -67,6 +83,7 @@ download-datasets:
 		--dusty-chat-repo $(DUSTY_CHAT_REPO) \
 		--dusty-chat-file $(DUSTY_CHAT_FILE) \
 		--dusty-sft-out $(DUSTY_SFT_OUT)
+	@printf "$(GREEN)✔ Datasets downloaded successfully!$(NC)\n"
 
 dusty-generate-pretrain:
 	uv run python data_pipeline/generate_pretrain.py \
@@ -99,13 +116,19 @@ dusty-filter-sft:
 		--sampling-mode $(DUSTY_SFT_SAMPLING_MODE)
 
 dusty-tokenizer:
+	@printf "$(YELLOW)Training tokenizer...$(NC)\n"
 	uv run python -m dustylm.tokenizer
+	@printf "$(GREEN)✔ Tokenizer trained successfully!$(NC)\n"
 
 dusty-pretrain-data:
+	@printf "$(YELLOW)Tokenizing pretrain data for dusty8m...$(NC)\n"
 	uv run python -m dustylm.data_prep --profile dusty8m
+	@printf "$(GREEN)✔ Pretrain data tokenized!$(NC)\n"
 
 dusty-pretrain:
+	@printf "$(YELLOW)Starting pretraining (dusty8m, $(EPOCHS) epochs)...$(NC)\n"
 	uv run python -m dustylm.train --profile dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
+	@printf "$(GREEN)✔ Pretraining complete! Checkpoints saved.$(NC)\n"
 
 dusty-generate:
 	uv run python dustylm/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
@@ -114,40 +137,72 @@ chat:
 	uv run python -m dustylm.inference $(if $(CHAT_PROFILE),--profile $(CHAT_PROFILE),)$(if $(CHECKPOINT_PATH), --checkpoint-path $(CHECKPOINT_PATH),)$(if $(TOKENIZER_PATH), --tokenizer-path $(TOKENIZER_PATH),)$(if $(DEVICE), --device $(DEVICE),)$(if $(TEMPERATURE), --temperature $(TEMPERATURE),)$(if $(MAX_TOKENS), --max-tokens $(MAX_TOKENS),)$(if $(TOP_P), --top-p $(TOP_P),)$(if $(MAX_CHAT_TURNS), --max-chat-turns $(MAX_CHAT_TURNS),)
 
 dusty-sft-data:
+	@printf "$(YELLOW)Tokenizing SFT data for sft_dusty8m...$(NC)\n"
 	uv run python -m dustylm.data_prep --profile sft_dusty8m
+	@printf "$(GREEN)✔ SFT data tokenized!$(NC)\n"
 
 dusty-sft-train:
+	@printf "$(YELLOW)Starting SFT fine-tuning (sft_dusty8m, $(EPOCHS) epochs)...$(NC)\n"
 	uv run python -m dustylm.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
+	@printf "$(GREEN)✔ SFT fine-tuning complete! Checkpoint saved.$(NC)\n"
 
 dusty-export-onnx:
 	uv run --extra onnx python scripts/export_onnx.py --profile $(ONNX_PROFILE) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),) --output $(ONNX_OUT) --tokenizer-output $(ONNX_TOKENIZER_OUT)
 
 serve-web:
 	uv run --extra onnx python scripts/export_onnx.py --profile $(ONNX_PROFILE) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),) --output $(ONNX_OUT) --tokenizer-output $(ONNX_TOKENIZER_OUT)
-	@echo "Starting local web server..."
-	@echo "Open http://localhost:$(WEB_PORT) in your browser to chat with DustyLM."
+	@printf "$(GREEN)✔ ONNX artifacts exported.$(NC)\n"
+	@printf "$(GREEN)Starting local web server...$(NC)\n"
+	@printf "$(CYAN)Open http://localhost:$(WEB_PORT) in your browser to chat with DustyLM.$(NC)\n"
 	uv run python -m http.server $(WEB_PORT) --directory docs
 
 stage-hub:
 ifndef HF_REPO_ID
-	$(error HF_REPO_ID is undefined. Please run: make stage-hub HF_REPO_ID=your-username/repo-name)
+	$(error $(RED)HF_REPO_ID is undefined. Please run: make stage-hub HF_REPO_ID=your-username/repo-name$(NC))
 endif
-	@echo "Staging Hugging Face Hub artifacts locally for $(HF_REPO_ID) (dry run; no upload)."
+	@printf "$(YELLOW)Staging artifacts locally for $(HF_REPO_ID) (dry run)...$(NC)\n"
 	uv run --extra onnx --extra hub python scripts/push_to_hub.py \
 		--repo-id $(HF_REPO_ID) \
 		--profile $(HF_PROFILE) \
 		--staging-dir $(HF_STAGING_DIR) \
 		--dry-run
+	@printf "$(GREEN)✔ Staging complete. Review artifacts before running make push-hub.$(NC)\n"
 
 push-hub:
 ifndef HF_REPO_ID
-	$(error HF_REPO_ID is undefined. Please run: make push-hub HF_REPO_ID=your-username/repo-name)
+	$(error $(RED)HF_REPO_ID is undefined. Please run: make push-hub HF_REPO_ID=your-username/repo-name$(NC))
 endif
-	@echo "Pushing staged DustyLM artifacts to Hugging Face Hub repo $(HF_REPO_ID)."
+	@printf "$(YELLOW)Pushing artifacts to Hugging Face Hub repo $(HF_REPO_ID)...$(NC)\n"
 	uv run --extra onnx --extra hub python scripts/push_to_hub.py \
 		--repo-id $(HF_REPO_ID) \
 		--profile $(HF_PROFILE) \
 		--staging-dir $(HF_STAGING_DIR)
+	@printf "$(GREEN)✔ Push to Hugging Face Hub complete!$(NC)\n"
 
 tensorboard:
+	@printf "$(YELLOW)Starting TensorBoard...$(NC)\n"
 	uv run tensorboard --logdir runs
+	@printf "$(GREEN)✔ TensorBoard stopped.$(NC)\n"
+
+# =============================================================================
+#  Automation Orchestration
+# =============================================================================
+
+train-end-to-end:
+	@printf "$(CYAN)==========================================$(NC)\n"
+	@printf "$(CYAN)   Starting End-to-End DustyLM Pipeline   $(NC)\n"
+	@printf "$(CYAN)==========================================$(NC)\n"
+	@printf "\n"
+	@printf "$(YELLOW)[1/4] Generating pre-training data...$(NC)\n"
+	make dusty-pretrain-data
+	@printf "\n"
+	@printf "$(YELLOW)[2/4] Running pre-training phase (Epochs: 1)...$(NC)\n"
+	make dusty-pretrain EPOCHS=1
+	@printf "\n"
+	@printf "$(YELLOW)[3/4] Generating SFT data...$(NC)\n"
+	make dusty-sft-data
+	@printf "\n"
+	@printf "$(YELLOW)[4/4] Running SFT phase (Epochs: 1)...$(NC)\n"
+	make dusty-sft-train EPOCHS=1
+	@printf "\n"
+	@printf "$(GREEN)✔ End-to-End Pipeline complete! All checkpoints saved to artifacts/.$(NC)\n"
