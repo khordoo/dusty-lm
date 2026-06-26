@@ -14,6 +14,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 [![Model: dusty8m](https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square)](https://huggingface.co/mkhordoo/dusty-8m-sft)
 [![Dataset: dusty-chat](https://img.shields.io/badge/Dataset-dusty_chat-FFD21E?style=flat-square&logo=huggingface&logoColor=white)](https://huggingface.co/datasets/mkhordoo/dusty-chat)
+[![PyPI](https://img.shields.io/pypi/v/dustylm?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/dustylm/)
 <div style="height: 12px;"></div>
 
 [![Try in Browser](https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white)](https://khordoo.github.io/dusty-lm/)
