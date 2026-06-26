@@ -195,27 +195,31 @@ dusty_8m_model = ModelSpec(
     tokenizer=DUSTY_TOKENIZER,
 )
 
-# ── Profile Architecture Tiers ─────────────────────────────────────────────────
+# =============================================================================
+# PROFILE REGISTRY
+# =============================================================================
+# Profiles are organized into three tiers, allowing users to scale from
+# a minimal toy model up to a production-grade architecture:
 #
-# Profiles are organized into three tiers so users can pick the right level
-# of complexity without wading through irrelevant config:
-#
-# Tier 1 — Dusty (scratch GPT)
-#   The primary, fully-supported path.  Custom BPE tokenizer, synthetic
-#   pretrain/SFT data, 8M parameters.  One-click in Colab.
+# Tier 1 — Dusty (Core)
+#   The fully-supported primary pipeline. Features a custom BPE tokenizer,
+#   synthetic pretrain/SFT datasets, and the 8M parameter architecture.
 #   Profiles: dusty8m, sft_dusty8m
 #
-# Tier 2 — Scratch (experimental GPT)
-#   Same scratch architecture family but with the r50k GPT-2 tokenizer and a
-#   larger embedding dimension.  A sandbox for experimenting with different
-#   tokenizers, text sources, and hyperparameters outside the Dusty pipeline.
+# Tier 2 — Scratch (Experimental)
+#   A sandbox environment. Uses the same scratch architecture family but with
+#   the standard GPT-2 tokenizer (r50k) and a larger embedding dimension.
 #   Profile: scratch_small
 #
-# Tier 3 — SmolLM2 (pretrained baseline)
-#   Uses the Hugging Face SmolLM2 architecture (embed_tokens, gate/up/down
-#   projections) as a stronger starting point.  Requires downloading weights
-#   from HF Hub via `make download-smollm2`.
+# Tier 3 — SmolLM2 (Pre-configured Baselines)
+#   Exact architectural specifications required to flawlessly load pre-trained
+#   Hugging Face SmolLM2 models without guessing hyperparameters.
 #   Profiles: smollm2_135m, smollm2_360m, sft_smollm2_135m
+#
+#   Quick Start: Download, convert, and run a SmolLM2 profile:
+#     uv run python -m dustylm.artifacts download --profile smollm2_135m --convert
+#     uv run python -m dustylm.generate --profile smollm2_135m --prompt "Hello, robot."
+# =============================================================================
 
 register(
     Profile(
@@ -313,6 +317,14 @@ register(
     )
 )
 
+# =============================================================================
+# SmolLM2 360m and 135m Pre-trained Baselines
+#
+# Note: The base profiles below (smollm2_360m, smollm2_135m) do not include a TrainingSpec. They are 
+# fully pre-trained by Hugging Face and are intended for direct inference 
+# or to be used as initialization weights for the SFT profile below.
+# =============================================================================
+
 register(
     Profile(
         name="smollm2_360m",
@@ -369,18 +381,15 @@ register(
         model=smollm2_135m_model,
         training=TrainingSpec(
             task=TrainingTask.SFT,
-            # Placeholder — replace this path with your own tokenized SFT dataset
-            # before running `python -m dustylm.train --profile sft_smollm2_135m`.
-            dataset_path=REPO_ROOT
-            / "artifacts"
-            / "datasets"
-            / "custom_sft_tokenized",
+            # By default, this points to the Dusty dataset so you can test 
+            # fine-tuning a larger architecture out of the box. 
+            # Replace this path with your own tokenized SFT dataset
+            # before running `python -m dustylm.train --profile sft_smollm2_135m`
+            dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_tokenized",
             batch_size=1,
             learning_rate=1e-5,
-            output_checkpoint=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "sft_smollm2_135m.pt",
+            raw_sft_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft.jsonl",
+            output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "sft_smollm2_135m.pt",
             max_seq_len=2048,
         ),
         generation=replace(

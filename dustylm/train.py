@@ -106,10 +106,13 @@ def require_training_dataset(profile: Profile) -> None:
     hint = ""
     if profile.name == "dusty8m":
         hint = " Run `make dusty-pretrain-data` first."
-    if profile.name == "sft_dusty8m":
+    elif profile.name == "sft_dusty8m":
         hint = " Run `make dusty-sft-data` first."
-    if profile.name == "sft_smollm2_135m":
-        hint = " Placeholder profile. Point dataset_path to your own tokenized SFT dataset in dustylm/config.py."
+    elif "smollm2" in profile.name:
+        hint = (
+            f" The '{profile.name}' profile acts as an architecture template. "
+            "You must prepare your own dataset and update the path first."
+        )
     raise FileNotFoundError(
         f"Tokenized training dataset not found: {dataset_path}.{hint}"
     )
