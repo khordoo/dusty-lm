@@ -299,7 +299,7 @@ def test_inference_auto_detects_smollm2_sft_checkpoint_when_profile_is_omitted(
         device="cpu",
     )
 
-    assert engine.profile_name == "sft_smollm2_360m"
+    assert engine.profile_name == "sft_smollm2_135m"
 
 
 def test_inference_rejects_detected_non_sft_profile(monkeypatch, tmp_path):

@@ -42,11 +42,11 @@ def test_detect_profile_from_smollm2_keys():
 
     assert (
         detect_profile_from_state_dict(state_dict, mode="chat")
-        == "sft_smollm2_360m"
+        == "sft_smollm2_135m"
     )
     assert (
         detect_profile_from_state_dict(state_dict, mode="generation")
-        == "smollm2_360m"
+        == "smollm2_135m"
     )
 
 
@@ -61,7 +61,7 @@ def test_read_sidecar_profile_name_prefers_checkpoint_stem_config(tmp_path):
         json.dumps({"profile_name": "sft_dusty8m"})
     )
     (tmp_path / "config.json").write_text(
-        json.dumps({"profile_name": "sft_smollm2_360m"})
+        json.dumps({"profile_name": "sft_smollm2_135m"})
     )
 
     assert read_sidecar_profile_name(checkpoint_path) == "sft_dusty8m"
@@ -71,7 +71,7 @@ def test_resolve_profile_explicit_profile_beats_sidecar_config(tmp_path):
     checkpoint_path = tmp_path / "model.pt"
     checkpoint_path.write_text("placeholder")
     (tmp_path / "model.json").write_text(
-        json.dumps({"profile_name": "sft_smollm2_360m"})
+        json.dumps({"profile_name": "sft_smollm2_135m"})
     )
 
     assert (
@@ -109,7 +109,7 @@ def test_resolve_profile_sniffs_weights_when_config_is_missing(tmp_path):
 
     assert (
         resolve_profile_name_for_checkpoint(checkpoint_path, mode="chat")
-        == "sft_smollm2_360m"
+        == "sft_smollm2_135m"
     )
 
 
