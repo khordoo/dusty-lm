@@ -10,8 +10,7 @@ import argparse
 import json
 from pathlib import Path
 
-from datasets import Dataset, load_dataset
-from huggingface_hub import login
+from datasets import Dataset
 
 from dustylm.config import (
     IGNORE_INDEX,
@@ -167,29 +166,6 @@ def prepare_scratch_text_dataset(profile: Profile):
     print(f"Ready to train on {len(tokenized_dataset)} text chunks.")
 
 
-def prepare_tiny_codes_sft_dataset(profile: Profile):
-    if profile.training is None:
-        raise ValueError(f"Profile '{profile.name}' does not define training config")
-
-    require_tokenizer_file(profile)
-    print("Launching Hugging Face login. Paste your token when prompted.")
-    login()
-    print("Downloading tiny-codes dataset...")
-
-    dataset = load_dataset("nampdn-ai/tiny-codes", split="train")
-    python_dataset = dataset.filter(lambda x: x["programming_language"] == "Python")
-    python_dataset.save_to_disk(str(profile.training.raw_python_dataset_path))
-
-    tokenizer = build_tokenizer(profile)
-    tokenized_dataset = python_dataset.map(
-        lambda example: prepare_prompt_response_training_example(example, tokenizer),
-        remove_columns=python_dataset.column_names,
-    )
-    print(f"Saving dataset to {profile.training.dataset_path}...")
-    tokenized_dataset.save_to_disk(str(profile.training.dataset_path))
-    print(f"Ready to train on {len(tokenized_dataset)} Python examples.")
-
-
 def prepare_jsonl_sft_dataset(profile: Profile):
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
@@ -240,10 +216,7 @@ def main(argv=None):
         prepare_scratch_text_dataset(profile)
         return
     if profile.training.task == TrainingTask.SFT:
-        if profile.training.raw_sft_path is not None:
-            prepare_jsonl_sft_dataset(profile)
-        else:
-            prepare_tiny_codes_sft_dataset(profile)
+        prepare_jsonl_sft_dataset(profile)
         return
 
     raise ValueError(f"Unsupported training task: {profile.training.task}")

@@ -63,7 +63,6 @@ class TrainingSpec:
     init_checkpoint_path: Path | None = None
     checkpoint_every_steps: int | None = None
     checkpoint_dir: Path | None = None
-    raw_python_dataset_path: str | Path = REPO_ROOT / "artifacts" / "datasets" / "tiny_codes_python_raw"
     log_dir: str | Path = REPO_ROOT / "runs"
 
 
@@ -195,6 +194,28 @@ dusty_8m_model = ModelSpec(
     vocab_size=4096,
     tokenizer=DUSTY_TOKENIZER,
 )
+
+# ── Profile Architecture Tiers ─────────────────────────────────────────────────
+#
+# Profiles are organized into three tiers so users can pick the right level
+# of complexity without wading through irrelevant config:
+#
+# Tier 1 — Dusty (scratch GPT)
+#   The primary, fully-supported path.  Custom BPE tokenizer, synthetic
+#   pretrain/SFT data, 8M parameters.  One-click in Colab.
+#   Profiles: dusty8m, sft_dusty8m
+#
+# Tier 2 — Scratch (experimental GPT)
+#   Same scratch architecture family but with the r50k GPT-2 tokenizer and a
+#   larger embedding dimension.  A sandbox for experimenting with different
+#   tokenizers, text sources, and hyperparameters outside the Dusty pipeline.
+#   Profile: scratch_small
+#
+# Tier 3 — SmolLM2 (pretrained baseline)
+#   Uses the Hugging Face SmolLM2 architecture (embed_tokens, gate/up/down
+#   projections) as a stronger starting point.  Requires downloading weights
+#   from HF Hub via `make download-smollm2`.
+#   Profiles: smollm2_135m, smollm2_360m, sft_smollm2_135m
 
 register(
     Profile(
@@ -348,10 +369,12 @@ register(
         model=smollm2_135m_model,
         training=TrainingSpec(
             task=TrainingTask.SFT,
+            # Placeholder — replace this path with your own tokenized SFT dataset
+            # before running `python -m dustylm.train --profile sft_smollm2_135m`.
             dataset_path=REPO_ROOT
             / "artifacts"
             / "datasets"
-            / "tiny_codes_python_tokenized",
+            / "custom_sft_tokenized",
             batch_size=1,
             learning_rate=1e-5,
             output_checkpoint=REPO_ROOT
