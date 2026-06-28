@@ -21,6 +21,7 @@ artifacts/hf/*
 !artifacts/hf/HF_BASE_MODEL_CARD.md
 checkpoints/
 data/
+runs/
 artifacts/tensorboard/
 
 # Private credentials

@@ -115,7 +115,7 @@ download-models:
 #   make download-datasets TINYSTORIES_SLICE="train[:2000000]"
 
 download-datasets:
-	@printf "$(YELLOW)Downloading raw training datasets (TinyStories + SFT logs)...$(NC)\n"
+	@printf "$(YELLOW)Downloading raw training datasets (TinyStories + SFT conversations)...$(NC)\n"
 	uv run python data_pipeline/download_datasets.py \
 		--tinystories-slice "$(TINYSTORIES_SLICE)" \
 		--tinystories-out $(TINYSTORIES_OUT) \
