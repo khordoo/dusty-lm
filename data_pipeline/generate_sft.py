@@ -1075,10 +1075,11 @@ def generate_dataset(
         raise ValueError("acceptance_window must be at least 1")
 
     api_key = os.environ.get("OPENAI_API_KEY", "")
+    base_url = os.environ.get("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
     if not api_key:
         raise RuntimeError("Set OPENAI_API_KEY to your OpenAI-compatible API key.")
     client = OpenAI(
-        base_url=os.environ.get("OPENAI_BASE_URL", "https://openrouter.ai/api/v1"),
+        base_url=base_url,
         api_key=api_key,
         max_retries=5,
         timeout=120.0,
