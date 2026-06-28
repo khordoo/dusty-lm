@@ -104,6 +104,16 @@ def parse_args(argv=None):
         default=DEFAULT_COMMIT_MESSAGE,
         help="Hugging Face commit message.",
     )
+    parser.add_argument(
+        "--skip-onnx",
+        action="store_true",
+        help="Skip ONNX export (useful for base pretrain-only models).",
+    )
+    parser.add_argument(
+        "--skip-chat-template",
+        action="store_true",
+        help="Skip chat template in tokenizer config (for base models).",
+    )
     return parser.parse_args(argv)
 
 
@@ -199,6 +209,8 @@ def stage_hub_artifacts(
     model_card_path: Path,
     logo_path: Path,
     staging_dir: Path,
+    skip_onnx: bool = False,
+    skip_chat_template: bool = False,
 ) -> list[Path]:
     require_file(checkpoint_path, "Checkpoint")
     require_file(tokenizer_path, "Tokenizer")
@@ -209,17 +221,22 @@ def stage_hub_artifacts(
 
     shutil.copy2(checkpoint_path, staging_dir / HUB_CHECKPOINT_FILENAME)
 
-    # Generate a fresh local quantized ONNX artifact into staging; upload happens later via upload_folder().
-    export_onnx(
-        profile_name=profile_name,
-        checkpoint_step=None,
-        checkpoint_path=checkpoint_path,
-        output_path=staging_dir / HUB_ONNX_FILENAME,
-        tokenizer_output_path=None,
-        quantize=True,
-        opset=23,
-    )
-    build_tokenizer_assets(tokenizer_path, staging_dir)
+    if not skip_onnx:
+        export_onnx(
+            profile_name=profile_name,
+            checkpoint_step=None,
+            checkpoint_path=checkpoint_path,
+            output_path=staging_dir / HUB_ONNX_FILENAME,
+            tokenizer_output_path=None,
+            quantize=True,
+            opset=23,
+        )
+
+    if skip_chat_template:
+        shutil.copy2(tokenizer_path, staging_dir / "tokenizer.json")
+    else:
+        build_tokenizer_assets(tokenizer_path, staging_dir)
+
     shutil.copy2(model_card_path, staging_dir / "README.md")
     hub_logo_path = staging_dir / HUB_LOGO_FILENAME
     hub_logo_path.parent.mkdir(parents=True, exist_ok=True)
@@ -274,6 +291,8 @@ def main(argv=None) -> None:
         model_card_path=args.model_card,
         logo_path=args.logo,
         staging_dir=staging_dir,
+        skip_onnx=args.skip_onnx,
+        skip_chat_template=args.skip_chat_template,
     )
     print(f"Staged {len(staged_files)} files in {staging_dir}:")
     for path in staged_files:
