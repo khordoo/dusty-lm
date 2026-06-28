@@ -3,12 +3,13 @@ GREEN  := \033[0;32m
 YELLOW := \033[0;33m
 RED    := \033[0;31m
 BOLD   := \033[1m
+DIM    := \033[2m
 NC     := \033[0m
 
 EPOCHS ?= 23
 CHECKPOINT_EVERY_STEPS ?= 100
 CHECKPOINT_STEP ?=
-PROMPT ?= i wake up.
+PROMPT ?= $(strip Once upon a time)
 PROFILE ?= dusty8m
 CHAT_PROFILE ?=
 TOP_P ?=
@@ -40,14 +41,14 @@ HF_REPO_ID ?=
 HF_PROFILE ?= sft_dusty8m
 HF_STAGING_DIR ?= artifacts/hub_upload/$(HF_PROFILE)
 
-.PHONY: help chat download-datasets generate-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
+.PHONY: help chat download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
 	@printf "\n"
 	@printf "$(BOLD)Data:$(NC)\n"
 	@printf "  make download-datasets          Download TinyStories + Dusty SFT data\n"
-	@printf "  make generate-sft               Generate SFT chat data\n"
+	@printf "  make synthesize-sft             Synthesize raw SFT chat data via LLM\n"
 	@printf "  make filter-sft                 Filter/sample SFT JSONL\n"
 	@printf "\n"
 	@printf "$(BOLD)Tokenizer & Datasets:$(NC)\n"
@@ -90,7 +91,8 @@ download-datasets:
 		--dusty-sft-out $(DUSTY_SFT_OUT)
 	@printf "$(GREEN)✔ Datasets downloaded successfully!$(NC)\n"
 
-generate-sft:
+synthesize-sft:
+	@printf "$(YELLOW)Synthesizing SFT chat data via LLM...$(NC)\n"
 	uv run python data_pipeline/generate_sft.py \
 		--mode generate \
 		--model $(DUSTY_MODEL) \
@@ -104,14 +106,17 @@ generate-sft:
 		--sleep 0.2 \
 		--out $(DUSTY_SFT_OUT) \
 		--rejected $(DUSTY_SFT_REJECTED)
+	@printf "$(GREEN)✔ SFT chat data synthesized!$(NC)\n"
 
 filter-sft:
+	@printf "$(YELLOW)Filtering and sampling SFT dataset...$(NC)\n"
 	uv run python data_pipeline/filter_sft.py \
 		--input $(DUSTY_SFT_OUT) \
 		--output $(DUSTY_SFT_FILTERED_OUT) \
 		--target-total $(DUSTY_SFT_FILTER_TARGET) \
 		--max-answer-tokens $(DUSTY_SFT_MAX_ANSWER_TOKENS) \
 		--sampling-mode $(DUSTY_SFT_SAMPLING_MODE)
+	@printf "$(GREEN)✔ SFT dataset filtered!$(NC)\n"
 
 tokenizer:
 	@printf "$(YELLOW)Training tokenizer...$(NC)\n"
@@ -129,9 +134,14 @@ train-pretrain:
 	@printf "$(GREEN)✔ Pretraining complete! Checkpoints saved.$(NC)\n"
 
 generate:
-	uv run python dustylm/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
+	@printf "$(YELLOW)Generating text with $(PROFILE) profile...$(NC)\n"
+	uv run python dustylm/generate.py --profile $(PROFILE) --prompt "$(strip $(PROMPT))" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
+	@printf "$(GREEN)✔ Generation complete!$(NC)\n"
 
 chat:
+	@printf "\n$(BOLD)$(CYAN)==================================================$(NC)\n"
+	@printf "$(BOLD)$(CYAN)  DustyLM Live Interface$(NC)\n"
+	@printf "$(BOLD)$(CYAN)==================================================$(NC)\n\n"
 	uv run python -m dustylm.inference $(if $(CHAT_PROFILE),--profile $(CHAT_PROFILE),)$(if $(CHECKPOINT_PATH), --checkpoint-path $(CHECKPOINT_PATH),)$(if $(TOKENIZER_PATH), --tokenizer-path $(TOKENIZER_PATH),)$(if $(DEVICE), --device $(DEVICE),)$(if $(TEMPERATURE), --temperature $(TEMPERATURE),)$(if $(MAX_TOKENS), --max-tokens $(MAX_TOKENS),)$(if $(TOP_P), --top-p $(TOP_P),)$(if $(MAX_CHAT_TURNS), --max-chat-turns $(MAX_CHAT_TURNS),)
 
 data-sft:
@@ -145,12 +155,15 @@ train-sft:
 	@printf "$(GREEN)✔ SFT fine-tuning complete! Checkpoint saved.$(NC)\n"
 
 export-onnx:
+	@printf "$(YELLOW)Exporting ONNX model...$(NC)\n"
 	uv run --extra onnx python scripts/export_onnx.py --profile $(ONNX_PROFILE) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),) --output $(ONNX_OUT) --tokenizer-output $(ONNX_TOKENIZER_OUT)
+	@printf "$(GREEN)✔ ONNX artifacts exported!$(NC)\n"
 
 serve-web:
+	@printf "$(YELLOW)Exporting ONNX model and starting web server...$(NC)\n"
 	uv run --extra onnx python scripts/export_onnx.py --profile $(ONNX_PROFILE) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),) --output $(ONNX_OUT) --tokenizer-output $(ONNX_TOKENIZER_OUT)
-	@printf "$(GREEN)✔ ONNX artifacts exported.$(NC)\n"
-	@printf "$(GREEN)Starting local web server...$(NC)\n"
+	@printf "$(GREEN)✔ ONNX artifacts exported!$(NC)\n"
+	@printf "$(YELLOW)Starting local web server...$(NC)\n"
 	@printf "$(CYAN)Open http://localhost:$(WEB_PORT) in your browser to chat with DustyLM.$(NC)\n"
 	uv run python -m http.server $(WEB_PORT) --directory docs
 
