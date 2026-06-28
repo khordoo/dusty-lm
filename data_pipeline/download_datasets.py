@@ -1,4 +1,12 @@
-"""Download public training datasets used by the Dusty quick-start flow."""
+"""Download public training datasets used by the Dusty quick-start flow.
+
+Defaults to an optimized 100k slice of TinyStories — enough to train the 8M
+model to solid English grammar on standard hardware. To experiment with more
+data on a high-end GPU, override the slice:
+
+- ``TINYSTORIES_SLICE="train"`` — full dataset (millions of stories)
+- ``TINYSTORIES_SLICE="train[:2000000]"`` — custom slice
+"""
 
 import argparse
 from pathlib import Path

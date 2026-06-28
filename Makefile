@@ -70,6 +70,16 @@ help:
 	@printf "  make push-hub HF_REPO_ID=...    Push staged artifacts to Hugging Face Hub\n"
 	@printf "  make tensorboard                Plot training logs from runs/\n"
 
+# =============================================================================
+# 1. Data Engineering Pipeline
+# =============================================================================
+
+# Defaults to an optimized 100k slice of TinyStories — enough to train the 8M
+# model to solid English grammar on standard hardware. To experiment with more
+# data on a high-end GPU, override the slice:
+#   make download-datasets TINYSTORIES_SLICE="train"
+#   make download-datasets TINYSTORIES_SLICE="train[:2000000]"
+
 download-datasets:
 	@printf "$(YELLOW)Downloading TinyStories and Dusty SFT datasets...$(NC)\n"
 	uv run python data_pipeline/download_datasets.py \
