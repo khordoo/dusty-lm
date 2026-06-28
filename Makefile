@@ -158,6 +158,7 @@ train-pretrain:
 
 generate:
 	@printf "$(YELLOW)Generating text with $(PROFILE) profile...$(NC)\n"
+	@uv run python scripts/check_artifacts.py $(PROFILE) generate || exit 1
 	uv run python dustylm/generate.py --profile $(PROFILE) --prompt "$(strip $(PROMPT))" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
 	@printf "$(GREEN)✔ Generation complete!$(NC)\n"
 
@@ -165,6 +166,7 @@ chat:
 	@printf "\n$(BOLD)$(CYAN)==================================================$(NC)\n"
 	@printf "$(BOLD)$(CYAN)  DustyLM Live Interface$(NC)\n"
 	@printf "$(BOLD)$(CYAN)==================================================$(NC)\n\n"
+	@uv run python scripts/check_artifacts.py "$(CHAT_PROFILE)" chat || exit 1
 	uv run python -m dustylm.inference $(if $(CHAT_PROFILE),--profile $(CHAT_PROFILE),)$(if $(CHECKPOINT_PATH), --checkpoint-path $(CHECKPOINT_PATH),)$(if $(TOKENIZER_PATH), --tokenizer-path $(TOKENIZER_PATH),)$(if $(DEVICE), --device $(DEVICE),)$(if $(TEMPERATURE), --temperature $(TEMPERATURE),)$(if $(MAX_TOKENS), --max-tokens $(MAX_TOKENS),)$(if $(TOP_P), --top-p $(TOP_P),)$(if $(MAX_CHAT_TURNS), --max-chat-turns $(MAX_CHAT_TURNS),)
 
 data-sft:
