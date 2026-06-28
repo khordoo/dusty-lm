@@ -63,7 +63,7 @@ class TrainingSpec:
     init_checkpoint_path: Path | None = None
     checkpoint_every_steps: int | None = None
     checkpoint_dir: Path | None = None
-    log_dir: str | Path = REPO_ROOT / "runs"
+    log_dir: str | Path = REPO_ROOT / "artifacts" / "tensorboard"
 
 
 @dataclass(frozen=True)

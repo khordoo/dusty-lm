@@ -82,7 +82,7 @@ help:
 	@printf "  make stage-hub HF_REPO_ID=...   Stage a single repo (override profile with HF_PROFILE=)\n"
 	@printf "  make push-hub                   Push both base + SFT to Hugging Face Hub\n"
 	@printf "  make push-hub HF_REPO_ID=...    Push a single repo\n"
-	@printf "  make tensorboard                Plot training logs from runs/\n"
+	@printf "  make tensorboard                Plot training logs from artifacts/tensorboard/\n"
 
 # =============================================================================
 # 1. Model & Artifacts Pipeline
@@ -265,7 +265,7 @@ endif
 
 tensorboard:
 	@printf "$(YELLOW)Starting TensorBoard...$(NC)\n"
-	uv run tensorboard --logdir runs
+	uv run tensorboard --logdir artifacts/tensorboard
 	@printf "$(GREEN)✔ TensorBoard stopped.$(NC)\n"
 
 # =============================================================================
