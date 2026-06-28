@@ -18,6 +18,7 @@ artifacts/*
 !artifacts/hf/
 artifacts/hf/*
 !artifacts/hf/HF_MODEL_CARD.md
+**/dusty_pretrain_progress.txt
 checkpoints/
 data/
 runs/
