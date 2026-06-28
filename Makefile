@@ -40,6 +40,14 @@ WEB_PORT ?= 8000
 HF_REPO_ID ?=
 HF_PROFILE ?= sft_dusty8m
 HF_STAGING_DIR ?= artifacts/hub_upload/$(HF_PROFILE)
+HF_SKIP_ONNX ?=
+HF_SKIP_CHAT_TEMPLATE ?=
+HF_BASE_REPO_ID ?= mkhordoo/dusty-8m-base
+HF_SFT_REPO_ID ?= mkhordoo/dusty-8m-sft
+HF_BASE_PROFILE ?= dusty8m
+HF_SFT_PROFILE ?= sft_dusty8m
+HF_BASE_MODEL_CARD ?= artifacts/hf/HF_BASE_MODEL_CARD.md
+HF_SFT_MODEL_CARD ?= artifacts/hf/HF_MODEL_CARD.md
 
 .PHONY: help chat download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
 
@@ -70,8 +78,10 @@ help:
 	@printf "  make export-onnx                Export ONNX artifacts to docs/\n"
 	@printf "\n"
 	@printf "$(BOLD)Hub:$(NC)\n"
-	@printf "  make stage-hub HF_REPO_ID=...   Stage artifacts locally (dry run)\n"
-	@printf "  make push-hub HF_REPO_ID=...    Push staged artifacts to Hugging Face Hub\n"
+	@printf "  make stage-hub                  Stage both base + SFT artifacts locally (dry run)\n"
+	@printf "  make stage-hub HF_REPO_ID=...   Stage a single repo (override profile with HF_PROFILE=)\n"
+	@printf "  make push-hub                   Push both base + SFT to Hugging Face Hub\n"
+	@printf "  make push-hub HF_REPO_ID=...    Push a single repo\n"
 	@printf "  make tensorboard                Plot training logs from runs/\n"
 
 # =============================================================================
@@ -193,27 +203,65 @@ serve-web:
 	uv run python -m http.server $(WEB_PORT) --directory docs
 
 stage-hub:
-ifndef HF_REPO_ID
-	$(error $(RED)HF_REPO_ID is undefined. Please run: make stage-hub HF_REPO_ID=your-username/repo-name$(NC))
-endif
+ifdef HF_REPO_ID
 	@printf "$(YELLOW)Staging artifacts locally for $(HF_REPO_ID) (dry run)...$(NC)\n"
 	uv run --extra onnx --extra hub python scripts/push_to_hub.py \
 		--repo-id $(HF_REPO_ID) \
 		--profile $(HF_PROFILE) \
+		--model-card $(HF_SFT_MODEL_CARD) \
 		--staging-dir $(HF_STAGING_DIR) \
+		$(HF_SKIP_ONNX) \
+		$(HF_SKIP_CHAT_TEMPLATE) \
 		--dry-run
 	@printf "$(GREEN)✔ Staging complete. Review artifacts before running make push-hub.$(NC)\n"
+else
+	@printf "$(YELLOW)Staging Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
+	$(MAKE) stage-hub \
+		HF_REPO_ID=$(HF_BASE_REPO_ID) \
+		HF_PROFILE=$(HF_BASE_PROFILE) \
+		HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
+		HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
+		HF_SKIP_ONNX=--skip-onnx \
+		HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
+	@printf "$(YELLOW)Staging Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
+	$(MAKE) stage-hub \
+		HF_REPO_ID=$(HF_SFT_REPO_ID) \
+		HF_PROFILE=$(HF_SFT_PROFILE) \
+		HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
+		HF_SKIP_ONNX= \
+		HF_SKIP_CHAT_TEMPLATE=
+	@printf "$(GREEN)✔ Both repos staged. Review artifacts in artifacts/hub_upload/ before running make push-hub.$(NC)\n"
+endif
 
 push-hub:
-ifndef HF_REPO_ID
-	$(error $(RED)HF_REPO_ID is undefined. Please run: make push-hub HF_REPO_ID=your-username/repo-name$(NC))
-endif
+ifdef HF_REPO_ID
 	@printf "$(YELLOW)Pushing artifacts to Hugging Face Hub repo $(HF_REPO_ID)...$(NC)\n"
 	uv run --extra onnx --extra hub python scripts/push_to_hub.py \
 		--repo-id $(HF_REPO_ID) \
 		--profile $(HF_PROFILE) \
-		--staging-dir $(HF_STAGING_DIR)
+		--model-card $(HF_SFT_MODEL_CARD) \
+		--staging-dir $(HF_STAGING_DIR) \
+		$(HF_SKIP_ONNX) \
+		$(HF_SKIP_CHAT_TEMPLATE)
 	@printf "$(GREEN)✔ Push to Hugging Face Hub complete!$(NC)\n"
+else
+	@printf "$(YELLOW)Pushing Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
+	$(MAKE) push-hub \
+		HF_REPO_ID=$(HF_BASE_REPO_ID) \
+		HF_PROFILE=$(HF_BASE_PROFILE) \
+		HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
+		HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
+		HF_SKIP_ONNX=--skip-onnx \
+		HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
+	@printf "$(YELLOW)Pushing Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
+	$(MAKE) push-hub \
+		HF_REPO_ID=$(HF_SFT_REPO_ID) \
+		HF_PROFILE=$(HF_SFT_PROFILE) \
+		HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
+		HF_SKIP_ONNX= \
+		HF_SKIP_CHAT_TEMPLATE=
+	@printf "$(GREEN)✔ Both repos pushed to Hugging Face Hub!$(NC)\n"
+endif
 
 tensorboard:
 	@printf "$(YELLOW)Starting TensorBoard...$(NC)\n"
