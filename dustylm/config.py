@@ -244,7 +244,7 @@ register(
             output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
             max_seq_len=256,
             weight_decay=0.01,
-            raw_text_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_pretrain.txt",
+            raw_text_path=REPO_ROOT / "artifacts" / "datasets" / "tinystories_base.txt",
             checkpoint_every_steps=100,
             checkpoint_dir=REPO_ROOT / "artifacts" / "checkpoints",
         ),
@@ -312,7 +312,7 @@ register(
             / "scratch_small.pt",
             max_seq_len=256,
             weight_decay=0.01,
-            raw_text_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_pretrain.txt",
+            raw_text_path=REPO_ROOT / "artifacts" / "datasets" / "tinystories_base.txt",
         ),
         generation=GenerationSpec(
             checkpoint_path=REPO_ROOT

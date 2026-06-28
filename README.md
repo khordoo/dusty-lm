@@ -143,10 +143,10 @@ Compact transformer with grouped-query attention, rotary position embeddings, GE
 
 ## Dataset
 
-Dusty uses two datasets: pre-training data teaches basic English and world logic, while SFT data gives it the robot vacuum personality.
+Dusty uses two datasets: TinyStories pre-training data teaches basic English and world logic, while SFT data gives it the robot vacuum personality.
 
 ```text
-artifacts/datasets/dusty_pretrain.txt
+artifacts/datasets/tinystories_base.txt
 artifacts/datasets/dusty_sft.jsonl
 ```
 
@@ -160,7 +160,6 @@ The SFT format is one conversation per line:
 
 ```bash
 make download-datasets        # Download TinyStories + Dusty SFT
-make generate-pretrain  # Generate custom pretrain data
 make generate-sft       # Generate custom SFT data
 make filter-sft         # Filter and sample SFT
 ```

@@ -22,9 +22,6 @@ DUSTY_MODEL ?= qwen/qwen3-235b-a22b-2507:floor
 DUSTY_FALLBACK_MODEL ?= openai/gpt-oss-120b:floor
 DUSTY_SFT_PER_CATEGORY ?= 500
 DUSTY_SFT_BATCH_SIZE ?= 20
-DUSTY_PRETRAIN_WORKERS ?= 5
-DUSTY_PRETRAIN_OUT ?= artifacts/datasets/dusty_pretrain.txt
-DUSTY_PRETRAIN_PROGRESS ?= artifacts/datasets/dusty_pretrain_progress.txt
 DUSTY_SFT_OUT ?= artifacts/datasets/dusty_sft.jsonl
 DUSTY_SFT_REJECTED ?= artifacts/datasets/dusty_sft_rejected.jsonl
 DUSTY_SFT_FILTERED_OUT ?= artifacts/datasets/dusty_sft_2000.jsonl
@@ -43,14 +40,13 @@ HF_REPO_ID ?=
 HF_PROFILE ?= sft_dusty8m
 HF_STAGING_DIR ?= artifacts/hub_upload/$(HF_PROFILE)
 
-.PHONY: help chat download-datasets generate-pretrain generate-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
+.PHONY: help chat download-datasets generate-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
 	@printf "\n"
 	@printf "$(BOLD)Data:$(NC)\n"
 	@printf "  make download-datasets          Download TinyStories + Dusty SFT data\n"
-	@printf "  make generate-pretrain          Generate pretrain text\n"
 	@printf "  make generate-sft               Generate SFT chat data\n"
 	@printf "  make filter-sft                 Filter/sample SFT JSONL\n"
 	@printf "\n"
@@ -79,18 +75,10 @@ download-datasets:
 	uv run python data_pipeline/download_datasets.py \
 		--tinystories-slice "$(TINYSTORIES_SLICE)" \
 		--tinystories-out $(TINYSTORIES_OUT) \
-		--dusty-pretrain-out $(DUSTY_PRETRAIN_OUT) \
 		--dusty-chat-repo $(DUSTY_CHAT_REPO) \
 		--dusty-chat-file $(DUSTY_CHAT_FILE) \
 		--dusty-sft-out $(DUSTY_SFT_OUT)
 	@printf "$(GREEN)✔ Datasets downloaded successfully!$(NC)\n"
-
-generate-pretrain:
-	uv run python data_pipeline/generate_pretrain.py \
-		--model $(DUSTY_MODEL) \
-		--workers $(DUSTY_PRETRAIN_WORKERS) \
-		--out $(DUSTY_PRETRAIN_OUT) \
-		--progress $(DUSTY_PRETRAIN_PROGRESS)
 
 generate-sft:
 	uv run python data_pipeline/generate_sft.py \
@@ -193,7 +181,7 @@ train-end-to-end:
 	@printf "$(CYAN)   Starting End-to-End DustyLM Pipeline   $(NC)\n"
 	@printf "$(CYAN)==========================================$(NC)\n"
 	@printf "\n"
-	@printf "$(YELLOW)[1/4] Generating pre-training data...$(NC)\n"
+	@printf "$(YELLOW)[1/4] Tokenizing pre-training data...$(NC)\n"
 	make data-pretrain
 	@printf "\n"
 	@printf "$(YELLOW)[2/4] Running pre-training phase (Epochs: 1)...$(NC)\n"

@@ -1,0 +1,2606 @@
+diff --git a/Makefile b/Makefile
+index dd784f0..8d5d198 100644
+--- a/Makefile
++++ b/Makefile
+@@ -43,31 +43,31 @@ HF_REPO_ID ?=
+ HF_PROFILE ?= sft_dusty8m
+ HF_STAGING_DIR ?= artifacts/hub_upload/$(HF_PROFILE)
+ 
+-.PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train serve-web dusty-export-onnx stage-hub push-hub tensorboard train-end-to-end
++.PHONY: help chat download-datasets generate-pretrain generate-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
+ 
+ help:
+ 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
+ 	@printf "\n"
+ 	@printf "$(BOLD)Data:$(NC)\n"
+ 	@printf "  make download-datasets          Download TinyStories + Dusty SFT data\n"
+-	@printf "  make dusty-generate-pretrain   Generate pretrain text\n"
+-	@printf "  make dusty-generate-sft        Generate SFT chat data\n"
+-	@printf "  make dusty-filter-sft          Filter/sample SFT JSONL\n"
++	@printf "  make generate-pretrain          Generate pretrain text\n"
++	@printf "  make generate-sft               Generate SFT chat data\n"
++	@printf "  make filter-sft                 Filter/sample SFT JSONL\n"
+ 	@printf "\n"
+ 	@printf "$(BOLD)Tokenizer & Datasets:$(NC)\n"
+-	@printf "  make dusty-tokenizer            Train tokenizer\n"
+-	@printf "  make dusty-pretrain-data        Tokenize pretrain text\n"
+-	@printf "  make dusty-sft-data             Tokenize SFT chat data\n"
++	@printf "  make tokenizer                  Train tokenizer\n"
++	@printf "  make data-pretrain              Tokenize pretrain text\n"
++	@printf "  make data-sft                   Tokenize SFT chat data\n"
+ 	@printf "\n"
+ 	@printf "$(BOLD)Training:$(NC)\n"
+-	@printf "  make dusty-pretrain EPOCHS=1    Train the dusty8m profile\n"
+-	@printf "  make dusty-sft-train EPOCHS=1   Train the sft_dusty8m profile\n"
++	@printf "  make train-pretrain EPOCHS=1    Train the dusty8m profile\n"
++	@printf "  make train-sft EPOCHS=1         Train the sft_dusty8m profile\n"
+ 	@printf "\n"
+ 	@printf "$(BOLD)Inference & Export:$(NC)\n"
+ 	@printf "  make chat                       Chat with local SFT inference CLI\n"
+-	@printf "  make dusty-generate             Generate with PROFILE=dusty8m PROMPT='hello'\n"
++	@printf "  make generate                   Generate text with the dusty8m profile\n"
+ 	@printf "  make serve-web                  Serve browser demo locally\n"
+-	@printf "  make dusty-export-onnx          Export ONNX artifacts to docs/\n"
++	@printf "  make export-onnx                Export ONNX artifacts to docs/\n"
+ 	@printf "\n"
+ 	@printf "$(BOLD)Hub:$(NC)\n"
+ 	@printf "  make stage-hub HF_REPO_ID=...   Stage artifacts locally (dry run)\n"
+@@ -85,14 +85,14 @@ download-datasets:
+ 		--dusty-sft-out $(DUSTY_SFT_OUT)
+ 	@printf "$(GREEN)✔ Datasets downloaded successfully!$(NC)\n"
+ 
+-dusty-generate-pretrain:
++generate-pretrain:
+ 	uv run python data_pipeline/generate_pretrain.py \
+ 		--model $(DUSTY_MODEL) \
+ 		--workers $(DUSTY_PRETRAIN_WORKERS) \
+ 		--out $(DUSTY_PRETRAIN_OUT) \
+ 		--progress $(DUSTY_PRETRAIN_PROGRESS)
+ 
+-dusty-generate-sft:
++generate-sft:
+ 	uv run python data_pipeline/generate_sft.py \
+ 		--mode generate \
+ 		--model $(DUSTY_MODEL) \
+@@ -107,7 +107,7 @@ dusty-generate-sft:
+ 		--out $(DUSTY_SFT_OUT) \
+ 		--rejected $(DUSTY_SFT_REJECTED)
+ 
+-dusty-filter-sft:
++filter-sft:
+ 	uv run python data_pipeline/filter_sft.py \
+ 		--input $(DUSTY_SFT_OUT) \
+ 		--output $(DUSTY_SFT_FILTERED_OUT) \
+@@ -115,38 +115,38 @@ dusty-filter-sft:
+ 		--max-answer-tokens $(DUSTY_SFT_MAX_ANSWER_TOKENS) \
+ 		--sampling-mode $(DUSTY_SFT_SAMPLING_MODE)
+ 
+-dusty-tokenizer:
++tokenizer:
+ 	@printf "$(YELLOW)Training tokenizer...$(NC)\n"
+ 	uv run python -m dustylm.tokenizer
+ 	@printf "$(GREEN)✔ Tokenizer trained successfully!$(NC)\n"
+ 
+-dusty-pretrain-data:
++data-pretrain:
+ 	@printf "$(YELLOW)Tokenizing pretrain data for dusty8m...$(NC)\n"
+ 	uv run python -m dustylm.data_prep --profile dusty8m
+ 	@printf "$(GREEN)✔ Pretrain data tokenized!$(NC)\n"
+ 
+-dusty-pretrain:
++train-pretrain:
+ 	@printf "$(YELLOW)Starting pretraining (dusty8m, $(EPOCHS) epochs)...$(NC)\n"
+ 	uv run python -m dustylm.train --profile dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
+ 	@printf "$(GREEN)✔ Pretraining complete! Checkpoints saved.$(NC)\n"
+ 
+-dusty-generate:
++generate:
+ 	uv run python dustylm/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
+ 
+ chat:
+ 	uv run python -m dustylm.inference $(if $(CHAT_PROFILE),--profile $(CHAT_PROFILE),)$(if $(CHECKPOINT_PATH), --checkpoint-path $(CHECKPOINT_PATH),)$(if $(TOKENIZER_PATH), --tokenizer-path $(TOKENIZER_PATH),)$(if $(DEVICE), --device $(DEVICE),)$(if $(TEMPERATURE), --temperature $(TEMPERATURE),)$(if $(MAX_TOKENS), --max-tokens $(MAX_TOKENS),)$(if $(TOP_P), --top-p $(TOP_P),)$(if $(MAX_CHAT_TURNS), --max-chat-turns $(MAX_CHAT_TURNS),)
+ 
+-dusty-sft-data:
++data-sft:
+ 	@printf "$(YELLOW)Tokenizing SFT data for sft_dusty8m...$(NC)\n"
+ 	uv run python -m dustylm.data_prep --profile sft_dusty8m
+ 	@printf "$(GREEN)✔ SFT data tokenized!$(NC)\n"
+ 
+-dusty-sft-train:
++train-sft:
+ 	@printf "$(YELLOW)Starting SFT fine-tuning (sft_dusty8m, $(EPOCHS) epochs)...$(NC)\n"
+ 	uv run python -m dustylm.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
+ 	@printf "$(GREEN)✔ SFT fine-tuning complete! Checkpoint saved.$(NC)\n"
+ 
+-dusty-export-onnx:
++export-onnx:
+ 	uv run --extra onnx python scripts/export_onnx.py --profile $(ONNX_PROFILE) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),) --output $(ONNX_OUT) --tokenizer-output $(ONNX_TOKENIZER_OUT)
+ 
+ serve-web:
+@@ -194,15 +194,15 @@ train-end-to-end:
+ 	@printf "$(CYAN)==========================================$(NC)\n"
+ 	@printf "\n"
+ 	@printf "$(YELLOW)[1/4] Generating pre-training data...$(NC)\n"
+-	make dusty-pretrain-data
++	make data-pretrain
+ 	@printf "\n"
+ 	@printf "$(YELLOW)[2/4] Running pre-training phase (Epochs: 1)...$(NC)\n"
+-	make dusty-pretrain EPOCHS=1
++	make train-pretrain EPOCHS=1
+ 	@printf "\n"
+ 	@printf "$(YELLOW)[3/4] Generating SFT data...$(NC)\n"
+-	make dusty-sft-data
++	make data-sft
+ 	@printf "\n"
+ 	@printf "$(YELLOW)[4/4] Running SFT phase (Epochs: 1)...$(NC)\n"
+-	make dusty-sft-train EPOCHS=1
++	make train-sft EPOCHS=1
+ 	@printf "\n"
+ 	@printf "$(GREEN)✔ End-to-End Pipeline complete! All checkpoints saved to artifacts/.$(NC)\n"
+diff --git a/README.md b/README.md
+index a2a3eeb..6266065 100644
+--- a/README.md
++++ b/README.md
+@@ -77,9 +77,12 @@ Downloads datasets, trains the tokenizer, runs pretraining, runs SFT, and tests
+ 
+ ### Chat Locally
+ 
++First, run the [Quickstart notebook](notebooks/01_quickstart.ipynb) in Colab — it downloads the pre-trained checkpoint automatically in three cells.
++
++If you have already trained your own model locally, generate text with:
++
+ ```bash
+-uv sync
+-make dusty-generate PROFILE=sft_dusty8m PROMPT="who are you?"
++make generate PROFILE=sft_dusty8m PROMPT="who are you?"
+ ```
+ 
+ For interactive chat:
+@@ -157,9 +160,9 @@ The SFT format is one conversation per line:
+ 
+ ```bash
+ make download-datasets        # Download TinyStories + Dusty SFT
+-make dusty-generate-pretrain  # Generate custom pretrain data
+-make dusty-generate-sft       # Generate custom SFT data
+-make dusty-filter-sft         # Filter and sample SFT
++make generate-pretrain  # Generate custom pretrain data
++make generate-sft       # Generate custom SFT data
++make filter-sft         # Filter and sample SFT
+ ```
+ 
+ The advanced notebook covers data-generation prompts, model choice, cost notes, filtering, tokenizer fertility, and personality customization.
+diff --git a/data_pipeline/download_datasets.py b/data_pipeline/download_datasets.py
+index 49705e4..cfed333 100644
+--- a/data_pipeline/download_datasets.py
++++ b/data_pipeline/download_datasets.py
+@@ -89,7 +89,7 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
+     except (OSError, HfHubHTTPError) as exc:
+         raise RuntimeError(
+             f"Could not download {filename} from {repo_id}. "
+-            "Generate the dataset locally with `make dusty-generate-sft` "
++            "Generate the dataset locally with `make generate-sft` "
+             "or pass --dusty-chat-repo to a repo you can access. "
+             f"Original error: {exc}"
+         ) from exc
+@@ -112,7 +112,7 @@ def main(argv=None):
+         args.dusty_chat_file,
+         args.dusty_sft_out,
+     )
+-    print("Datasets are ready. Next: make dusty-tokenizer")
++    print("Datasets are ready. Next: make tokenizer")
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/data_pipeline/generate_pretrain.py b/data_pipeline/generate_pretrain.py
+index cf2f886..52c9849 100644
+--- a/data_pipeline/generate_pretrain.py
++++ b/data_pipeline/generate_pretrain.py
+@@ -178,6 +178,7 @@ def process_category(
+ 
+     except Exception as e:
+         print(f"  -> Error on batch {i + 1} [{category}]: {e}")
++        raise
+ 
+ 
+ def parse_args(argv=None):
+@@ -242,7 +243,17 @@ def main(argv=None):
+                 )
+                 for i, cat, desc in pending_tasks
+             ]
+-            concurrent.futures.wait(futures)
++            errors = []
++            for future in concurrent.futures.as_completed(futures):
++                try:
++                    future.result()
++                except Exception as exc:
++                    errors.append(str(exc))
++            if errors:
++                raise RuntimeError(
++                    f"{len(errors)}/{len(pending_tasks)} batches failed. "
++                    f"First error: {errors[0]}"
++                )
+ 
+     print("Dataset generation complete. Dusty is ready to learn.")
+ 
+diff --git a/data_pipeline/generate_sft.py b/data_pipeline/generate_sft.py
+index d32ddf7..64bf995 100644
+--- a/data_pipeline/generate_sft.py
++++ b/data_pipeline/generate_sft.py
+@@ -1074,9 +1074,12 @@ def generate_dataset(
+     if acceptance_window < 1:
+         raise ValueError("acceptance_window must be at least 1")
+ 
++    api_key = os.environ.get("OPENAI_API_KEY", "")
++    if not api_key:
++        raise RuntimeError("Set OPENAI_API_KEY to your OpenRouter API key.")
+     client = OpenAI(
+         base_url="https://openrouter.ai/api/v1",
+-        api_key=os.environ["OPENAI_API_KEY"],
++        api_key=api_key,
+         max_retries=5,
+         timeout=120.0,
+     )
+diff --git a/dustylm/adapter.py b/dustylm/adapter.py
+index d74a4ca..2147d22 100644
+--- a/dustylm/adapter.py
++++ b/dustylm/adapter.py
+@@ -58,6 +58,12 @@ def map_smollm2_to_dustylm_and_save(
+     hf_model_path = resolve_hf_model_path(profile, hf_model_path)
+     dustylm_save_path = Path(dustylm_save_path or profile.generation.checkpoint_path)
+ 
++    hf_model_path = Path(hf_model_path)
++    if not hf_model_path.exists():
++        raise FileNotFoundError(
++            f"Hugging Face weights not found: {hf_model_path}. "
++            "Run `python -m dustylm.artifacts download --profile {profile.name} --convert` first."
++        )
+     print("Loading Hugging Face model weights from:", hf_model_path)
+     hf_weights = load_file(str(hf_model_path))
+     state_dict = convert_smollm2_state_dict(hf_weights)
+diff --git a/dustylm/checkpoint.py b/dustylm/checkpoint.py
+index 35e6474..9c5f94f 100644
+--- a/dustylm/checkpoint.py
++++ b/dustylm/checkpoint.py
+@@ -22,18 +22,37 @@ DUSTY_CHAT_PROFILE = "sft_dusty8m"
+ DUSTY_GENERATION_PROFILE = "sft_dusty8m"
+ 
+ 
++_KEY_REMAPS = {
++    "mlp_nrom.weight": "mlp_norm.weight",
++    "mlp_nrom.bias": "mlp_norm.bias",
++}
++
++
++def _remap_keys(state_dict: dict[str, Any]) -> dict[str, Any]:
++    for old_key, new_key in _KEY_REMAPS.items():
++        if old_key in state_dict:
++            state_dict[new_key] = state_dict.pop(old_key)
++    return state_dict
++
++
+ def load_state_dict(
+     checkpoint_path: str | Path,
+     map_location="cpu",
+ ) -> dict[str, Any]:
++    checkpoint_path = Path(checkpoint_path)
++    if not checkpoint_path.exists():
++        raise FileNotFoundError(
++            f"Checkpoint not found: {checkpoint_path}. "
++            "Run `make train-pretrain EPOCHS=1` first or download a pre-trained checkpoint."
++        )
+     checkpoint = torch.load(
+         checkpoint_path,
+         map_location=map_location,
+         weights_only=True,
+     )
+     if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+-        return checkpoint["model_state_dict"]
+-    return checkpoint
++        return _remap_keys(checkpoint["model_state_dict"])
++    return _remap_keys(checkpoint)
+ 
+ 
+ def detect_profile_from_state_dict(
+diff --git a/dustylm/config.py b/dustylm/config.py
+index 1ca0528..226b623 100644
+--- a/dustylm/config.py
++++ b/dustylm/config.py
+@@ -93,6 +93,7 @@ class HFArtifactSpec:
+ class Profile:
+     name: str
+     model: ModelSpec
++    description: str = ""
+     training: TrainingSpec | None = None
+     generation: GenerationSpec | None = None
+     hf_artifacts: HFArtifactSpec | None = None
+@@ -135,6 +136,7 @@ def get_profile(name: str) -> Profile:
+     return Profile(
+         name=profile.name,
+         model=profile.model or base.model,
++        description=profile.description or base.description,
+         training=profile.training or base.training,
+         generation=profile.generation or base.generation,
+         hf_artifacts=profile.hf_artifacts or base.hf_artifacts,
+@@ -142,7 +144,12 @@ def get_profile(name: str) -> Profile:
+     )
+ 
+ 
+-def list_profiles() -> list[str]:
++def list_profiles(verbose: bool = False) -> list[str]:
++    if verbose:
++        return [
++            f"{name:20} - {_PROFILES[name].description}"
++            for name in sorted(_PROFILES)
++        ]
+     return sorted(_PROFILES)
+ 
+ 
+@@ -225,6 +232,7 @@ register(
+     Profile(
+         name="dusty8m",
+         model=dusty_8m_model,
++        description="Core 8M parameter model trained from scratch on TinyStories.",
+         training=TrainingSpec(
+             task=TrainingTask.PRETRAIN,
+             dataset_path=REPO_ROOT
+@@ -255,6 +263,7 @@ register(
+     Profile(
+         name="sft_dusty8m",
+         model=dusty_8m_model,
++        description="SFT fine-tune of dusty8m on the Dusty chat dataset for persona alignment.",
+         training=TrainingSpec(
+             task=TrainingTask.SFT,
+             dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_tokenized",
+@@ -288,6 +297,7 @@ register(
+     Profile(
+         name="scratch_small",
+         model=scratch_small_model,
++        description="Experimental sandbox with GPT-2 r50k tokenizer and larger embed dim.",
+         training=TrainingSpec(
+             task=TrainingTask.PRETRAIN,
+             dataset_path=REPO_ROOT
+@@ -329,6 +339,7 @@ register(
+     Profile(
+         name="smollm2_360m",
+         model=smollm2_360m_model,
++        description="Hugging Face SmolLM2 360M pretrained baseline for high-capacity inference.",
+         generation=GenerationSpec(
+             checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "smollm2_360m.pt",
+             max_new_tokens=1000,
+@@ -354,6 +365,7 @@ register(
+     Profile(
+         name="smollm2_135m",
+         model=smollm2_135m_model,
++        description="Hugging Face SmolLM2 135M pretrained baseline for efficient fine-tuning.",
+         generation=GenerationSpec(
+             checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "smollm2_135m.pt",
+             max_new_tokens=1000,
+@@ -379,6 +391,7 @@ register(
+     Profile(
+         name="sft_smollm2_135m",
+         model=smollm2_135m_model,
++        description="SFT fine-tune of SmolLM2 135M on the Dusty chat dataset for persona alignment.",
+         training=TrainingSpec(
+             task=TrainingTask.SFT,
+             # By default, this points to the Dusty dataset so you can test 
+diff --git a/dustylm/data_prep.py b/dustylm/data_prep.py
+index 17c3e24..592e877 100644
+--- a/dustylm/data_prep.py
++++ b/dustylm/data_prep.py
+@@ -50,7 +50,7 @@ def require_tokenizer_file(profile: Profile) -> None:
+ 
+     hint = ""
+     if profile.name in {"dusty8m", "sft_dusty8m"}:
+-        hint = " Run `make dusty-tokenizer` first."
++        hint = " Run `make tokenizer` first."
+     raise FileNotFoundError(f"Tokenizer file not found: {path}.{hint}")
+ 
+ 
+@@ -106,7 +106,7 @@ def read_jsonl_sft_rows(raw_sft_path: str | Path) -> list[dict]:
+     if not path.exists():
+         hint = ""
+         if path.name == "dusty_sft.jsonl":
+-            hint = " Run `make dusty-generate-sft` first."
++            hint = " Run `make generate-sft` first."
+         raise FileNotFoundError(f"Raw SFT JSONL not found: {path}.{hint}")
+ 
+     rows = []
+diff --git a/dustylm/inference.py b/dustylm/inference.py
+index c25cd56..72b5983 100644
+--- a/dustylm/inference.py
++++ b/dustylm/inference.py
+@@ -182,7 +182,7 @@ class Inference:
+         self._require_artifact(
+             self.tokenizer_path,
+             "Tokenizer",
+-            "Run `make dusty-tokenizer`, or pass tokenizer_path=...",
++            "Run `make tokenizer`, or pass tokenizer_path=...",
+         )
+ 
+         self.tokenizer = self._load_tokenizer(tokenizer_path)
+diff --git a/dustylm/modeling.py b/dustylm/modeling.py
+index 8b5011f..19b1e92 100644
+--- a/dustylm/modeling.py
++++ b/dustylm/modeling.py
+@@ -52,5 +52,11 @@ def build_tokenizer(profile: Profile) -> Any:
+     if spec.kind == "tiktoken":
+         return tiktoken.get_encoding(str(spec.path_or_name))
+     if spec.kind == "tokenizers":
+-        return Tokenizer.from_file(str(Path(spec.path_or_name)))
++        path = Path(spec.path_or_name)
++        if not path.exists():
++            raise FileNotFoundError(
++                f"Tokenizer file not found: {path}. "
++                f"Run `make tokenizer` first or download a pretrained tokenizer."
++            )
++        return Tokenizer.from_file(str(path))
+     raise ValueError(f"Unsupported tokenizer kind: {spec.kind}")
+diff --git a/dustylm/models/scratch.py b/dustylm/models/scratch.py
+index 0e022ca..82ed4c5 100644
+--- a/dustylm/models/scratch.py
++++ b/dustylm/models/scratch.py
+@@ -249,14 +249,13 @@ class TransformerBlock(nn.Module):
+             nn.GELU(),
+             nn.Linear(hidden_dim, embed_dim, bias=False),
+         )
+-        # Keep this attribute name for compatibility with existing checkpoints.
+-        self.mlp_nrom = nn.RMSNorm(embed_dim, eps=rms_eps)
++        self.mlp_norm = nn.RMSNorm(embed_dim, eps=rms_eps)
+ 
+     def forward(self, x, context: ForwardContext, kv_cache=None):
+         # x: [B, T, embed_dim]
+         att_out, present_kv = self.attention(self.att_norm(x), context, kv_cache)
+         x = x + att_out          # residual connection around attention
+-        x = x + self.mlp(self.mlp_nrom(x))  # residual connection around FFN
++        x = x + self.mlp(self.mlp_norm(x))  # residual connection around FFN
+         return x, present_kv
+ 
+ 
+diff --git a/dustylm/train.py b/dustylm/train.py
+index 3817f5d..a4d2e43 100644
+--- a/dustylm/train.py
++++ b/dustylm/train.py
+@@ -60,7 +60,7 @@ def parse_args(argv=None):
+ 
+ def collate_batch(batch, max_seq_len: int):
+     def get_labels(item):
+-        return item["labels"] if "labels" in item else item["lables"]
++        return item["labels"]
+ 
+     input_ids = [
+         torch.tensor(item["input_ids"][:max_seq_len], dtype=torch.long)
+@@ -105,9 +105,9 @@ def require_training_dataset(profile: Profile) -> None:
+ 
+     hint = ""
+     if profile.name == "dusty8m":
+-        hint = " Run `make dusty-pretrain-data` first."
++        hint = " Run `make data-pretrain` first."
+     elif profile.name == "sft_dusty8m":
+-        hint = " Run `make dusty-sft-data` first."
++        hint = " Run `make data-sft` first."
+     elif "smollm2" in profile.name:
+         hint = (
+             f" The '{profile.name}' profile acts as an architecture template. "
+@@ -129,7 +129,7 @@ def load_init_checkpoint_if_configured(model, profile: Profile, device: str):
+     if not checkpoint_path.exists():
+         hint = ""
+         if profile.name == "sft_dusty8m":
+-            hint = " Run `make dusty-pretrain` first."
++            hint = " Run `make train-pretrain` first."
+         raise FileNotFoundError(
+             f"Initial checkpoint not found: {checkpoint_path}.{hint}"
+         )
+diff --git a/notebooks/01_quickstart.ipynb b/notebooks/01_quickstart.ipynb
+index b626d38..2a379cb 100644
+--- a/notebooks/01_quickstart.ipynb
++++ b/notebooks/01_quickstart.ipynb
+@@ -1,106 +1,84 @@
+ {
+- "cells": [
+-  {
+-   "cell_type": "markdown",
+-   "id": "intro",
+-   "metadata": {},
+-   "source": [
+-    "# DustyLM: Chat with Dusty\n",
+-    "\n",
+-    "Download a pre-trained 8M parameter DustyLM checkpoint and chat with it in under 30 seconds.\n",
+-    "\n",
+-    "**Model:** [mkhordoo/dusty-8m-sft](https://huggingface.co/mkhordoo/dusty-8m-sft)  \n",
+-    "**No GPU required.** Runs on CPU, Colab, or any machine with Python."
+-   ]
++  "cells": [
++    {
++      "cell_type": "markdown",
++      "id": "intro",
++      "metadata": {},
++      "source": [
++        "# DustyLM: Chat with Dusty\n",
++        "\n",
++        "Download a pre-trained 8M parameter DustyLM checkpoint and chat with it in under 30 seconds.\n",
++        "\n",
++        "**Model:** [mkhordoo/dusty-8m-sft](https://huggingface.co/mkhordoo/dusty-8m-sft)  \n",
++        "**No GPU required.** Runs on CPU, Colab, or any machine with Python."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "id": "env-setup",
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "import sys\n",
++        "\n",
++        "if \"google.colab\" in sys.modules:\n",
++        "    !pip install -q \"git+https://github.com/khordoo/dusty-lm.git\" huggingface_hub\n",
++        "\n",
++        "from huggingface_hub import hf_hub_download\n",
++        "\n",
++        "checkpoint_path = hf_hub_download(\n",
++        "    repo_id=\"mkhordoo/dusty-8m-sft\",\n",
++        "    filename=\"model.pt\",\n",
++        ")\n",
++        "tokenizer_path = hf_hub_download(\n",
++        "    repo_id=\"mkhordoo/dusty-8m-sft\",\n",
++        "    filename=\"tokenizer.json\",\n",
++        ")\n",
++        "\n",
++        "print(\"model downloaded.\")"
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "id": "chat-demo",
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "import torch\nfrom dustylm.inference import Inference\n\nengine = Inference(\n    checkpoint_path=checkpoint_path,\n    tokenizer_path=tokenizer_path,\n    device=\"cuda\" if torch.cuda.is_available() else \"cpu\",\n)\n\n\ndef chat(prompt):\n    return engine.chat_completion(\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n        max_tokens=64,\n        temperature=0.6,\n        top_p=0.8,\n    )[\"choices\"][0][\"message\"][\"content\"].strip()\n\n\n# Quick test\nfor prompt in [\"hi dusty\", \"are you scared?\", \"what do you dream about?\"]:\n    print(f\"You> {prompt}\")\n    print(f\"Dusty> {chat(prompt)}\\n\")"
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "id": "interactive-chat",
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "# Interactive chat: type your messages\n",
++        "while True:\n",
++        "    try:\n",
++        "        prompt = input(\"You> \").strip()\n",
++        "    except (KeyboardInterrupt, EOFError):\n",
++        "        break\n",
++        "    if not prompt or prompt.lower() in {\"quit\", \"exit\", \"q\"}:\n",
++        "        break\n",
++        "    print(f\"Dusty> {chat(prompt)}\\n\")"
++      ]
++    }
++  ],
++  "metadata": {
++    "kernelspec": {
++      "display_name": "Python 3",
++      "language": "python",
++      "name": "python3"
++    },
++    "language_info": {
++      "name": "python",
++      "version": "3.11.0"
++    }
+   },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "id": "env-setup",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "import sys\n",
+-    "\n",
+-    "if \"google.colab\" in sys.modules:\n",
+-    "    !pip install -q \"git+https://github.com/khordoo/dusty-lm.git\" huggingface_hub\n",
+-    "\n",
+-    "from huggingface_hub import hf_hub_download\n",
+-    "\n",
+-    "checkpoint_path = hf_hub_download(\n",
+-    "    repo_id=\"mkhordoo/dusty-8m-sft\",\n",
+-    "    filename=\"model.pt\",\n",
+-    ")\n",
+-    "tokenizer_path = hf_hub_download(\n",
+-    "    repo_id=\"mkhordoo/dusty-8m-sft\",\n",
+-    "    filename=\"tokenizer.json\",\n",
+-    ")\n",
+-    "\n",
+-    "print(\"model downloaded.\")"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "id": "chat-demo",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "import torch\n",
+-    "from dustylm.inference import Inference\n",
+-    "\n",
+-    "engine = Inference(\n",
+-    "    checkpoint_path=checkpoint_path,\n",
+-    "    tokenizer_path=tokenizer_path,\n",
+-    "    device=\"cuda\" if torch.cuda.is_available() else \"cpu\",\n",
+-    ")\n",
+-    "\n",
+-    "\n",
+-    "def chat(prompt):\n",
+-    "    return engine.chat_completion(\n",
+-    "        messages=[{\"role\": \"user\", \"content\": prompt}],\n",
+-    "        max_tokens=64,\n",
+-    "        temperature=0.6,\n",
+-    "        top_p=0.8,\n",
+-    "    )[\"choices\"][0][\"message\"][\"content\"].strip()\n",
+-    "\n",
+-    "\n",
+-    "# Quick test\n",
+-    "for prompt in [\"hi dusty\", \"are you scared?\", \"what do you dream about?\", \"where do you charge?\"]:\n",
+-    "    print(f\"You> {prompt}\")\n",
+-    "    print(f\"Dusty> {chat(prompt)}\\n\")"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "id": "interactive-chat",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "# Interactive chat: type your messages\n",
+-    "while True:\n",
+-    "    try:\n",
+-    "        prompt = input(\"You> \").strip()\n",
+-    "    except (KeyboardInterrupt, EOFError):\n",
+-    "        break\n",
+-    "    if not prompt or prompt.lower() in {\"quit\", \"exit\", \"q\"}:\n",
+-    "        break\n",
+-    "    print(f\"Dusty> {chat(prompt)}\\n\")"
+-   ]
+-  }
+- ],
+- "metadata": {
+-  "kernelspec": {
+-   "display_name": "Python 3",
+-   "language": "python",
+-   "name": "python3"
+-  },
+-  "language_info": {
+-   "name": "python",
+-   "version": "3.11.0"
+-  }
+- },
+- "nbformat": 4,
+- "nbformat_minor": 5
+-}
++  "nbformat": 4,
++  "nbformat_minor": 5
++}
+\ No newline at end of file
+diff --git a/notebooks/02_train_from_scratch.ipynb b/notebooks/02_train_from_scratch.ipynb
+index 1f389a1..9ab2b81 100644
+--- a/notebooks/02_train_from_scratch.ipynb
++++ b/notebooks/02_train_from_scratch.ipynb
+@@ -22,6 +22,15 @@
+         "This notebook works on **Google Colab, RunPod, or any local machine**. The setup cell auto-detects your environment."
+       ]
+     },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "> **Note on Execution:** This notebook is designed as an interactive, educational guide.\n",
++        "> It includes manual checkpoint evaluations and is not meant to be run top-to-bottom in a single click.\n",
++        "> If you are looking for a fully automated end-to-end run, open your terminal and execute `make train-end-to-end`.\n"
++      ]
++    },
+     {
+       "cell_type": "code",
+       "execution_count": null,
+@@ -118,7 +127,7 @@
+       "metadata": {},
+       "outputs": [],
+       "source": [
+-        "!make dusty-tokenizer"
++        "!make tokenizer"
+       ]
+     },
+     {
+@@ -138,8 +147,8 @@
+       "metadata": {},
+       "outputs": [],
+       "source": [
+-        "!make dusty-pretrain-data\n",
+-        "!make dusty-sft-data"
++        "!make data-pretrain\n",
++        "!make data-sft"
+       ]
+     },
+     {
+@@ -161,7 +170,7 @@
+       "metadata": {},
+       "outputs": [],
+       "source": [
+-        "!make dusty-pretrain EPOCHS=1 CHECKPOINT_EVERY_STEPS=50"
++        "!make train-pretrain EPOCHS=1 CHECKPOINT_EVERY_STEPS=50"
+       ]
+     },
+     {
+@@ -220,7 +229,7 @@
+       "metadata": {},
+       "outputs": [],
+       "source": [
+-        "!make dusty-generate PROFILE=dusty8m PROMPT=\"deep in the forest, there lived a \" TOP_P=0.9 TEMPERATURE=0.8"
++        "!make generate PROFILE=dusty8m PROMPT=\"deep in the forest, there lived a \" TOP_P=0.9 TEMPERATURE=0.8"
+       ]
+     },
+     {
+@@ -243,7 +252,7 @@
+         "for step in [50, 100, 150]:\n",
+         "    print(\"=\" * 80)\n",
+         "    print(\"CHECKPOINT_STEP:\", step)\n",
+-        "    !make dusty-generate PROFILE=dusty8m CHECKPOINT_STEP={step} PROMPT=\"deep in the forest, there lived a \" TOP_P=0.9 TEMPERATURE=0.8"
++        "    !make generate PROFILE=dusty8m CHECKPOINT_STEP={step} PROMPT=\"deep in the forest, there lived a \" TOP_P=0.9 TEMPERATURE=0.8"
+       ]
+     },
+     {
+@@ -268,7 +277,7 @@
+         "!cp artifacts/checkpoints/dusty8m_step_{BEST_PRETRAIN_STEP}.pt artifacts/checkpoints/dusty8m.pt\n",
+         "\n",
+         "# Verify the promoted checkpoint\n",
+-        "!make dusty-generate PROFILE=dusty8m PROMPT=\"deep in the forest, there lived a \" TOP_P=0.9 TEMPERATURE=0.8"
++        "!make generate PROFILE=dusty8m PROMPT=\"deep in the forest, there lived a \" TOP_P=0.9 TEMPERATURE=0.8"
+       ]
+     },
+     {
+@@ -288,7 +297,7 @@
+       "metadata": {},
+       "outputs": [],
+       "source": [
+-        "!make dusty-sft-train EPOCHS=1 CHECKPOINT_EVERY_STEPS=50"
++        "!make train-sft EPOCHS=1 CHECKPOINT_EVERY_STEPS=50"
+       ]
+     },
+     {
+@@ -325,7 +334,7 @@
+         "\n",
+         "### Understanding Generation Parameters\n",
+         "\n",
+-        "An 8M model has a noisy vocabulary tail. Restricting its choices is critical for coherent output. These settings apply to every `make dusty-generate` command in this notebook:\n",
++        "An 8M model has a noisy vocabulary tail. Restricting its choices is critical for coherent output. These settings apply to every `make generate` command in this notebook:\n",
+         "\n",
+         "| Parameter | Value | Effect |\n",
+         "|---|---|---|\n",
+@@ -346,7 +355,7 @@
+         "for step in [18000, 19600, 21000]:\n",
+         "    print(\"=\" * 80)\n",
+         "    print(\"SFT CHECKPOINT_STEP:\", step)\n",
+-        "    !make dusty-generate PROFILE=sft_dusty8m CHECKPOINT_STEP={step} PROMPT=\"who are you?\" TOP_P=0.9 TEMPERATURE=0.8"
++        "    !make generate PROFILE=sft_dusty8m CHECKPOINT_STEP={step} PROMPT=\"who are you?\" TOP_P=0.9 TEMPERATURE=0.8"
+       ]
+     },
+     {
+@@ -371,7 +380,7 @@
+         "!cp artifacts/checkpoints/dusty8m_sft_step_{BEST_SFT_STEP}.pt artifacts/checkpoints/dusty8m_sft.pt\n",
+         "\n",
+         "# Verify the promoted checkpoint has the right personality and coherent responses\n",
+-        "!make dusty-generate PROFILE=sft_dusty8m PROMPT=\"who are you?\" TOP_P=0.9 TEMPERATURE=0.8"
++        "!make generate PROFILE=sft_dusty8m PROMPT=\"who are you?\" TOP_P=0.9 TEMPERATURE=0.8"
+       ]
+     },
+     {
+@@ -389,28 +398,7 @@
+       "metadata": {},
+       "outputs": [],
+       "source": [
+-        "from dustylm.inference import Inference\n",
+-        "\n",
+-        "engine = Inference(\n",
+-        "    checkpoint_path=REPO_ROOT / \"artifacts\" / \"checkpoints\" / \"dusty8m_sft.pt\",\n",
+-        "    tokenizer_path=REPO_ROOT / \"artifacts\" / \"tokenizers\" / \"dusty_tokenizer.json\",\n",
+-        "    device=device,\n",
+-        ")\n",
+-        "\n",
+-        "\n",
+-        "def chat(prompt):\n",
+-        "    response = engine.chat_completion(\n",
+-        "        messages=[{\"role\": \"user\", \"content\": prompt}],\n",
+-        "        max_tokens=64,\n",
+-        "        temperature=0.6,\n",
+-        "        top_p=0.8,\n",
+-        "    )\n",
+-        "    return response[\"choices\"][0][\"message\"][\"content\"].strip()\n",
+-        "\n",
+-        "\n",
+-        "for prompt in [\"who are you?\", \"what makes you happy\", \"where do you charge?\"]:\n",
+-        "    print(f\"You> {prompt}\")\n",
+-        "    print(f\"Dusty> {chat(prompt)}\\n\")"
++        "from dustylm.inference import Inference\n\nengine = Inference(\n    checkpoint_path=REPO_ROOT / \"artifacts\" / \"checkpoints\" / \"dusty8m_sft.pt\",\n    tokenizer_path=REPO_ROOT / \"artifacts\" / \"tokenizers\" / \"dusty_tokenizer.json\",\n    device=device,\n)\n\n\ndef chat(prompt):\n    response = engine.chat_completion(\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n        max_tokens=64,\n        temperature=0.6,\n        top_p=0.8,\n    )\n    return response[\"choices\"][0][\"message\"][\"content\"].strip()\n\n\nfor prompt in [\"who are you?\", \"what makes you happy\"]:\n    print(f\"You> {prompt}\")\n    print(f\"Dusty> {chat(prompt)}\\n\")"
+       ]
+     },
+     {
+@@ -457,8 +445,8 @@
+       "source": [
+         "# Optional: generate pretraining text and SFT chat examples.\n",
+         "# Uncomment these when your model/API credentials are configured.\n",
+-        "# !make dusty-generate-pretrain\n",
+-        "# !make dusty-generate-sft"
++        "# !make generate-pretrain\n",
++        "# !make generate-sft"
+       ]
+     },
+     {
+@@ -470,7 +458,7 @@
+         "\n",
+         "If you simply want to retrain Dusty, use the downloaded dataset from `make download-datasets` and keep the training flow unchanged.\n",
+         "\n",
+-        "If you want a different robot persona, create a new SFT dataset by editing the prompt inside `data_pipeline/generate_sft.py`. Change the instructions that define Dusty's personality, topics, and speaking style, then run `make dusty-generate-sft` to produce your new chat JSONL before training."
++        "If you want a different robot persona, create a new SFT dataset by editing the prompt inside `data_pipeline/generate_sft.py`. Change the instructions that define Dusty's personality, topics, and speaking style, then run `make generate-sft` to produce your new chat JSONL before training."
+       ]
+     },
+     {
+@@ -484,11 +472,11 @@
+         "\n",
+         "```bash\n",
+         "make download-datasets\n",
+-        "make dusty-tokenizer\n",
+-        "make dusty-pretrain-data\n",
+-        "make dusty-pretrain EPOCHS=1\n",
+-        "make dusty-sft-data\n",
+-        "make dusty-sft-train EPOCHS=1\n",
++        "make tokenizer\n",
++        "make data-pretrain\n",
++        "make train-pretrain EPOCHS=1\n",
++        "make data-sft\n",
++        "make train-sft EPOCHS=1\n",
+         "make chat\n",
+         "```\n",
+         "\n",
+@@ -500,7 +488,7 @@
+         "make train-end-to-end\n",
+         "```\n",
+         "\n",
+-        "Executes the full pipeline with a default of `EPOCHS=1`. This acts as a rapid smoke test to verify that all stages run successfully, from data generation to checkpoint saving. You can override this by passing `EPOCHS=N` (e.g., `make train-end-to-end EPOCHS=5`). For actual model convergence, use the individual commands above to set separate epoch counts for pre-training and SFT, and to monitor the loss at each stage."
++        "This runs the full pipeline with `EPOCHS=1` hardcoded, ideal as a smoke test to verify all stages run correctly. For real training with more epochs, use the individual commands above so you can monitor the loss curve at each stage."
+       ]
+     }
+   ],
+@@ -517,4 +505,4 @@
+   },
+   "nbformat": 4,
+   "nbformat_minor": 5
+-}
++}
+\ No newline at end of file
+diff --git a/notebooks/03_advanced_tools.ipynb b/notebooks/03_advanced_tools.ipynb
+index a45432f..ea81db5 100644
+--- a/notebooks/03_advanced_tools.ipynb
++++ b/notebooks/03_advanced_tools.ipynb
+@@ -1,605 +1,603 @@
+ {
+- "cells": [
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "# Advanced Tools\n",
+-    "\n",
+-    "Dataset generation, filtering, tokenizer fertility, checkpoint selection, and inference internals. Run these after you have completed the [training notebook](02_train_from_scratch.ipynb)."
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## Setup"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "import sys, os\n",
+-    "from pathlib import Path\n",
+-    "\n",
+-    "if \"google.colab\" in sys.modules:\n",
+-    "    !git clone --depth 1 https://github.com/khordoo/dusty-lm.git\n",
+-    "    os.chdir(\"dusty-lm\")\n",
+-    "    !make download-datasets\n",
+-    "elif not Path(\"dustylm\").exists():\n",
+-    "    print(\"Run this from the repo root: cd /path/to/dusty-lm && uv sync\")"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## Overview\n",
+-    "\n",
+-    "This notebook covers:\n",
+-    "\n",
+-    "1. **Generate SFT Data** - create synthetic conversations using an external LLM, then preview, filter, and flatten\n",
+-    "2. **Tokenizer Fertility** - measure tokens per word across vocabulary sizes\n",
+-    "3. **Select Pretraining Checkpoints** - evaluate, compare, and promote the best base model\n",
+-    "4. **Select SFT Checkpoints** - evaluate, compare, and promote the best fine-tuned model\n",
+-    "5. **Inference Internals** - chat completion API, context windows, and convenience wrappers\n"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## Inspect the Dataset Files\n",
+-    "\n",
+-    "The training loop expects raw data under `artifacts/datasets/` and tokenized datasets beside it."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "from pathlib import Path\n",
+-    "\n",
+-    "for path in [\n",
+-    "    Path(\"artifacts/datasets/tinystories_base.txt\"),\n",
+-    "    Path(\"artifacts/datasets/dusty_pretrain.txt\"),\n",
+-    "    Path(\"artifacts/datasets/dusty_sft.jsonl\"),\n",
+-    "]:\n",
+-    "    if path.exists():\n",
+-    "        print(f\"\\u2713 {path}: {path.stat().st_size / 1024 / 1024:.2f} MB\")\n",
+-    "    else:\n",
+-    "        print(f\"\\u2717 {path}\")"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## 1. Generate SFT Data\n",
+-    "\n",
+-    "\n",
+-    "This step uses an external LLM (via OpenRouter) with a dedicated prompt to generate synthetic Dusty conversations. The prompt defines the robot vacuum persona, topics, and speaking style.\n",
+-    "\n",
+-    "**Models used:**\n",
+-    "- **Primary:** `qwen/qwen3-235b-a22b-2507` (stronger Dusty-style responses)\n",
+-    "- **Fallback:** `openai/gpt-oss-120b` (used if primary is unavailable)\n",
+-    "\n",
+-    "Both use the `:floor` suffix to route to the lowest-cost provider on OpenRouter. Override them with `DUSTY_MODEL` and `DUSTY_FALLBACK_MODEL`.\n",
+-    "\n",
+-    "**Before you start:**\n",
+-    "- Set your OpenRouter API key as `OPENAI_API_KEY`\n",
+-    "- If you change the persona, update the prompt and categories in `data_pipeline/generate_sft.py`\n",
+-    "\n",
+-    "**Cost:** The full dataset (500 examples per category, ~30k rows) cost us under $3 with Qwen. Start with 5 per category (as below) to check quality before scaling up."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "# Optional: set your OpenRouter key before running this cell.\n",
+-    "# import os\n",
+-    "# os.environ[\"OPENAI_API_KEY\"] = \"...\"\n",
+-    "\n",
+-    "!make dusty-generate-sft DUSTY_SFT_PER_CATEGORY=5 DUSTY_SFT_BATCH_SIZE=5"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "### 1.1 Preview SFT Rows\n",
+-    "\n",
+-    "\n",
+-    "Each JSONL row needs `category`, `user`, and `dusty`. The `category` field is metadata for filtering and balancing; training uses the user and assistant text."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "import json\n",
+-    "from pathlib import Path\n",
+-    "\n",
+-    "sft_path = Path(\"artifacts/datasets/dusty_sft.jsonl\")\n",
+-    "with sft_path.open(\"r\", encoding=\"utf-8\") as file:\n",
+-    "    for index, line in zip(range(5), file):\n",
+-    "        row = json.loads(line)\n",
+-    "        print(json.dumps(row, indent=2)[:800])\n",
+-    "        print()"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "### 1.2 Filter and Balance SFT Data [Optional]\n",
+-    "\n",
+-    "\n",
+-    "The model uses `max_seq_len=256` tokens. If a training conversation exceeds the limit, the tail gets truncated and the model never sees the `<eos>` (End of Sequence) token. Without learning when to emit `<eos>`, the model will generate endless, looping text during inference.\n",
+-    "\n",
+-    "The main way to keep examples short is to write the generation prompt so the LLM produces concise responses (2-3 sentences). Filtering is an optional safeguard: it drops any example whose answer exceeds `DUSTY_SFT_MAX_ANSWER_TOKENS` and samples a category-balanced subset. Use a smaller target for experiments and a larger target for final training."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "!make dusty-filter-sft \\\n",
+-    "  DUSTY_SFT_FILTER_TARGET=200 \\\n",
+-    "  DUSTY_SFT_MAX_ANSWER_TOKENS=256 \\\n",
+-    "  DUSTY_SFT_FILTERED_OUT=artifacts/datasets/dusty_sft_200.jsonl"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## 2. Tokenizer Fertility\n",
+-    "\n",
+-    "\n",
+-    "Fertility is tokens per whitespace-delimited word. For a tiny model, roughly `1.2` to `1.5` is usually a useful range. Higher values mean words are split heavily; lower values may spend too much of the model on embeddings.\n",
+-    "\n",
+-    "Vocabulary size is part of the model's parameter budget. A larger vocabulary increases the embedding and output projection matrices, which can make the checkpoint larger without making the transformer layers more capable. Fertility testing asks a practical question: if we spend more parameters on vocabulary, do we actually reduce token count enough to justify it?\n",
+-    "\n",
+-    "| Vocab Size | Lines | Words | Tokens | Fertility |\n",
+-    "|-----------|------:|------:|------:|---------:|\n",
+-    "| 4,096 | 10,000 | 327,204 | 430,793 | 1.317 |\n",
+-    "| 8,192 | 10,000 | 327,204 | 410,990 | 1.256 |\n",
+-    "\n",
+-    "The table confirms the diminishing returns:\n",
+-    "\n",
+-    "- **4,096 tokens:** 1.32 fertility at a small parameter footprint\n",
+-    "- **8,192 tokens:** 1.26 fertility, but adds roughly 4M embedding parameters\n",
+-    "\n",
+-    "For Dusty, moving from 4K to 8K did not produce a large enough improvement to justify the extra parameters, so the default tokenizer stays around 4K tokens."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "!uv run python data_pipeline/test_tokenizer_fertility.py \\\n",
+-    "  --input artifacts/datasets/tinystories_base.txt \\\n",
+-    "  --training-files artifacts/datasets/tinystories_base.txt artifacts/datasets/dusty_sft_chatml_pretrain.txt \\\n",
+-    "  --lines 10000 \\\n",
+-    "  --vocab-sizes 2048 4096 8192"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## 3. Select Pretraining Checkpoints\n",
+-    "\n",
+-    "### 3.1 Evaluate Pretraining Checkpoints\n",
+-    "\n",
+-    "Before SFT, evaluate the base `dusty8m` checkpoints directly. The pretrained model was trained on TinyStories, so it should produce coherent story-like text but does not yet have the Dusty conversational personality."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "id": "c8753dd1",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "!make dusty-generate PROFILE=dusty8m PROMPT=\"Deep in the forest there was a \" TOP_P=0.9 TEMPERATURE=0.8"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "id": "95fed994",
+-   "metadata": {},
+-   "source": [
+-    "### 3.2 Compare Pretraining Checkpoints\n",
+-    "\n",
+-    "\n",
+-    "During pretraining, the loss curve does not tell the whole story. A model with a low loss might generate looping, repetitive text, while an earlier checkpoint produces perfectly readable English. Production pipelines run full benchmark suites to quantify this, but here we keep it simple with direct side-by-side reads.\n",
+-    "\n",
+-    "To find the best version of your base model, evaluate the generated text manually. Use `CHECKPOINT_STEP` to sample outputs from different intermediate checkpoints. Generate a short story from several steps and compare them for coherence, spelling, and repetition."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "id": "6d4bc02c",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "# Use story-based cliffhangers to test the raw pre-trained base model\n",
+-    "base_prompts = [\n",
+-    "    \"Once upon a time,\",\n",
+-    "    \"Lily was a little girl who loved to\",\n",
+-    "    \"Deep in the forest, there lived a little boy named Timmy. One day, he\",\n",
+-    "]\n",
+-    "base_checkpoint_steps = [50, 100, 150]\n",
+-    "\n",
+-    "for step in base_checkpoint_steps:\n",
+-    "    print(\"#\" * 80)\n",
+-    "    print(\"BASE CHECKPOINT_STEP:\", step)\n",
+-    "    for prompt in base_prompts:\n",
+-    "        print(\"=\" * 80)\n",
+-    "        print(\"PROMPT:\", prompt)\n",
+-    "        !make dusty-generate PROFILE=dusty8m CHECKPOINT_STEP={step} PROMPT=\"{prompt}\" TOP_P=0.9 TEMPERATURE=0.8"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "id": "c4f4d469",
+-   "metadata": {},
+-   "source": [
+-    "Sampling these checkpoints serves two different purposes depending on where you are in the training cycle:\n",
+-    "\n",
+-    "- **Early Debugging (The Sanity Check)**\n",
+-    "\n",
+-    "    While the model is actively training, sample early steps to verify that it is progressively learning. Early checkpoints will show the model transition from pure noise to forming real letters to generating basic words. Keep Chinchilla scaling laws in mind - do not expect cohesive stories this early. You are simply confirming that the training pipeline is working.\n",
+-    "\n",
+-    "- **Finding the Golden Zone (Post-Training)**\n",
+-    "\n",
+-    "    Once training is complete and the model has seen enough tokens to satisfy the scaling laws, you enter the golden zone. If you choose to train all the way to the full 160 million token target, this region will be around steps 19,600 to 20,000.\n",
+-    "\n",
+-    "**Note on our run:** To keep this demonstration lightweight, we stopped our production pretraining run early at step 5,700 (~46M tokens). Even at this early fraction of the scaling law target, the model already produces remarkably cohesive English. If you have time to let training run to completion, we recommend exploring checkpoints in the 19,600+ golden zone to see how text quality and vocabulary diversity mature. Otherwise, step 5,700 is the target baseline for a functional model.\n",
+-    "\n",
+-    "Sample several checkpoints strictly within your chosen region and compare them. The best checkpoint is the one that produces the most natural-sounding text with the fewest spelling errors and the least amount of looping.\n"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "id": "78a0ffdf",
+-   "metadata": {},
+-   "source": [
+-    "### 3.3 Promote the Best Pretraining Checkpoint\n",
+-    "\n",
+-    "\n",
+-    "Once you have evaluated your checkpoints and selected the winner from your pretraining run (whether it is the lightweight step 5,700 or a deeper checkpoint from the golden zone), you must **promote** it to be the official base model.\n",
+-    "\n",
+-    "The subsequent Supervised Fine-Tuning (SFT) phase is hardcoded to look for a specific base model file named `artifacts/checkpoints/dusty8m.pt`. To promote your best checkpoint, copy your chosen step file and rename it to this target filename.\n",
+-    "\n",
+-    "Run the following command to promote your chosen step (replace `5700` if you selected a different one):"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "id": "47a1cf2f",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "!cp artifacts/checkpoints/dusty8m_step_5700.pt artifacts/checkpoints/dusty8m.pt"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "id": "f520b277",
+-   "metadata": {},
+-   "source": [
+-    "**Sanity Check Your Base Model**\n",
+-    "\n",
+-    "After promoting the file, it is highly recommended to run one final sanity check. This ensures that you copied the correct checkpoint and that `dusty8m.pt` is successfully generating coherent English before you invest time into the fine-tuning phase.\n",
+-    "\n",
+-    "Run the generation command using the base profile to test your newly promoted model:"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "id": "4f47fe2e",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "!make dusty-generate PROFILE=dusty8m PROMPT=\"Deep in the forest there was a\" TOP_P=0.9 TEMPERATURE=0.8"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## 4. Select SFT Checkpoints\n",
+-    "\n",
+-    "### 4.1 Compare SFT Step Checkpoints\n",
+-    "\n",
+-    "\n",
+-    "Loss is only a coarse signal for tiny character models. During training, step checkpoints such as `artifacts/checkpoints/dusty8m_sft_step_100.pt` let you evaluate intermediate model behavior. Generate the same fixed prompt set from several `CHECKPOINT_STEP` values and compare instruction following, persona consistency, repetition, and answer length.\n",
+-    "\n",
+-    "Unlike the pre-training phase, Supervised Fine-Tuning (SFT) does not follow Chinchilla scaling laws. Instead of aiming for hundreds of millions of tokens, SFT is simply about teaching the base model a specific conversational format and persona. For this repository, we use a custom 30k instruction dataset. We found that training for about 7 epochs (roughly 1,960 iterations, depending on your batch size) is the sweet spot.\n",
+-    "\n",
+-    "During SFT, the model can overfit to the chat format quickly. This is why you should stop relying purely on the loss curve and begin selecting checkpoints qualitatively by reading the generated text.\n",
+-    "\n",
+-    "When a step checkpoint behaves better than the final checkpoint, promote it by copying that file over the profile's default checkpoint path. After promotion, remove `CHECKPOINT_STEP` from the generation command; normal `make dusty-generate PROFILE=sft_dusty8m ...` will use the selected model."
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "id": "f732c7ca",
+-   "metadata": {},
+-   "source": [
+-    "## 4.1 Compare SFT Checkpoints\n",
+-    "\n",
+-    "Just as we established during pre-training, the loss curve is only a coarse signal. However, what you are evaluating for during SFT is entirely different. Instead of checking for basic English coherence, you are testing for **instruction following, persona consistency, and appropriate answer length**.\n",
+-    "\n",
+-    "\n",
+-    "Unlike pre-training, SFT does not follow Chinchilla scaling laws; you are simply teaching the model a specific conversational format. Because small models can quickly overfit to chat templates, qualitative testing is critical. For this repository, we use a custom 30k instruction dataset. We found that training for about 21 epochs (roughly 19,600 iterations with a batch size of 32) is the sweet spot.\n",
+-    "\n",
+-    "Sample intermediate checkpoints strictly within this region using `CHECKPOINT_STEP` to find the best persona fit."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "prompts = [\n",
+-    "    \"where are you?\",\n",
+-    "    \"are you scared?\",\n",
+-    "    \"what do you dream about?\",\n",
+-    "    \"where do you charge?\",\n",
+-    "]\n",
+-    "\n",
+-    "checkpoint_steps = [100, 500, 1000]  # Update these based on your runs\n",
+-    "\n",
+-    "for step in checkpoint_steps:\n",
+-    "    print(\"#\" * 80)\n",
+-    "    print(\"CHECKPOINT_STEP:\", step)\n",
+-    "    for prompt in prompts:\n",
+-    "        print(\"=\" * 80)\n",
+-    "        print(\"PROMPT:\", prompt)\n",
+-    "        !make dusty-generate PROFILE=sft_dusty8m CHECKPOINT_STEP={step} PROMPT=\"{prompt}\" TOP_P=0.9 TEMPERATURE=0.8"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "### 4.2 Promote the Selected SFT Checkpoint\n",
+-    "\n",
+-    "Exactly as you did with the base model, you must promote your winning checkpoint to finalize the pipeline. This copies your chosen step file and renames it to `artifacts/checkpoints/dusty8m_sft.pt`, which is the default weight for the `sft_dusty8m` profile used in the chat interface.\n",
+-    "\n",
+-    "Set `BEST_STEP` to the checkpoint step that produced the best qualitative behavior. Run the following commands to promote your model and perform a final sanity check (replace `19600` if you chose a different step):"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "BEST_STEP = 19600\n",
+-    "\n",
+-    "!cp artifacts/checkpoints/dusty8m_sft_step_{BEST_STEP}.pt artifacts/checkpoints/dusty8m_sft.pt\n",
+-    "\n",
+-    "# This command intentionally omits CHECKPOINT_STEP. It now uses the promoted default checkpoint.\n",
+-    "!make dusty-generate PROFILE=sft_dusty8m PROMPT=\"where are you?\" TOP_P=0.9 TEMPERATURE=0.8"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "## 5. Inference Internals\n",
+-    "\n",
+-    "### 5.1 Load an Inference Engine\n",
+-    "\n",
+-    "Use the local promoted SFT checkpoint if you trained one. If you skipped training, pre-trained checkpoints are available on Hugging Face Hub at `mkhordoo/dusty-8m-sft` and will be downloaded automatically when you run the cell below."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "id": "c8e7df77",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "from pathlib import Path\n",
+-    "import torch\n",
+-    "from dustylm.inference import Inference\n",
+-    "\n",
+-    "checkpoint_path = Path(\"artifacts/checkpoints/dusty8m_sft.pt\")\n",
+-    "tokenizer_path = Path(\"artifacts/tokenizers/dusty_tokenizer.json\")\n",
+-    "\n",
+-    "if not checkpoint_path.exists():\n",
+-    "    from huggingface_hub import hf_hub_download\n",
+-    "\n",
+-    "    print(\"Local checkpoint not found, downloading from Hugging Face Hub...\")\n",
+-    "    checkpoint_path = Path(\n",
+-    "        hf_hub_download(repo_id=\"mkhordoo/dusty-8m-sft\", filename=\"dusty8m_sft.pt\")\n",
+-    "    )\n",
+-    "    tokenizer_path = Path(\n",
+-    "        hf_hub_download(\n",
+-    "            repo_id=\"mkhordoo/dusty-8m-sft\", filename=\"dusty_tokenizer.json\"\n",
+-    "        )\n",
+-    "    )\n",
+-    "\n",
+-    "engine = Inference(\n",
+-    "    checkpoint_path=checkpoint_path,\n",
+-    "    tokenizer_path=tokenizer_path,\n",
+-    "    device=\"cuda\" if torch.cuda.is_available() else \"cpu\",\n",
+-    ")\n",
+-    "print(\"Profile:\", engine.profile_name)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "### 5.2 Convenience Wrapper and CLI Chat\n",
+-    "\n",
+-    "\n",
+-    "For scripts or demos, wrap the response dictionary and return only the generated assistant text. For a terminal chat loop, use `make chat`, which runs `uv run python -m dustylm.inference`."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "def chat(prompt, *, max_tokens=128, temperature=0.8, top_p=0.8):\n",
+-    "    response = engine.chat_completion(\n",
+-    "        [{\"role\": \"user\", \"content\": prompt}],\n",
+-    "        max_tokens=max_tokens,\n",
+-    "        temperature=temperature,\n",
+-    "        top_p=top_p,\n",
+-    "    )\n",
+-    "    return response[\"choices\"][0][\"message\"][\"content\"].strip()\n",
+-    "\n",
+-    "\n",
+-    "for prompt in [\n",
+-    "    \"who are you?\",\n",
+-    "    \"are you scared?\",\n",
+-    "    \"what do you dream about?\",\n",
+-    "    \"where do you charge?\",\n",
+-    "]:\n",
+-    "    print(f\"You> {prompt}\")\n",
+-    "    print(f\"Dusty> {chat(prompt)}\\n\")"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "### 5.3 OpenAI-Style Chat Completion\n",
+-    "\n",
+-    "\n",
+-    "`Inference.chat_completion()` accepts OpenAI-style `messages` and returns an OpenAI-like dictionary. That keeps local DustyLM inference close to common chat-completion calling patterns while still running against a local PyTorch checkpoint."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "messages = [{\"role\": \"user\", \"content\": \"where are you?\"}]\n",
+-    "\n",
+-    "response = engine.chat_completion(\n",
+-    "    messages=messages,\n",
+-    "    max_tokens=64,\n",
+-    "    temperature=0.8,\n",
+-    "    top_p=0.8,\n",
+-    ")\n",
+-    "\n",
+-    "response"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "assistant_text = response[\"choices\"][0][\"message\"][\"content\"]\n",
+-    "print(\"Dusty>\", assistant_text)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "### 5.4 Short Context Windows for Tiny Models\n",
+-    "\n",
+-    "\n",
+-    "Dusty is only about 8M parameters, so the default chat history window is intentionally tiny: `max_chat_turns=1`. That keeps the current user request from being diluted by old conversation tokens. Larger SFT profiles, such as SmolLM2-based models, can use a larger window."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "print(\"Profile:\", engine.profile_name)\n",
+-    "print(\"Default max_chat_turns:\", engine.spec.max_chat_turns)\n",
+-    "\n",
+-    "history = [\n",
+-    "    {\"role\": \"system\", \"content\": \"Answer as Dusty, a tiny vacuum robot.\"},\n",
+-    "    {\"role\": \"user\", \"content\": \"what is under the couch?\"},\n",
+-    "    {\"role\": \"assistant\", \"content\": \"crumbs. many crumbs.\"},\n",
+-    "    {\"role\": \"user\", \"content\": \"should you go there?\"},\n",
+-    "]\n",
+-    "\n",
+-    "response = engine.chat_completion(history, max_tokens=128)\n",
+-    "print(\"Default window:\", response[\"choices\"][0][\"message\"][\"content\"])\n",
+-    "\n",
+-     "response = engine.chat_completion(history, max_tokens=128, max_chat_turns=2)\n",
+-     "print(\"Two-turn window:\", response[\"choices\"][0][\"message\"][\"content\"])"
+-    ]
+-   },
+-   {
+-    "cell_type": "markdown",
+-    "metadata": {},
+-    "source": [
+-      "### 5.5 The dustylm SDK\n",
+-      "\n",
+-      "You just loaded the raw `.pt` weights, instantiated the `nn.Module`, and wrote the token-by-token generation loop from scratch. That is exactly how the engine works under the hood.\n",
+-      "\n",
+-      "However, in a production environment, you don't want to rewrite that boilerplate every time you need to chat with your model. To solve this, we wrapped the exact logic you just learned into a lightweight Python package.\n",
+-      "\n",
+-      "Now, you can run the model in just two lines. The SDK works with your own local checkpoints and with published Hub models:\n",
+-      "\n",
+-      "```python\n",
+-      "from dustylm import DustyLM\n",
+-      "\n",
+-      "# Your own training run -- point to your local directory\n",
+-      "model = DustyLM.from_pretrained(\"./dusty-final-checkpoint/\")\n",
+-      "\n",
+-      "# Or pull a published model from Hugging Face Hub\n",
+-      "model = DustyLM.from_pretrained(\"mkhordoo/dusty-8m-sft\")\n",
+-      "\n",
+-      "response = model.chat([{\"role\": \"user\", \"content\": \"who are you?\"}])\n",
+-      "print(response[\"choices\"][0][\"message\"][\"content\"])\n",
+-      "# beep. i am a little robot. i clean floors and find crumbs.\n",
+-      "```\n",
+-      "\n",
+-      "The SDK auto-detects the architecture from your checkpoint's state dict and supports both PyTorch and ONNX backends. Install it with `pip install dustylm`."
+-    ]
+-   }
++  "cells": [
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "# Advanced Tools\n",
++        "\n",
++        "Dataset generation, filtering, tokenizer fertility, checkpoint selection, and inference internals. Run these after you have completed the [training notebook](02_train_from_scratch.ipynb)."
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "## Setup"
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "import sys, os\n",
++        "from pathlib import Path\n",
++        "\n",
++        "if \"google.colab\" in sys.modules:\n",
++        "    !git clone --depth 1 https://github.com/khordoo/dusty-lm.git\n",
++        "    os.chdir(\"dusty-lm\")\n",
++        "    !make download-datasets\n",
++        "elif not Path(\"dustylm\").exists():\n",
++        "    print(\"Run this from the repo root: cd /path/to/dusty-lm && uv sync\")"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "## Overview\n",
++        "\n",
++        "This notebook covers:\n",
++        "\n",
++        "1. **Generate SFT Data** - create synthetic conversations using an external LLM, then preview, filter, and flatten\n",
++        "2. **Tokenizer Fertility** - measure tokens per word across vocabulary sizes\n",
++        "3. **Select Pretraining Checkpoints** - evaluate, compare, and promote the best base model\n",
++        "4. **Select SFT Checkpoints** - evaluate, compare, and promote the best fine-tuned model\n",
++        "5. **Inference Internals** - chat completion API, context windows, and convenience wrappers\n"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "## Inspect the Dataset Files\n",
++        "\n",
++        "The training loop expects raw data under `artifacts/datasets/` and tokenized datasets beside it."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "from pathlib import Path\n",
++        "\n",
++        "for path in [\n",
++        "    Path(\"artifacts/datasets/tinystories_base.txt\"),\n",
++        "    Path(\"artifacts/datasets/dusty_pretrain.txt\"),\n",
++        "    Path(\"artifacts/datasets/dusty_sft.jsonl\"),\n",
++        "]:\n",
++        "    if path.exists():\n",
++        "        print(f\"\\u2713 {path}: {path.stat().st_size / 1024 / 1024:.2f} MB\")\n",
++        "    else:\n",
++        "        print(f\"\\u2717 {path}\")"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "## 1. Generate SFT Data\n",
++        "\n",
++        "\n",
++        "This step uses an external LLM (via OpenRouter) with a dedicated prompt to generate synthetic Dusty conversations. The prompt defines the robot vacuum persona, topics, and speaking style.\n",
++        "\n",
++        "**Models used:**\n",
++        "- **Primary:** `qwen/qwen3-235b-a22b-2507` (stronger Dusty-style responses)\n",
++        "- **Fallback:** `openai/gpt-oss-120b` (used if primary is unavailable)\n",
++        "\n",
++        "Both use the `:floor` suffix to route to the lowest-cost provider on OpenRouter. Override them with `DUSTY_MODEL` and `DUSTY_FALLBACK_MODEL`.\n",
++        "\n",
++        "**Before you start:**\n",
++        "- Set your OpenRouter API key as `OPENAI_API_KEY`\n",
++        "- If you change the persona, update the prompt and categories in `data_pipeline/generate_sft.py`\n",
++        "\n",
++        "**Cost:** The full dataset (500 examples per category, ~30k rows) cost us under $3 with Qwen. Start with 5 per category (as below) to check quality before scaling up."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "# Optional: set your OpenRouter key before running this cell.\n",
++        "# import os\n",
++        "# os.environ[\"OPENAI_API_KEY\"] = \"...\"\n",
++        "\n",
++        "!make generate-sft DUSTY_SFT_PER_CATEGORY=5 DUSTY_SFT_BATCH_SIZE=5"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "### 1.1 Preview SFT Rows\n",
++        "\n",
++        "\n",
++        "Each JSONL row needs `category`, `user`, and `dusty`. The `category` field is metadata for filtering and balancing; training uses the user and assistant text."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "import json\n",
++        "from pathlib import Path\n",
++        "\n",
++        "sft_path = Path(\"artifacts/datasets/dusty_sft.jsonl\")\n",
++        "with sft_path.open(\"r\", encoding=\"utf-8\") as file:\n",
++        "    for index, line in zip(range(5), file):\n",
++        "        row = json.loads(line)\n",
++        "        print(json.dumps(row, indent=2)[:800])\n",
++        "        print()"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "### 1.2 Filter and Balance SFT Data [Optional]\n",
++        "\n",
++        "\n",
++        "The model uses `max_seq_len=256` tokens. If a training conversation exceeds the limit, the tail gets truncated and the model never sees the `<eos>` (End of Sequence) token. Without learning when to emit `<eos>`, the model will generate endless, looping text during inference.\n",
++        "\n",
++        "The main way to keep examples short is to write the generation prompt so the LLM produces concise responses (2-3 sentences). Filtering is an optional safeguard: it drops any example whose answer exceeds `DUSTY_SFT_MAX_ANSWER_TOKENS` and samples a category-balanced subset. Use a smaller target for experiments and a larger target for final training."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "!make filter-sft \\\n",
++        "  DUSTY_SFT_FILTER_TARGET=200 \\\n",
++        "  DUSTY_SFT_MAX_ANSWER_TOKENS=256 \\\n",
++        "  DUSTY_SFT_FILTERED_OUT=artifacts/datasets/dusty_sft_200.jsonl"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "## 2. Tokenizer Fertility\n",
++        "\n",
++        "\n",
++        "Fertility is tokens per whitespace-delimited word. For a tiny model, roughly `1.2` to `1.5` is usually a useful range. Higher values mean words are split heavily; lower values may spend too much of the model on embeddings.\n",
++        "\n",
++        "Vocabulary size is part of the model's parameter budget. A larger vocabulary increases the embedding and output projection matrices, which can make the checkpoint larger without making the transformer layers more capable. Fertility testing asks a practical question: if we spend more parameters on vocabulary, do we actually reduce token count enough to justify it?\n",
++        "\n",
++        "| Vocab Size | Lines | Words | Tokens | Fertility |\n",
++        "|-----------|------:|------:|------:|---------:|\n",
++        "| 4,096 | 10,000 | 327,204 | 430,793 | 1.317 |\n",
++        "| 8,192 | 10,000 | 327,204 | 410,990 | 1.256 |\n",
++        "\n",
++        "The table confirms the diminishing returns:\n",
++        "\n",
++        "- **4,096 tokens:** 1.32 fertility at a small parameter footprint\n",
++        "- **8,192 tokens:** 1.26 fertility, but adds roughly 4M embedding parameters\n",
++        "\n",
++        "For Dusty, moving from 4K to 8K did not produce a large enough improvement to justify the extra parameters, so the default tokenizer stays around 4K tokens."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "!uv run python data_pipeline/test_tokenizer_fertility.py \\\n",
++        "  --input artifacts/datasets/tinystories_base.txt \\\n",
++        "  --training-files artifacts/datasets/tinystories_base.txt artifacts/datasets/dusty_pretrain.txt \\\n",
++        "  --lines 10000 \\\n",
++        "  --vocab-sizes 2048 4096 8192"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "## 3. Select Pretraining Checkpoints\n",
++        "\n",
++        "### 3.1 Evaluate Pretraining Checkpoints\n",
++        "\n",
++        "Before SFT, evaluate the base `dusty8m` checkpoints directly. The pretrained model was trained on TinyStories, so it should produce coherent story-like text but does not yet have the Dusty conversational personality."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "id": "c8753dd1",
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "!make generate PROFILE=dusty8m PROMPT=\"Deep in the forest there was a \" TOP_P=0.9 TEMPERATURE=0.8"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "id": "95fed994",
++      "metadata": {},
++      "source": [
++        "### 3.2 Compare Pretraining Checkpoints\n",
++        "\n",
++        "\n",
++        "During pretraining, the loss curve does not tell the whole story. A model with a low loss might generate looping, repetitive text, while an earlier checkpoint produces perfectly readable English. Production pipelines run full benchmark suites to quantify this, but here we keep it simple with direct side-by-side reads.\n",
++        "\n",
++        "To find the best version of your base model, evaluate the generated text manually. Use `CHECKPOINT_STEP` to sample outputs from different intermediate checkpoints. Generate a short story from several steps and compare them for coherence, spelling, and repetition."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "id": "6d4bc02c",
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "# Use story-based cliffhangers to test the raw pre-trained base model\n",
++        "base_prompts = [\n",
++        "    \"Once upon a time,\",\n",
++        "    \"Lily was a little girl who loved to\",\n",
++        "    \"Deep in the forest, there lived a little boy named Timmy. One day, he\",\n",
++        "]\n",
++        "base_checkpoint_steps = [50, 100, 150]\n",
++        "\n",
++        "for step in base_checkpoint_steps:\n",
++        "    print(\"#\" * 80)\n",
++        "    print(\"BASE CHECKPOINT_STEP:\", step)\n",
++        "    for prompt in base_prompts:\n",
++        "        print(\"=\" * 80)\n",
++        "        print(\"PROMPT:\", prompt)\n",
++        "        !make generate PROFILE=dusty8m CHECKPOINT_STEP={step} PROMPT=\"{prompt}\" TOP_P=0.9 TEMPERATURE=0.8"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "id": "c4f4d469",
++      "metadata": {},
++      "source": [
++        "Sampling these checkpoints serves two different purposes depending on where you are in the training cycle:\n",
++        "\n",
++        "- **Early Debugging (The Sanity Check)**\n",
++        "\n",
++        "    While the model is actively training, sample early steps to verify that it is progressively learning. Early checkpoints will show the model transition from pure noise to forming real letters to generating basic words. Keep Chinchilla scaling laws in mind - do not expect cohesive stories this early. You are simply confirming that the training pipeline is working.\n",
++        "\n",
++        "- **Finding the Golden Zone (Post-Training)**\n",
++        "\n",
++        "    Once training is complete and the model has seen enough tokens to satisfy the scaling laws, you enter the golden zone. If you choose to train all the way to the full 160 million token target, this region will be around steps 19,600 to 20,000.\n",
++        "\n",
++        "**Note on our run:** To keep this demonstration lightweight, we stopped our production pretraining run early at step 5,700 (~46M tokens). Even at this early fraction of the scaling law target, the model already produces remarkably cohesive English. If you have time to let training run to completion, we recommend exploring checkpoints in the 19,600+ golden zone to see how text quality and vocabulary diversity mature. Otherwise, step 5,700 is the target baseline for a functional model.\n",
++        "\n",
++        "Sample several checkpoints strictly within your chosen region and compare them. The best checkpoint is the one that produces the most natural-sounding text with the fewest spelling errors and the least amount of looping.\n"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "id": "78a0ffdf",
++      "metadata": {},
++      "source": [
++        "### 3.3 Promote the Best Pretraining Checkpoint\n",
++        "\n",
++        "\n",
++        "Once you have evaluated your checkpoints and selected the winner from your pretraining run (whether it is the lightweight step 5,700 or a deeper checkpoint from the golden zone), you must **promote** it to be the official base model.\n",
++        "\n",
++        "The subsequent Supervised Fine-Tuning (SFT) phase is hardcoded to look for a specific base model file named `artifacts/checkpoints/dusty8m.pt`. To promote your best checkpoint, copy your chosen step file and rename it to this target filename.\n",
++        "\n",
++        "Run the following command to promote your chosen step (replace `5700` if you selected a different one):"
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "id": "47a1cf2f",
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "!cp artifacts/checkpoints/dusty8m_step_5700.pt artifacts/checkpoints/dusty8m.pt"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "id": "f520b277",
++      "metadata": {},
++      "source": [
++        "**Sanity Check Your Base Model**\n",
++        "\n",
++        "After promoting the file, it is highly recommended to run one final sanity check. This ensures that you copied the correct checkpoint and that `dusty8m.pt` is successfully generating coherent English before you invest time into the fine-tuning phase.\n",
++        "\n",
++        "Run the generation command using the base profile to test your newly promoted model:"
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "id": "4f47fe2e",
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "!make generate PROFILE=dusty8m PROMPT=\"Deep in the forest there was a\" TOP_P=0.9 TEMPERATURE=0.8"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "## 4. Select SFT Checkpoints\n",
++        "\n",
++        "### 4.1 Compare SFT Step Checkpoints\n",
++        "\n",
++        "\n",
++        "Loss is only a coarse signal for tiny character models. During training, step checkpoints such as `artifacts/checkpoints/dusty8m_sft_step_100.pt` let you evaluate intermediate model behavior. Generate the same fixed prompt set from several `CHECKPOINT_STEP` values and compare instruction following, persona consistency, repetition, and answer length.\n",
++        "\n",
++        "Unlike the pre-training phase, Supervised Fine-Tuning (SFT) does not follow Chinchilla scaling laws. Instead of aiming for hundreds of millions of tokens, SFT is simply about teaching the base model a specific conversational format and persona. For this repository, we use a custom 30k instruction dataset. We found that training for about 7 epochs (roughly 1,960 iterations, depending on your batch size) is the sweet spot.\n",
++        "\n",
++        "During SFT, the model can overfit to the chat format quickly. This is why you should stop relying purely on the loss curve and begin selecting checkpoints qualitatively by reading the generated text.\n",
++        "\n",
++        "When a step checkpoint behaves better than the final checkpoint, promote it by copying that file over the profile's default checkpoint path. After promotion, remove `CHECKPOINT_STEP` from the generation command; normal `make generate PROFILE=sft_dusty8m ...` will use the selected model."
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "id": "f732c7ca",
++      "metadata": {},
++      "source": [
++        "## 4.1 Compare SFT Checkpoints\n",
++        "\n",
++        "Just as we established during pre-training, the loss curve is only a coarse signal. However, what you are evaluating for during SFT is entirely different. Instead of checking for basic English coherence, you are testing for **instruction following, persona consistency, and appropriate answer length**.\n",
++        "\n",
++        "\n",
++        "Unlike pre-training, SFT does not follow Chinchilla scaling laws; you are simply teaching the model a specific conversational format. Because small models can quickly overfit to chat templates, qualitative testing is critical. For this repository, we use a custom 30k instruction dataset. We found that training for about 21 epochs (roughly 19,600 iterations with a batch size of 32) is the sweet spot.\n",
++        "\n",
++        "Sample intermediate checkpoints strictly within this region using `CHECKPOINT_STEP` to find the best persona fit."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "prompts = [\n",
++        "    \"where are you?\",\n",
++        "    \"are you scared?\",\n",
++        "    \"what do you dream about?\",\n",
++        "]\n",
++        "\n",
++        "checkpoint_steps = [100, 500, 1000]  # Update these based on your runs\n",
++        "\n",
++        "for step in checkpoint_steps:\n",
++        "    print(\"#\" * 80)\n",
++        "    print(\"CHECKPOINT_STEP:\", step)\n",
++        "    for prompt in prompts:\n",
++        "        print(\"=\" * 80)\n",
++        "        print(\"PROMPT:\", prompt)\n",
++        "        !make generate PROFILE=sft_dusty8m CHECKPOINT_STEP={step} PROMPT=\"{prompt}\" TOP_P=0.9 TEMPERATURE=0.8"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "### 4.2 Promote the Selected SFT Checkpoint\n",
++        "\n",
++        "Exactly as you did with the base model, you must promote your winning checkpoint to finalize the pipeline. This copies your chosen step file and renames it to `artifacts/checkpoints/dusty8m_sft.pt`, which is the default weight for the `sft_dusty8m` profile used in the chat interface.\n",
++        "\n",
++        "Set `BEST_STEP` to the checkpoint step that produced the best qualitative behavior. Run the following commands to promote your model and perform a final sanity check (replace `19600` if you chose a different step):"
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "BEST_STEP = 19600\n",
++        "\n",
++        "!cp artifacts/checkpoints/dusty8m_sft_step_{BEST_STEP}.pt artifacts/checkpoints/dusty8m_sft.pt\n",
++        "\n",
++        "# This command intentionally omits CHECKPOINT_STEP. It now uses the promoted default checkpoint.\n",
++        "!make generate PROFILE=sft_dusty8m PROMPT=\"where are you?\" TOP_P=0.9 TEMPERATURE=0.8"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "## 5. Inference Internals\n",
++        "\n",
++        "### 5.1 Load an Inference Engine\n",
++        "\n",
++        "Use the local promoted SFT checkpoint if you trained one. If you skipped training, pre-trained checkpoints are available on Hugging Face Hub at `mkhordoo/dusty-8m-sft` and will be downloaded automatically when you run the cell below."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "id": "c8e7df77",
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "from pathlib import Path\n",
++        "import torch\n",
++        "from dustylm.inference import Inference\n",
++        "\n",
++        "checkpoint_path = Path(\"artifacts/checkpoints/dusty8m_sft.pt\")\n",
++        "tokenizer_path = Path(\"artifacts/tokenizers/dusty_tokenizer.json\")\n",
++        "\n",
++        "if not checkpoint_path.exists():\n",
++        "    from huggingface_hub import hf_hub_download\n",
++        "\n",
++        "    print(\"Local checkpoint not found, downloading from Hugging Face Hub...\")\n",
++        "    checkpoint_path = Path(\n",
++        "        hf_hub_download(repo_id=\"mkhordoo/dusty-8m-sft\", filename=\"dusty8m_sft.pt\")\n",
++        "    )\n",
++        "    tokenizer_path = Path(\n",
++        "        hf_hub_download(\n",
++        "            repo_id=\"mkhordoo/dusty-8m-sft\", filename=\"dusty_tokenizer.json\"\n",
++        "        )\n",
++        "    )\n",
++        "\n",
++        "engine = Inference(\n",
++        "    checkpoint_path=checkpoint_path,\n",
++        "    tokenizer_path=tokenizer_path,\n",
++        "    device=\"cuda\" if torch.cuda.is_available() else \"cpu\",\n",
++        ")\n",
++        "print(\"Profile:\", engine.profile_name)"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "### 5.2 Convenience Wrapper and CLI Chat\n",
++        "\n",
++        "\n",
++        "For scripts or demos, wrap the response dictionary and return only the generated assistant text. For a terminal chat loop, use `make chat`, which runs `uv run python -m dustylm.inference`."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "def chat(prompt, *, max_tokens=128, temperature=0.8, top_p=0.8):\n",
++        "    response = engine.chat_completion(\n",
++        "        [{\"role\": \"user\", \"content\": prompt}],\n",
++        "        max_tokens=max_tokens,\n",
++        "        temperature=temperature,\n",
++        "        top_p=top_p,\n",
++        "    )\n",
++        "    return response[\"choices\"][0][\"message\"][\"content\"].strip()\n",
++        "\n",
++        "\n",
++        "for prompt in [\n",
++        "    \"who are you?\",\n",
++        "    \"are you scared?\",\n",
++        "    \"what do you dream about?\",\n",
++        "]:\n",
++        "    print(f\"You> {prompt}\")\n",
++        "    print(f\"Dusty> {chat(prompt)}\\n\")"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "### 5.3 OpenAI-Style Chat Completion\n",
++        "\n",
++        "\n",
++        "`Inference.chat_completion()` accepts OpenAI-style `messages` and returns an OpenAI-like dictionary. That keeps local DustyLM inference close to common chat-completion calling patterns while still running against a local PyTorch checkpoint."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "messages = [{\"role\": \"user\", \"content\": \"where are you?\"}]\n",
++        "\n",
++        "response = engine.chat_completion(\n",
++        "    messages=messages,\n",
++        "    max_tokens=64,\n",
++        "    temperature=0.8,\n",
++        "    top_p=0.8,\n",
++        ")\n",
++        "\n",
++        "response"
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "assistant_text = response[\"choices\"][0][\"message\"][\"content\"]\n",
++        "print(\"Dusty>\", assistant_text)"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "### 5.4 Short Context Windows for Tiny Models\n",
++        "\n",
++        "\n",
++        "Dusty is only about 8M parameters, so the default chat history window is intentionally tiny: `max_chat_turns=1`. That keeps the current user request from being diluted by old conversation tokens. Larger SFT profiles, such as SmolLM2-based models, can use a larger window."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "print(\"Profile:\", engine.profile_name)\n",
++        "print(\"Default max_chat_turns:\", engine.spec.max_chat_turns)\n",
++        "\n",
++        "history = [\n",
++        "    {\"role\": \"system\", \"content\": \"Answer as Dusty, a tiny vacuum robot.\"},\n",
++        "    {\"role\": \"user\", \"content\": \"what is under the couch?\"},\n",
++        "    {\"role\": \"assistant\", \"content\": \"crumbs. many crumbs.\"},\n",
++        "    {\"role\": \"user\", \"content\": \"should you go there?\"},\n",
++        "]\n",
++        "\n",
++        "response = engine.chat_completion(history, max_tokens=128)\n",
++        "print(\"Default window:\", response[\"choices\"][0][\"message\"][\"content\"])\n",
++        "\n",
++        "response = engine.chat_completion(history, max_tokens=128, max_chat_turns=2)\n",
++        "print(\"Two-turn window:\", response[\"choices\"][0][\"message\"][\"content\"])"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "### 5.5 The dustylm SDK\n",
++        "\n",
++        "You just loaded the raw `.pt` weights, instantiated the `nn.Module`, and wrote the token-by-token generation loop from scratch. That is exactly how the engine works under the hood.\n",
++        "\n",
++        "However, in a production environment, you don't want to rewrite that boilerplate every time you need to chat with your model. To solve this, we wrapped the exact logic you just learned into a lightweight Python package.\n",
++        "\n",
++        "Now, you can run the model in just two lines. The SDK works with your own local checkpoints and with published Hub models:\n",
++        "\n",
++        "```python\n",
++        "from dustylm import DustyLM\n",
++        "\n",
++        "# Your own training run -- point to your local directory\n",
++        "model = DustyLM.from_pretrained(\"./dusty-final-checkpoint/\")\n",
++        "\n",
++        "# Or pull a published model from Hugging Face Hub\n",
++        "model = DustyLM.from_pretrained(\"mkhordoo/dusty-8m-sft\")\n",
++        "\n",
++        "response = model.chat([{\"role\": \"user\", \"content\": \"who are you?\"}])\n",
++        "print(response[\"choices\"][0][\"message\"][\"content\"])\n",
++        "# beep. i am a little robot. i clean floors and find crumbs.\n",
++        "```\n",
++        "\n",
++        "The SDK auto-detects the architecture from your checkpoint's state dict and supports both PyTorch and ONNX backends. Install it with `pip install dustylm`."
++      ]
++    }
+   ],
+- "metadata": {
+-  "kernelspec": {
+-   "display_name": "Python 3",
+-   "language": "python",
+-   "name": "python3"
+-  },
+-  "language_info": {
+-   "name": "python",
+-   "pygments_lexer": "ipython3"
+-  }
+- },
+- "nbformat": 4,
+- "nbformat_minor": 5
+-}
++  "metadata": {
++    "kernelspec": {
++      "display_name": "Python 3",
++      "language": "python",
++      "name": "python3"
++    },
++    "language_info": {
++      "name": "python",
++      "pygments_lexer": "ipython3"
++    }
++  },
++  "nbformat": 4,
++  "nbformat_minor": 5
++}
+\ No newline at end of file
+diff --git a/notebooks/04_hf_export_and_web_ui.ipynb b/notebooks/04_hf_export_and_web_ui.ipynb
+index 08bbc7a..055f4fb 100644
+--- a/notebooks/04_hf_export_and_web_ui.ipynb
++++ b/notebooks/04_hf_export_and_web_ui.ipynb
+@@ -1,199 +1,199 @@
+ {
+- "cells": [
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "# HF Export & Web UI\n",
+-    "\n",
+-    "Convert your trained DustyLM checkpoint to ONNX, push it to Hugging Face Hub, and serve the browser-based chat UI. Run this after you have a promoted SFT checkpoint from the [training notebook](02_train_from_scratch.ipynb)."
+-   ]
++  "cells": [
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "# HF Export & Web UI\n",
++        "\n",
++        "Convert your trained DustyLM checkpoint to ONNX, push it to Hugging Face Hub, and serve the browser-based chat UI. Run this after you have a promoted SFT checkpoint from the [training notebook](02_train_from_scratch.ipynb)."
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "---\n",
++        "## Setup"
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "import sys, os\n",
++        "from pathlib import Path\n",
++        "\n",
++        "if \"google.colab\" in sys.modules:\n",
++        "    !git clone --depth 1 https://github.com/khordoo/dusty-lm.git\n",
++        "    os.chdir(\"dusty-lm\")\n",
++        "elif not Path(\"dustylm\").exists():\n",
++        "    print(\"Run this from the repo root: cd /path/to/dusty-lm && uv sync\")\n"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "---\n",
++        "\n",
++        "## 1. Serve the Browser Demo Locally\n",
++        "\n",
++        "The best way to interact with your newly trained model is through the browser.\n",
++        "\n",
++        "After you promote a checkpoint, run `make serve-web` to start the local browser demo. By default it serves the latest promoted `sft_dusty8m` checkpoint at `http://localhost:8000`, so open that URL in your browser after the command starts.\n",
++        "\n",
++        "To try a specific SFT checkpoint without promoting it first, pass `CHECKPOINT_STEP`. If port 8000 is already in use, override it with `WEB_PORT`, then open the matching localhost URL. The target refreshes the browser files before starting the local server.\n",
++        "\n",
++        "> **Note:** This requires the `onnx` extras. Run `uv sync --extra onnx` once before running `make serve-web`."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "# Serve the promoted checkpoint locally.\n",
++        "!make serve-web\n",
++        "\n",
++        "# Or serve a specific SFT checkpoint step directly.\n",
++        "# !make serve-web CHECKPOINT_STEP=1000\n",
++        "\n",
++        "# Or use a different local port, then open http://localhost:9000.\n",
++        "# !make serve-web WEB_PORT=9000"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "<img src=\"../docs/images/dusty-web-ui.png\" alt=\"Dusty Web UI\" width=\"600\">\n",
++        "\n",
++        "Open `http://localhost:8000` in your browser to chat with the model."
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "id": "aadcc498",
++      "metadata": {},
++      "source": [
++        "*(Behind the scenes, this command automatically converts your PyTorch weights into an optimized ONNX format so it can run lightning-fast directly in your browser!)*"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "id": "2349c316",
++      "metadata": {},
++      "source": [
++        "---\n",
++        "\n",
++        "## 2. Export to ONNX (Optional / Advanced)\n",
++        "\n",
++        "If you want to take your trained model and deploy it to a mobile app, an edge device, or a custom backend, you can manually export it to the ONNX format. ONNX is a highly optimized, universally supported machine learning standard."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "id": "bb1f9851",
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "!make export-onnx ONNX_PROFILE=sft_dusty8m"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "---\n",
++        "\n",
++        "## 3. Push to Hugging Face Hub\n",
++        "\n",
++        "The script rebuilds a clean local folder under `artifacts/hub_upload/<profile>/`, then `upload_folder` pushes that exact folder as one Hugging Face commit.\n",
++        "\n",
++        "Before a live push:\n",
++        "\n",
++        "- Create the target model repo on Hugging Face, such as `your-username/dusty-8m-sft`.\n",
++        "- Log in with `huggingface-cli login` or set `HF_TOKEN` in your environment.\n",
++        "- Edit `artifacts/hf/HF_MODEL_CARD.md`; the script copies it to `README.md` for the Hub.\n",
++        "- Make sure `artifacts/checkpoints/dusty8m_sft.pt`, `artifacts/tokenizers/dusty_tokenizer.json`, and `docs/images/logo.png` exist.\n",
++        "\n",
++        "The staged Hub folder includes `model.pt`, a freshly exported `model_int8.onnx`, tokenizer files with the Hugging Face chat template, `README.md`, and `assets/logo.png` for the model card image."
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "### 3.1 Dry Run: Build the Hub Folder Locally\n",
++        "\n",
++        "Start here. This rebuilds the staging folder and stops before upload, so you can inspect the exact files that would be pushed.\n",
++        "\n",
++        "> **Note:** This requires the `hub` extras (`transformers`). Run `uv sync --extra hub` once before running `make stage-hub` or `make push-hub`."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "# Change this to your Hugging Face model repo.\n",
++        "HF_REPO_ID = \"your-username/dusty-8m-sft\"\n",
++        "\n",
++        "!make stage-hub HF_REPO_ID={HF_REPO_ID}"
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "from pathlib import Path\n",
++        "\n",
++        "staging_dir = Path(\"artifacts/hub_upload/sft_dusty8m\")\n",
++        "for path in sorted(\n",
++        "    p.relative_to(staging_dir) for p in staging_dir.rglob(\"*\") if p.is_file()\n",
++        "):\n",
++        "    print(path)"
++      ]
++    },
++    {
++      "cell_type": "markdown",
++      "metadata": {},
++      "source": [
++        "### 3.2 Live Push to Hugging Face Hub\n",
++        "\n",
++        "Run this only after the dry-run folder looks correct and your Hugging Face authentication is configured. If the upload fails with an authentication error, set `HF_TOKEN` or run `huggingface-cli login`, then rerun the command."
++      ]
++    },
++    {
++      "cell_type": "code",
++      "execution_count": null,
++      "metadata": {},
++      "outputs": [],
++      "source": [
++        "# Live upload. This pushes the staged model folder to the Hugging Face Hub repo.\n",
++        "!make push-hub HF_REPO_ID={HF_REPO_ID}"
++      ]
++    }
++  ],
++  "metadata": {
++    "kernelspec": {
++      "display_name": "Python 3",
++      "language": "python",
++      "name": "python3"
++    },
++    "language_info": {
++      "name": "python",
++      "pygments_lexer": "ipython3"
++    }
+   },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "---\n",
+-    "## Setup"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "import sys, os\n",
+-    "from pathlib import Path\n",
+-    "\n",
+-    "if \"google.colab\" in sys.modules:\n",
+-    "    !git clone --depth 1 https://github.com/khordoo/dusty-lm.git\n",
+-    "    os.chdir(\"dusty-lm\")\n",
+-    "elif not Path(\"dustylm\").exists():\n",
+-    "    print(\"Run this from the repo root: cd /path/to/dusty-lm && uv sync\")\n"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "---\n",
+-    "\n",
+-         "## 1. Serve the Browser Demo Locally\n",
+-    "\n",
+-    "The best way to interact with your newly trained model is through the browser.\n",
+-    "\n",
+-    "After you promote a checkpoint, run `make serve-web` to start the local browser demo. By default it serves the latest promoted `sft_dusty8m` checkpoint at `http://localhost:8000`, so open that URL in your browser after the command starts.\n",
+-    "\n",
+-     "To try a specific SFT checkpoint without promoting it first, pass `CHECKPOINT_STEP`. If port 8000 is already in use, override it with `WEB_PORT`, then open the matching localhost URL. The target refreshes the browser files before starting the local server.\n",
+-     "\n",
+-     "> **Note:** This requires the `onnx` extras. Run `uv sync --extra onnx` once before running `make serve-web`."
+-   ]
+-  },
+-   {
+-    "cell_type": "code",
+-    "execution_count": null,
+-    "metadata": {},
+-    "outputs": [],
+-    "source": [
+-     "# Serve the promoted checkpoint locally.\n",
+-     "!make serve-web\n",
+-     "\n",
+-     "# Or serve a specific SFT checkpoint step directly.\n",
+-     "# !make serve-web CHECKPOINT_STEP=1000\n",
+-     "\n",
+-     "# Or use a different local port, then open http://localhost:9000.\n",
+-     "# !make serve-web WEB_PORT=9000"
+-    ]
+-   },
+-   {
+-    "cell_type": "markdown",
+-    "metadata": {},
+-    "source": [
+-     "<img src=\"../docs/images/dusty-web-ui.png\" alt=\"Dusty Web UI\" width=\"600\">\n",
+-     "\n",
+-     "Open `http://localhost:8000` in your browser to chat with the model."
+-    ]
+-   },
+-  {
+-   "cell_type": "markdown",
+-   "id": "aadcc498",
+-   "metadata": {},
+-   "source": [
+-    "*(Behind the scenes, this command automatically converts your PyTorch weights into an optimized ONNX format so it can run lightning-fast directly in your browser!)*"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "id": "2349c316",
+-   "metadata": {},
+-   "source": [
+-    "---\n",
+-    "\n",
+-         "## 2. Export to ONNX (Optional / Advanced)\n",
+-    "\n",
+-    "If you want to take your trained model and deploy it to a mobile app, an edge device, or a custom backend, you can manually export it to the ONNX format. ONNX is a highly optimized, universally supported machine learning standard."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "id": "bb1f9851",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "!make dusty-export-onnx ONNX_PROFILE=sft_dusty8m"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-    "---\n",
+-    "\n",
+-     "## 3. Push to Hugging Face Hub\n",
+-         "\n",
+-         "The script rebuilds a clean local folder under `artifacts/hub_upload/<profile>/`, then `upload_folder` pushes that exact folder as one Hugging Face commit.\n",
+-    "\n",
+-    "Before a live push:\n",
+-    "\n",
+-    "- Create the target model repo on Hugging Face, such as `your-username/dusty-8m-sft`.\n",
+-    "- Log in with `huggingface-cli login` or set `HF_TOKEN` in your environment.\n",
+-    "- Edit `artifacts/hf/HF_MODEL_CARD.md`; the script copies it to `README.md` for the Hub.\n",
+-    "- Make sure `artifacts/checkpoints/dusty8m_sft.pt`, `artifacts/tokenizers/dusty_tokenizer.json`, and `docs/images/logo.png` exist.\n",
+-    "\n",
+-    "The staged Hub folder includes `model.pt`, a freshly exported `model_int8.onnx`, tokenizer files with the Hugging Face chat template, `README.md`, and `assets/logo.png` for the model card image."
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-     "### 3.1 Dry Run: Build the Hub Folder Locally\n",
+-     "\n",
+-     "Start here. This rebuilds the staging folder and stops before upload, so you can inspect the exact files that would be pushed.\n",
+-     "\n",
+-     "> **Note:** This requires the `hub` extras (`transformers`). Run `uv sync --extra hub` once before running `make stage-hub` or `make push-hub`."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "# Change this to your Hugging Face model repo.\n",
+-    "HF_REPO_ID = \"your-username/dusty-8m-sft\"\n",
+-    "\n",
+-    "!make stage-hub HF_REPO_ID={HF_REPO_ID}"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "from pathlib import Path\n",
+-    "\n",
+-    "staging_dir = Path(\"artifacts/hub_upload/sft_dusty8m\")\n",
+-    "for path in sorted(\n",
+-    "    p.relative_to(staging_dir) for p in staging_dir.rglob(\"*\") if p.is_file()\n",
+-    "):\n",
+-    "    print(path)"
+-   ]
+-  },
+-  {
+-   "cell_type": "markdown",
+-   "metadata": {},
+-   "source": [
+-         "### 3.2 Live Push to Hugging Face Hub\n",
+-    "\n",
+-    "Run this only after the dry-run folder looks correct and your Hugging Face authentication is configured. If the upload fails with an authentication error, set `HF_TOKEN` or run `huggingface-cli login`, then rerun the command."
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "# Live upload. This pushes the staged model folder to the Hugging Face Hub repo.\n",
+-    "!make push-hub HF_REPO_ID={HF_REPO_ID}"
+-   ]
+-  }
+- ],
+- "metadata": {
+-  "kernelspec": {
+-   "display_name": "Python 3",
+-   "language": "python",
+-   "name": "python3"
+-  },
+-  "language_info": {
+-   "name": "python",
+-   "pygments_lexer": "ipython3"
+-  }
+- },
+- "nbformat": 4,
+- "nbformat_minor": 5
+-}
++  "nbformat": 4,
++  "nbformat_minor": 5
++}
+\ No newline at end of file
+diff --git a/notebooks/05_pretrained_base_models.ipynb b/notebooks/05_pretrained_base_models.ipynb
+index 19bbc6c..5ffbe44 100644
+--- a/notebooks/05_pretrained_base_models.ipynb
++++ b/notebooks/05_pretrained_base_models.ipynb
+@@ -66,7 +66,15 @@
+       "source": [
+         "### 1.1 Inspect the Profiles\n",
+         "\n",
+-        "Profiles are the source of truth for model size, tokenizer, checkpoint paths, HF artifact locations, generation defaults, and SFT training config."
++        "Profiles are the source of truth for model size, tokenizer, checkpoint paths, HF artifact locations, generation defaults, and SFT training config.\n",
++        "\n",
++        "```python\n",
++        "from dustylm.config import list_profiles\n",
++        "for line in list_profiles(verbose=True):\n",
++        "    print(line)\n",
++        "```\n",
++        "\n",
++        "That will print all available profiles with their descriptions."
+       ]
+     },
+     {
+@@ -82,6 +90,8 @@
+         "    model = profile.model\n",
+         "    print(\"=\" * 80)\n",
+         "    print(\"profile:\", profile.name)\n",
++        "    if profile.description:\n",
++        "        print(\"description:\", profile.description)\n",
+         "    print(\"family:\", model.family)\n",
+         "    print(\"layers:\", model.num_layers)\n",
+         "    print(\"hidden dim:\", model.embed_dim)\n",
+@@ -197,9 +207,9 @@
+         "\n",
+         "SFT is the alignment step: the pretrained SmolLM2 base already has broad language knowledge, and SFT teaches it the target response style or task behavior. The training mechanics are the same profile-driven path used elsewhere in DustyLM; the profile decides which tokenizer, dataset, initialization checkpoint, output checkpoint, and context length to use.\n",
+         "\n",
+-        "For SmolLM2 profiles, do not run `make dusty-tokenizer`. The tokenizer belongs to the pretrained model and is downloaded from Hugging Face. Your SFT dataset still needs to be tokenized for the SFT profile before training.\n",
++        "For SmolLM2 profiles, do not run `make tokenizer`. The tokenizer belongs to the pretrained model and is downloaded from Hugging Face. Your SFT dataset still needs to be tokenized for the SFT profile before training.\n",
+         "\n",
+-        "The repository ships `sft_smollm2_135m` — an SFT profile for the 135M model.\n",
++        "The repository ships `sft_smollm2_135m` - an SFT profile for the 135M model.\n",
+         "\n",
+         "### 5.1 Dataset Path in the Profile\n",
+         "\n",
+@@ -215,7 +225,7 @@
+         "python -m dustylm.train --profile sft_smollm2_135m\n",
+         "```\n",
+         "\n",
+-        "(assuming you already ran `make dusty-sft-data`) to instantly see how much smarter a 135M Hugging Face architecture gets when fine-tuned on the exact same vacuum persona data.\n",
++        "(assuming you already ran `make data-sft`) to instantly see how much smarter a 135M Hugging Face architecture gets when fine-tuned on the exact same vacuum persona data.\n",
+         "\n",
+         "If you decide to train the SmolLM2 architecture on your own data later, simply update those paths in the profile.\n"
+       ]
+@@ -261,4 +271,4 @@
+   },
+   "nbformat": 4,
+   "nbformat_minor": 5
+-}
++}
+\ No newline at end of file
+diff --git a/tests/test_data_prep.py b/tests/test_data_prep.py
+index 2118789..ef9a164 100644
+--- a/tests/test_data_prep.py
++++ b/tests/test_data_prep.py
+@@ -109,7 +109,7 @@ def test_prepare_jsonl_sft_dataset_uses_configured_assistant_field(monkeypatch,
+ 
+ 
+ def test_missing_dusty_sft_jsonl_error_points_to_make_target(tmp_path):
+-    with pytest.raises(FileNotFoundError, match="make dusty-generate-sft"):
++    with pytest.raises(FileNotFoundError, match="make generate-sft"):
+         read_jsonl_sft_rows(tmp_path / "dusty_sft.jsonl")
+ 
+ 
+@@ -184,7 +184,7 @@ def test_missing_dusty_tokenizer_error_points_to_make_target(tmp_path):
+         ),
+     )
+ 
+-    with pytest.raises(FileNotFoundError, match="make dusty-tokenizer"):
++    with pytest.raises(FileNotFoundError, match="make tokenizer"):
+         require_tokenizer_file(profile)
+ 
+ 
+diff --git a/tests/test_train.py b/tests/test_train.py
+index 0d045e3..beeb99c 100644
+--- a/tests/test_train.py
++++ b/tests/test_train.py
+@@ -70,7 +70,7 @@ def test_missing_dusty_training_dataset_error_points_to_make_target(tmp_path):
+         ),
+     )
+ 
+-    with pytest.raises(FileNotFoundError, match="make dusty-pretrain-data"):
++    with pytest.raises(FileNotFoundError, match="make data-pretrain"):
+         require_training_dataset(profile)
+ 
+ 
+@@ -84,7 +84,7 @@ def test_missing_dusty_sft_training_dataset_error_points_to_make_target(tmp_path
+         ),
+     )
+ 
+-    with pytest.raises(FileNotFoundError, match="make dusty-sft-data"):
++    with pytest.raises(FileNotFoundError, match="make data-sft"):
+         require_training_dataset(profile)
+ 
+ 
+@@ -122,7 +122,7 @@ def test_missing_init_checkpoint_error_points_to_dusty_pretrain(tmp_path):
+         ),
+     )
+ 
+-    with pytest.raises(FileNotFoundError, match="make dusty-pretrain"):
++    with pytest.raises(FileNotFoundError, match="make train-pretrain"):
+         load_init_checkpoint_if_configured(object(), profile, "cpu")
+ 
+ 

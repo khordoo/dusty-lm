@@ -10,7 +10,6 @@ from dustylm.data_prep import normalize_pretrain_text, read_jsonl_sft_rows
 base = Path(__file__).parents[1]
 TOKENIZER_TEXT_CORPORA = [
     base / "artifacts/datasets/tinystories_base.txt",
-    base / "artifacts/datasets/dusty_pretrain.txt",
 ]
 TOKENIZER_SFT_JSONL_CORPORA = [
     base / "artifacts/datasets/dusty_sft.jsonl",
