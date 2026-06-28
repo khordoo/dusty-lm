@@ -365,7 +365,6 @@ def generate_text(
     spec = profile.generation
     top_p = spec.top_p if top_p is None else top_p
     temperature = spec.temperature if temperature is None else temperature
-    print("generating with temperature:", temperature)
     validate_generation_options(top_p, temperature)
     model, tokenizer, device = load_model(
         profile,
