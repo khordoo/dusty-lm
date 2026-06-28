@@ -70,7 +70,7 @@ def test_missing_dusty_training_dataset_error_points_to_make_target(tmp_path):
         ),
     )
 
-    with pytest.raises(FileNotFoundError, match="make dusty-pretrain-data"):
+    with pytest.raises(FileNotFoundError, match="make data-pretrain"):
         require_training_dataset(profile)
 
 
@@ -84,7 +84,7 @@ def test_missing_dusty_sft_training_dataset_error_points_to_make_target(tmp_path
         ),
     )
 
-    with pytest.raises(FileNotFoundError, match="make dusty-sft-data"):
+    with pytest.raises(FileNotFoundError, match="make data-sft"):
         require_training_dataset(profile)
 
 
@@ -122,7 +122,7 @@ def test_missing_init_checkpoint_error_points_to_dusty_pretrain(tmp_path):
         ),
     )
 
-    with pytest.raises(FileNotFoundError, match="make dusty-pretrain"):
+    with pytest.raises(FileNotFoundError, match="make train-pretrain"):
         load_init_checkpoint_if_configured(object(), profile, "cpu")
 
 

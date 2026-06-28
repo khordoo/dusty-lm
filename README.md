@@ -77,9 +77,12 @@ Downloads datasets, trains the tokenizer, runs pretraining, runs SFT, and tests 
 
 ### Chat Locally
 
+First, run the [Quickstart notebook](notebooks/01_quickstart.ipynb) in Colab — it downloads the pre-trained checkpoint automatically in three cells.
+
+If you have already trained your own model locally, generate text with:
+
 ```bash
-uv sync
-make dusty-generate PROFILE=sft_dusty8m PROMPT="who are you?"
+make generate PROFILE=sft_dusty8m PROMPT="who are you?"
 ```
 
 For interactive chat:
@@ -157,9 +160,9 @@ The SFT format is one conversation per line:
 
 ```bash
 make download-datasets        # Download TinyStories + Dusty SFT
-make dusty-generate-pretrain  # Generate custom pretrain data
-make dusty-generate-sft       # Generate custom SFT data
-make dusty-filter-sft         # Filter and sample SFT
+make generate-pretrain  # Generate custom pretrain data
+make generate-sft       # Generate custom SFT data
+make filter-sft         # Filter and sample SFT
 ```
 
 The advanced notebook covers data-generation prompts, model choice, cost notes, filtering, tokenizer fertility, and personality customization.

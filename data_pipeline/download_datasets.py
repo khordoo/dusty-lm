@@ -89,7 +89,7 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
     except (OSError, HfHubHTTPError) as exc:
         raise RuntimeError(
             f"Could not download {filename} from {repo_id}. "
-            "Generate the dataset locally with `make dusty-generate-sft` "
+            "Generate the dataset locally with `make generate-sft` "
             "or pass --dusty-chat-repo to a repo you can access. "
             f"Original error: {exc}"
         ) from exc
@@ -112,7 +112,7 @@ def main(argv=None):
         args.dusty_chat_file,
         args.dusty_sft_out,
     )
-    print("Datasets are ready. Next: make dusty-tokenizer")
+    print("Datasets are ready. Next: make tokenizer")
 
 
 if __name__ == "__main__":

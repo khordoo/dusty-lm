@@ -52,5 +52,11 @@ def build_tokenizer(profile: Profile) -> Any:
     if spec.kind == "tiktoken":
         return tiktoken.get_encoding(str(spec.path_or_name))
     if spec.kind == "tokenizers":
-        return Tokenizer.from_file(str(Path(spec.path_or_name)))
+        path = Path(spec.path_or_name)
+        if not path.exists():
+            raise FileNotFoundError(
+                f"Tokenizer file not found: {path}. "
+                f"Run `make tokenizer` first or download a pretrained tokenizer."
+            )
+        return Tokenizer.from_file(str(path))
     raise ValueError(f"Unsupported tokenizer kind: {spec.kind}")

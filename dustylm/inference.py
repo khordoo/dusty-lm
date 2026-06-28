@@ -182,7 +182,7 @@ class Inference:
         self._require_artifact(
             self.tokenizer_path,
             "Tokenizer",
-            "Run `make dusty-tokenizer`, or pass tokenizer_path=...",
+            "Run `make tokenizer`, or pass tokenizer_path=...",
         )
 
         self.tokenizer = self._load_tokenizer(tokenizer_path)

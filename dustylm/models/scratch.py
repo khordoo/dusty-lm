@@ -249,14 +249,13 @@ class TransformerBlock(nn.Module):
             nn.GELU(),
             nn.Linear(hidden_dim, embed_dim, bias=False),
         )
-        # Keep this attribute name for compatibility with existing checkpoints.
-        self.mlp_nrom = nn.RMSNorm(embed_dim, eps=rms_eps)
+        self.mlp_norm = nn.RMSNorm(embed_dim, eps=rms_eps)
 
     def forward(self, x, context: ForwardContext, kv_cache=None):
         # x: [B, T, embed_dim]
         att_out, present_kv = self.attention(self.att_norm(x), context, kv_cache)
         x = x + att_out          # residual connection around attention
-        x = x + self.mlp(self.mlp_nrom(x))  # residual connection around FFN
+        x = x + self.mlp(self.mlp_norm(x))  # residual connection around FFN
         return x, present_kv
 
 

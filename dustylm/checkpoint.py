@@ -22,18 +22,37 @@ DUSTY_CHAT_PROFILE = "sft_dusty8m"
 DUSTY_GENERATION_PROFILE = "sft_dusty8m"
 
 
+_KEY_REMAPS = {
+    "mlp_nrom.weight": "mlp_norm.weight",
+    "mlp_nrom.bias": "mlp_norm.bias",
+}
+
+
+def _remap_keys(state_dict: dict[str, Any]) -> dict[str, Any]:
+    for old_key, new_key in _KEY_REMAPS.items():
+        if old_key in state_dict:
+            state_dict[new_key] = state_dict.pop(old_key)
+    return state_dict
+
+
 def load_state_dict(
     checkpoint_path: str | Path,
     map_location="cpu",
 ) -> dict[str, Any]:
+    checkpoint_path = Path(checkpoint_path)
+    if not checkpoint_path.exists():
+        raise FileNotFoundError(
+            f"Checkpoint not found: {checkpoint_path}. "
+            "Run `make train-pretrain EPOCHS=1` first or download a pre-trained checkpoint."
+        )
     checkpoint = torch.load(
         checkpoint_path,
         map_location=map_location,
         weights_only=True,
     )
     if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
-        return checkpoint["model_state_dict"]
-    return checkpoint
+        return _remap_keys(checkpoint["model_state_dict"])
+    return _remap_keys(checkpoint)
 
 
 def detect_profile_from_state_dict(

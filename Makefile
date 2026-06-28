@@ -43,31 +43,31 @@ HF_REPO_ID ?=
 HF_PROFILE ?= sft_dusty8m
 HF_STAGING_DIR ?= artifacts/hub_upload/$(HF_PROFILE)
 
-.PHONY: help chat download-datasets dusty-generate-pretrain dusty-generate-sft dusty-filter-sft dusty-tokenizer dusty-pretrain-data dusty-pretrain dusty-generate dusty-sft-data dusty-sft-train serve-web dusty-export-onnx stage-hub push-hub tensorboard train-end-to-end
+.PHONY: help chat download-datasets generate-pretrain generate-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
 	@printf "\n"
 	@printf "$(BOLD)Data:$(NC)\n"
 	@printf "  make download-datasets          Download TinyStories + Dusty SFT data\n"
-	@printf "  make dusty-generate-pretrain   Generate pretrain text\n"
-	@printf "  make dusty-generate-sft        Generate SFT chat data\n"
-	@printf "  make dusty-filter-sft          Filter/sample SFT JSONL\n"
+	@printf "  make generate-pretrain          Generate pretrain text\n"
+	@printf "  make generate-sft               Generate SFT chat data\n"
+	@printf "  make filter-sft                 Filter/sample SFT JSONL\n"
 	@printf "\n"
 	@printf "$(BOLD)Tokenizer & Datasets:$(NC)\n"
-	@printf "  make dusty-tokenizer            Train tokenizer\n"
-	@printf "  make dusty-pretrain-data        Tokenize pretrain text\n"
-	@printf "  make dusty-sft-data             Tokenize SFT chat data\n"
+	@printf "  make tokenizer                  Train tokenizer\n"
+	@printf "  make data-pretrain              Tokenize pretrain text\n"
+	@printf "  make data-sft                   Tokenize SFT chat data\n"
 	@printf "\n"
 	@printf "$(BOLD)Training:$(NC)\n"
-	@printf "  make dusty-pretrain EPOCHS=1    Train the dusty8m profile\n"
-	@printf "  make dusty-sft-train EPOCHS=1   Train the sft_dusty8m profile\n"
+	@printf "  make train-pretrain EPOCHS=1    Train the dusty8m profile\n"
+	@printf "  make train-sft EPOCHS=1         Train the sft_dusty8m profile\n"
 	@printf "\n"
 	@printf "$(BOLD)Inference & Export:$(NC)\n"
 	@printf "  make chat                       Chat with local SFT inference CLI\n"
-	@printf "  make dusty-generate             Generate with PROFILE=dusty8m PROMPT='hello'\n"
+	@printf "  make generate                   Generate text with the dusty8m profile\n"
 	@printf "  make serve-web                  Serve browser demo locally\n"
-	@printf "  make dusty-export-onnx          Export ONNX artifacts to docs/\n"
+	@printf "  make export-onnx                Export ONNX artifacts to docs/\n"
 	@printf "\n"
 	@printf "$(BOLD)Hub:$(NC)\n"
 	@printf "  make stage-hub HF_REPO_ID=...   Stage artifacts locally (dry run)\n"
@@ -85,14 +85,14 @@ download-datasets:
 		--dusty-sft-out $(DUSTY_SFT_OUT)
 	@printf "$(GREEN)✔ Datasets downloaded successfully!$(NC)\n"
 
-dusty-generate-pretrain:
+generate-pretrain:
 	uv run python data_pipeline/generate_pretrain.py \
 		--model $(DUSTY_MODEL) \
 		--workers $(DUSTY_PRETRAIN_WORKERS) \
 		--out $(DUSTY_PRETRAIN_OUT) \
 		--progress $(DUSTY_PRETRAIN_PROGRESS)
 
-dusty-generate-sft:
+generate-sft:
 	uv run python data_pipeline/generate_sft.py \
 		--mode generate \
 		--model $(DUSTY_MODEL) \
@@ -107,7 +107,7 @@ dusty-generate-sft:
 		--out $(DUSTY_SFT_OUT) \
 		--rejected $(DUSTY_SFT_REJECTED)
 
-dusty-filter-sft:
+filter-sft:
 	uv run python data_pipeline/filter_sft.py \
 		--input $(DUSTY_SFT_OUT) \
 		--output $(DUSTY_SFT_FILTERED_OUT) \
@@ -115,38 +115,38 @@ dusty-filter-sft:
 		--max-answer-tokens $(DUSTY_SFT_MAX_ANSWER_TOKENS) \
 		--sampling-mode $(DUSTY_SFT_SAMPLING_MODE)
 
-dusty-tokenizer:
+tokenizer:
 	@printf "$(YELLOW)Training tokenizer...$(NC)\n"
 	uv run python -m dustylm.tokenizer
 	@printf "$(GREEN)✔ Tokenizer trained successfully!$(NC)\n"
 
-dusty-pretrain-data:
+data-pretrain:
 	@printf "$(YELLOW)Tokenizing pretrain data for dusty8m...$(NC)\n"
 	uv run python -m dustylm.data_prep --profile dusty8m
 	@printf "$(GREEN)✔ Pretrain data tokenized!$(NC)\n"
 
-dusty-pretrain:
+train-pretrain:
 	@printf "$(YELLOW)Starting pretraining (dusty8m, $(EPOCHS) epochs)...$(NC)\n"
 	uv run python -m dustylm.train --profile dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
 	@printf "$(GREEN)✔ Pretraining complete! Checkpoints saved.$(NC)\n"
 
-dusty-generate:
+generate:
 	uv run python dustylm/generate.py --profile $(PROFILE) --prompt "$(PROMPT)" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
 
 chat:
 	uv run python -m dustylm.inference $(if $(CHAT_PROFILE),--profile $(CHAT_PROFILE),)$(if $(CHECKPOINT_PATH), --checkpoint-path $(CHECKPOINT_PATH),)$(if $(TOKENIZER_PATH), --tokenizer-path $(TOKENIZER_PATH),)$(if $(DEVICE), --device $(DEVICE),)$(if $(TEMPERATURE), --temperature $(TEMPERATURE),)$(if $(MAX_TOKENS), --max-tokens $(MAX_TOKENS),)$(if $(TOP_P), --top-p $(TOP_P),)$(if $(MAX_CHAT_TURNS), --max-chat-turns $(MAX_CHAT_TURNS),)
 
-dusty-sft-data:
+data-sft:
 	@printf "$(YELLOW)Tokenizing SFT data for sft_dusty8m...$(NC)\n"
 	uv run python -m dustylm.data_prep --profile sft_dusty8m
 	@printf "$(GREEN)✔ SFT data tokenized!$(NC)\n"
 
-dusty-sft-train:
+train-sft:
 	@printf "$(YELLOW)Starting SFT fine-tuning (sft_dusty8m, $(EPOCHS) epochs)...$(NC)\n"
 	uv run python -m dustylm.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
 	@printf "$(GREEN)✔ SFT fine-tuning complete! Checkpoint saved.$(NC)\n"
 
-dusty-export-onnx:
+export-onnx:
 	uv run --extra onnx python scripts/export_onnx.py --profile $(ONNX_PROFILE) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),) --output $(ONNX_OUT) --tokenizer-output $(ONNX_TOKENIZER_OUT)
 
 serve-web:
@@ -194,15 +194,15 @@ train-end-to-end:
 	@printf "$(CYAN)==========================================$(NC)\n"
 	@printf "\n"
 	@printf "$(YELLOW)[1/4] Generating pre-training data...$(NC)\n"
-	make dusty-pretrain-data
+	make data-pretrain
 	@printf "\n"
 	@printf "$(YELLOW)[2/4] Running pre-training phase (Epochs: 1)...$(NC)\n"
-	make dusty-pretrain EPOCHS=1
+	make train-pretrain EPOCHS=1
 	@printf "\n"
 	@printf "$(YELLOW)[3/4] Generating SFT data...$(NC)\n"
-	make dusty-sft-data
+	make data-sft
 	@printf "\n"
 	@printf "$(YELLOW)[4/4] Running SFT phase (Epochs: 1)...$(NC)\n"
-	make dusty-sft-train EPOCHS=1
+	make train-sft EPOCHS=1
 	@printf "\n"
 	@printf "$(GREEN)✔ End-to-End Pipeline complete! All checkpoints saved to artifacts/.$(NC)\n"

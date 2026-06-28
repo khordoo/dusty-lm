@@ -58,6 +58,12 @@ def map_smollm2_to_dustylm_and_save(
     hf_model_path = resolve_hf_model_path(profile, hf_model_path)
     dustylm_save_path = Path(dustylm_save_path or profile.generation.checkpoint_path)
 
+    hf_model_path = Path(hf_model_path)
+    if not hf_model_path.exists():
+        raise FileNotFoundError(
+            f"Hugging Face weights not found: {hf_model_path}. "
+            "Run `python -m dustylm.artifacts download --profile {profile.name} --convert` first."
+        )
     print("Loading Hugging Face model weights from:", hf_model_path)
     hf_weights = load_file(str(hf_model_path))
     state_dict = convert_smollm2_state_dict(hf_weights)

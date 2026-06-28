@@ -60,7 +60,7 @@ def parse_args(argv=None):
 
 def collate_batch(batch, max_seq_len: int):
     def get_labels(item):
-        return item["labels"] if "labels" in item else item["lables"]
+        return item["labels"]
 
     input_ids = [
         torch.tensor(item["input_ids"][:max_seq_len], dtype=torch.long)
@@ -105,9 +105,9 @@ def require_training_dataset(profile: Profile) -> None:
 
     hint = ""
     if profile.name == "dusty8m":
-        hint = " Run `make dusty-pretrain-data` first."
+        hint = " Run `make data-pretrain` first."
     elif profile.name == "sft_dusty8m":
-        hint = " Run `make dusty-sft-data` first."
+        hint = " Run `make data-sft` first."
     elif "smollm2" in profile.name:
         hint = (
             f" The '{profile.name}' profile acts as an architecture template. "
@@ -129,7 +129,7 @@ def load_init_checkpoint_if_configured(model, profile: Profile, device: str):
     if not checkpoint_path.exists():
         hint = ""
         if profile.name == "sft_dusty8m":
-            hint = " Run `make dusty-pretrain` first."
+            hint = " Run `make train-pretrain` first."
         raise FileNotFoundError(
             f"Initial checkpoint not found: {checkpoint_path}.{hint}"
         )

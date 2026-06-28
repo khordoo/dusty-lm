@@ -93,6 +93,7 @@ class HFArtifactSpec:
 class Profile:
     name: str
     model: ModelSpec
+    description: str = ""
     training: TrainingSpec | None = None
     generation: GenerationSpec | None = None
     hf_artifacts: HFArtifactSpec | None = None
@@ -135,6 +136,7 @@ def get_profile(name: str) -> Profile:
     return Profile(
         name=profile.name,
         model=profile.model or base.model,
+        description=profile.description or base.description,
         training=profile.training or base.training,
         generation=profile.generation or base.generation,
         hf_artifacts=profile.hf_artifacts or base.hf_artifacts,
@@ -142,7 +144,12 @@ def get_profile(name: str) -> Profile:
     )
 
 
-def list_profiles() -> list[str]:
+def list_profiles(verbose: bool = False) -> list[str]:
+    if verbose:
+        return [
+            f"{name:20} - {_PROFILES[name].description}"
+            for name in sorted(_PROFILES)
+        ]
     return sorted(_PROFILES)
 
 
@@ -225,6 +232,7 @@ register(
     Profile(
         name="dusty8m",
         model=dusty_8m_model,
+        description="Core 8M parameter model trained from scratch on TinyStories.",
         training=TrainingSpec(
             task=TrainingTask.PRETRAIN,
             dataset_path=REPO_ROOT
@@ -255,6 +263,7 @@ register(
     Profile(
         name="sft_dusty8m",
         model=dusty_8m_model,
+        description="SFT fine-tune of dusty8m on the Dusty chat dataset for persona alignment.",
         training=TrainingSpec(
             task=TrainingTask.SFT,
             dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_tokenized",
@@ -288,6 +297,7 @@ register(
     Profile(
         name="scratch_small",
         model=scratch_small_model,
+        description="Experimental sandbox with GPT-2 r50k tokenizer and larger embed dim.",
         training=TrainingSpec(
             task=TrainingTask.PRETRAIN,
             dataset_path=REPO_ROOT
@@ -329,6 +339,7 @@ register(
     Profile(
         name="smollm2_360m",
         model=smollm2_360m_model,
+        description="Hugging Face SmolLM2 360M pretrained baseline for high-capacity inference.",
         generation=GenerationSpec(
             checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "smollm2_360m.pt",
             max_new_tokens=1000,
@@ -354,6 +365,7 @@ register(
     Profile(
         name="smollm2_135m",
         model=smollm2_135m_model,
+        description="Hugging Face SmolLM2 135M pretrained baseline for efficient fine-tuning.",
         generation=GenerationSpec(
             checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "smollm2_135m.pt",
             max_new_tokens=1000,
@@ -379,6 +391,7 @@ register(
     Profile(
         name="sft_smollm2_135m",
         model=smollm2_135m_model,
+        description="SFT fine-tune of SmolLM2 135M on the Dusty chat dataset for persona alignment.",
         training=TrainingSpec(
             task=TrainingTask.SFT,
             # By default, this points to the Dusty dataset so you can test 

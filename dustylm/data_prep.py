@@ -50,7 +50,7 @@ def require_tokenizer_file(profile: Profile) -> None:
 
     hint = ""
     if profile.name in {"dusty8m", "sft_dusty8m"}:
-        hint = " Run `make dusty-tokenizer` first."
+        hint = " Run `make tokenizer` first."
     raise FileNotFoundError(f"Tokenizer file not found: {path}.{hint}")
 
 
@@ -106,7 +106,7 @@ def read_jsonl_sft_rows(raw_sft_path: str | Path) -> list[dict]:
     if not path.exists():
         hint = ""
         if path.name == "dusty_sft.jsonl":
-            hint = " Run `make dusty-generate-sft` first."
+            hint = " Run `make generate-sft` first."
         raise FileNotFoundError(f"Raw SFT JSONL not found: {path}.{hint}")
 
     rows = []

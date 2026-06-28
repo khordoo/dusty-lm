@@ -178,6 +178,7 @@ def process_category(
 
     except Exception as e:
         print(f"  -> Error on batch {i + 1} [{category}]: {e}")
+        raise
 
 
 def parse_args(argv=None):
@@ -242,7 +243,17 @@ def main(argv=None):
                 )
                 for i, cat, desc in pending_tasks
             ]
-            concurrent.futures.wait(futures)
+            errors = []
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    future.result()
+                except Exception as exc:
+                    errors.append(str(exc))
+            if errors:
+                raise RuntimeError(
+                    f"{len(errors)}/{len(pending_tasks)} batches failed. "
+                    f"First error: {errors[0]}"
+                )
 
     print("Dataset generation complete. Dusty is ready to learn.")
 
