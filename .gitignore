@@ -18,6 +18,7 @@ artifacts/*
 !artifacts/hf/
 artifacts/hf/*
 !artifacts/hf/HF_MODEL_CARD.md
+!artifacts/hf/HF_BASE_MODEL_CARD.md
 checkpoints/
 data/
 runs/
