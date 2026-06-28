@@ -22,20 +22,6 @@ DUSTY_CHAT_PROFILE = "sft_dusty8m"
 DUSTY_GENERATION_PROFILE = "sft_dusty8m"
 
 
-_KEY_REMAPS = {
-    "mlp_nrom.weight": "mlp_norm.weight",
-    "mlp_nrom.bias": "mlp_norm.bias",
-}
-
-
-def _remap_keys(state_dict: dict[str, Any]) -> dict[str, Any]:
-    for old_suffix, new_suffix in _KEY_REMAPS.items():
-        for key in list(state_dict.keys()):
-            if key.endswith(old_suffix):
-                state_dict[key.replace(old_suffix, new_suffix)] = state_dict.pop(key)
-    return state_dict
-
-
 def load_state_dict(
     checkpoint_path: str | Path,
     map_location="cpu",
@@ -52,8 +38,8 @@ def load_state_dict(
         weights_only=True,
     )
     if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
-        return _remap_keys(checkpoint["model_state_dict"])
-    return _remap_keys(checkpoint)
+        return checkpoint["model_state_dict"]
+    return checkpoint
 
 
 def detect_profile_from_state_dict(
