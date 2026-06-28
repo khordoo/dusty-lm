@@ -22,6 +22,7 @@ DEVICE ?=
 DUSTY_MODEL ?= qwen/qwen3-235b-a22b-2507:floor
 DUSTY_FALLBACK_MODEL ?= openai/gpt-oss-120b:floor
 DUSTY_SFT_PER_CATEGORY ?= 500
+BATCH_SIZE ?= 32
 DUSTY_SFT_BATCH_SIZE ?= 20
 DUSTY_SFT_OUT ?= artifacts/datasets/dusty_sft.jsonl
 DUSTY_SFT_REJECTED ?= artifacts/datasets/dusty_sft_rejected.jsonl
@@ -31,7 +32,7 @@ DUSTY_SFT_MAX_ANSWER_TOKENS ?= 256
 DUSTY_SFT_SAMPLING_MODE ?= balanced
 DUSTY_CHAT_REPO ?= mkhordoo/dusty-chat
 DUSTY_CHAT_FILE ?= dusty_sft.jsonl
-TINYSTORIES_SLICE ?= train[:100000]
+TINYSTORIES_SLICE ?= train[:50000]
 TINYSTORIES_OUT ?= artifacts/datasets/tinystories_base.txt
 ONNX_PROFILE ?= sft_dusty8m
 ONNX_OUT ?= docs/model.onnx
@@ -163,7 +164,7 @@ data-pretrain:
 
 train-pretrain:
 	@printf "$(YELLOW)Starting pretraining (dusty8m, $(EPOCHS) epochs)...$(NC)\n"
-	uv run python -m dustylm.train --profile dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
+	uv run python -m dustylm.train --profile dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS) --batch-size $(BATCH_SIZE)
 	@printf "$(GREEN)✔ Pretraining complete! Checkpoints saved.$(NC)\n"
 
 generate:
@@ -186,7 +187,7 @@ data-sft:
 
 train-sft:
 	@printf "$(YELLOW)Starting SFT fine-tuning (sft_dusty8m, $(EPOCHS) epochs)...$(NC)\n"
-	uv run python -m dustylm.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS)
+	uv run python -m dustylm.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS) --batch-size $(BATCH_SIZE)
 	@printf "$(GREEN)✔ SFT fine-tuning complete! Checkpoint saved.$(NC)\n"
 
 export-onnx:

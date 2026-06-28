@@ -55,6 +55,12 @@ def parse_args(argv=None):
             "checkpoints for this run."
         ),
     )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=None,
+        help="Override the profile's batch_size (default: profile default).",
+    )
     return parser.parse_args(argv)
 
 
@@ -165,6 +171,7 @@ def train(
     profile: Profile,
     num_epochs: int = 1,
     checkpoint_every_steps: int | None = None,
+    batch_size: int | None = None,
 ):
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
@@ -186,9 +193,10 @@ def train(
     print(f"Loaded {len(dataset)} examples.")
 
     device, dtype = get_device_and_dtype()
+    effective_batch_size = batch_size if batch_size is not None else training.batch_size
     train_loader = DataLoader(
         dataset=dataset,
-        batch_size=training.batch_size,
+        batch_size=effective_batch_size,
         shuffle=True,
         collate_fn=lambda batch: collate_batch(batch, training.max_seq_len),
     )
@@ -253,6 +261,7 @@ def main(argv=None):
         get_profile(args.profile),
         num_epochs=args.epochs,
         checkpoint_every_steps=args.checkpoint_every_steps,
+        batch_size=args.batch_size,
     )
 
 
