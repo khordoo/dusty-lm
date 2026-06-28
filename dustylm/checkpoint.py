@@ -29,9 +29,10 @@ _KEY_REMAPS = {
 
 
 def _remap_keys(state_dict: dict[str, Any]) -> dict[str, Any]:
-    for old_key, new_key in _KEY_REMAPS.items():
-        if old_key in state_dict:
-            state_dict[new_key] = state_dict.pop(old_key)
+    for old_suffix, new_suffix in _KEY_REMAPS.items():
+        for key in list(state_dict.keys()):
+            if key.endswith(old_suffix):
+                state_dict[key.replace(old_suffix, new_suffix)] = state_dict.pop(key)
     return state_dict
 
 
