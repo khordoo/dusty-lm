@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import replace
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -150,6 +151,13 @@ def strip_stop_text(text: str, spec: GenerationSpec) -> str:
     return text.strip()
 
 
+class _Color:
+    YELLOW = "\033[93m"
+    GREEN = "\033[92m"
+    DIM = "\033[2m"
+    RESET = "\033[0m"
+
+
 class Inference:
     def __init__(
         self,
@@ -287,15 +295,15 @@ class Inference:
 
 def run_chat_loop(engine: Inference, args) -> None:
     messages = []
-    print("Type 'exit' or 'quit' to stop.")
+    print(f"{_Color.DIM}Tip: Type 'q', 'quit', 'exit', or 'bye' to stop.{_Color.RESET}")
     while True:
         try:
-            user_text = input("You> ").strip()
+            user_text = input(f"{_Color.GREEN}You{_Color.RESET}> ").strip()
         except (EOFError, KeyboardInterrupt):
             print()
             return
 
-        if user_text.lower() in {"exit", "quit"}:
+        if user_text.lower() in {"exit", "quit", "q", "bye"}:
             return
         if not user_text:
             continue
@@ -309,7 +317,7 @@ def run_chat_loop(engine: Inference, args) -> None:
             max_chat_turns=args.max_chat_turns,
         )
         assistant_text = response["choices"][0]["message"]["content"]
-        print(f"Assistant> {assistant_text}")
+        print(f"{_Color.YELLOW}Dusty{_Color.RESET}> {assistant_text}")
         messages.append({"role": "assistant", "content": assistant_text})
 
 
