@@ -30,7 +30,8 @@ def load_state_dict(
     if not checkpoint_path.exists():
         raise FileNotFoundError(
             f"Checkpoint not found: {checkpoint_path}. "
-            "Run `make train-pretrain EPOCHS=1` first or download a pre-trained checkpoint."
+            "Run `make download-models` to download pre-trained weights, "
+            "or `make train-pretrain EPOCHS=1` to train from scratch."
         )
     checkpoint = torch.load(
         checkpoint_path,

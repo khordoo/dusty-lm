@@ -41,13 +41,18 @@ HF_REPO_ID ?=
 HF_PROFILE ?= sft_dusty8m
 HF_STAGING_DIR ?= artifacts/hub_upload/$(HF_PROFILE)
 
-.PHONY: help chat download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
+.PHONY: help chat download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
 	@printf "\n"
+	@printf "$(BOLD)Quick Start (Inference Path):$(NC)\n"
+	@printf "  make download-models            Download pretrained weights + tokenizer from Hugging Face Hub\n"
+	@printf "  make chat                       Chat with local SFT inference CLI\n"
+	@printf "  make generate                   Generate text with the dusty8m profile\n"
+	@printf "\n"
 	@printf "$(BOLD)Data:$(NC)\n"
-	@printf "  make download-datasets          Download TinyStories + Dusty SFT data\n"
+	@printf "  make download-datasets          Download raw training datasets (TinyStories + SFT logs)\n"
 	@printf "  make synthesize-sft             Synthesize raw SFT chat data via LLM\n"
 	@printf "  make filter-sft                 Filter/sample SFT JSONL\n"
 	@printf "\n"
@@ -60,9 +65,7 @@ help:
 	@printf "  make train-pretrain EPOCHS=1    Train the dusty8m profile\n"
 	@printf "  make train-sft EPOCHS=1         Train the sft_dusty8m profile\n"
 	@printf "\n"
-	@printf "$(BOLD)Inference & Export:$(NC)\n"
-	@printf "  make chat                       Chat with local SFT inference CLI\n"
-	@printf "  make generate                   Generate text with the dusty8m profile\n"
+	@printf "$(BOLD)Export:$(NC)\n"
 	@printf "  make serve-web                  Serve browser demo locally\n"
 	@printf "  make export-onnx                Export ONNX artifacts to docs/\n"
 	@printf "\n"
@@ -72,7 +75,27 @@ help:
 	@printf "  make tensorboard                Plot training logs from runs/\n"
 
 # =============================================================================
-# 1. Data Engineering Pipeline
+# 1. Model & Artifacts Pipeline
+# =============================================================================
+
+download-models:
+	@mkdir -p artifacts/checkpoints artifacts/tokenizers
+	@printf "$(CYAN)Downloading Dusty 8M Base (pre-trained weights)...$(NC)\n"
+	hf download mkhordoo/dusty-8m-base model.pt --local-dir artifacts/checkpoints > /dev/null 2>&1
+	@mv -f artifacts/checkpoints/model.pt artifacts/checkpoints/dusty8m.pt
+	@printf "$(GREEN)  ✔ dusty8m.pt$(NC)\n"
+	@printf "$(CYAN)Downloading Dusty 8M SFT (vacuum persona)...$(NC)\n"
+	hf download mkhordoo/dusty-8m-sft model.pt --local-dir artifacts/checkpoints > /dev/null 2>&1
+	@mv -f artifacts/checkpoints/model.pt artifacts/checkpoints/dusty8m_sft.pt
+	@printf "$(GREEN)  ✔ dusty8m_sft.pt$(NC)\n"
+	@printf "$(CYAN)Downloading Dusty tokenizer...$(NC)\n"
+	hf download mkhordoo/dusty-8m-base tokenizer.json --local-dir artifacts/tokenizers > /dev/null 2>&1
+	@mv -f artifacts/tokenizers/tokenizer.json artifacts/tokenizers/dusty_tokenizer.json
+	@printf "$(GREEN)  ✔ dusty_tokenizer.json$(NC)\n"
+	@printf "$(GREEN)✔ Models ready. Run 'make chat' or 'make generate'.$(NC)\n"
+
+# =============================================================================
+# 2. Data Engineering Pipeline
 # =============================================================================
 
 # Defaults to an optimized 100k slice of TinyStories — enough to train the 8M
@@ -82,14 +105,14 @@ help:
 #   make download-datasets TINYSTORIES_SLICE="train[:2000000]"
 
 download-datasets:
-	@printf "$(YELLOW)Downloading TinyStories and Dusty SFT datasets...$(NC)\n"
+	@printf "$(YELLOW)Downloading raw training datasets (TinyStories + SFT logs)...$(NC)\n"
 	uv run python data_pipeline/download_datasets.py \
 		--tinystories-slice "$(TINYSTORIES_SLICE)" \
 		--tinystories-out $(TINYSTORIES_OUT) \
 		--dusty-chat-repo $(DUSTY_CHAT_REPO) \
 		--dusty-chat-file $(DUSTY_CHAT_FILE) \
 		--dusty-sft-out $(DUSTY_SFT_OUT)
-	@printf "$(GREEN)✔ Datasets downloaded successfully!$(NC)\n"
+	@printf "$(GREEN)✔ Datasets ready for training. Run 'make train-pretrain' or 'make train-sft'.$(NC)\n"
 
 synthesize-sft:
 	@printf "$(YELLOW)Synthesizing SFT chat data via LLM...$(NC)\n"

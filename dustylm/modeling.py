@@ -56,7 +56,8 @@ def build_tokenizer(profile: Profile) -> Any:
         if not path.exists():
             raise FileNotFoundError(
                 f"Tokenizer file not found: {path}. "
-                f"Run `make tokenizer` first or download a pretrained tokenizer."
+                f"Run `make download-models` to download a pre-trained tokenizer, "
+                f"or `make tokenizer` to train one from scratch."
             )
         return Tokenizer.from_file(str(path))
     raise ValueError(f"Unsupported tokenizer kind: {spec.kind}")

@@ -185,12 +185,13 @@ class Inference:
         self._require_artifact(
             self.checkpoint_path,
             "Checkpoint",
-            "Train or download the SFT checkpoint first, or pass checkpoint_path=...",
+            "Run `make download-models` to download pre-trained weights, or pass checkpoint_path=...",
         )
         self._require_artifact(
             self.tokenizer_path,
             "Tokenizer",
-            "Run `make tokenizer`, or pass tokenizer_path=...",
+            "Run `make download-models` to download the pre-trained tokenizer, "
+            "or `make tokenizer` to train one from scratch.",
         )
 
         self.tokenizer = self._load_tokenizer(tokenizer_path)
