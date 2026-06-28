@@ -106,7 +106,7 @@ def read_jsonl_sft_rows(raw_sft_path: str | Path) -> list[dict]:
     if not path.exists():
         hint = ""
         if path.name == "dusty_sft.jsonl":
-            hint = " Run `make generate-sft` first."
+            hint = " Run `make synthesize-sft` first."
         raise FileNotFoundError(f"Raw SFT JSONL not found: {path}.{hint}")
 
     rows = []

@@ -109,7 +109,7 @@ def test_prepare_jsonl_sft_dataset_uses_configured_assistant_field(monkeypatch, 
 
 
 def test_missing_dusty_sft_jsonl_error_points_to_make_target(tmp_path):
-    with pytest.raises(FileNotFoundError, match="make generate-sft"):
+    with pytest.raises(FileNotFoundError, match="make synthesize-sft"):
         read_jsonl_sft_rows(tmp_path / "dusty_sft.jsonl")
 
 
