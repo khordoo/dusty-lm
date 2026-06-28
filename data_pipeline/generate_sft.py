@@ -1076,9 +1076,9 @@ def generate_dataset(
 
     api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key:
-        raise RuntimeError("Set OPENAI_API_KEY to your OpenRouter API key.")
+        raise RuntimeError("Set OPENAI_API_KEY to your OpenAI-compatible API key.")
     client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
+        base_url=os.environ.get("OPENAI_BASE_URL", "https://openrouter.ai/api/v1"),
         api_key=api_key,
         max_retries=5,
         timeout=120.0,
@@ -1449,7 +1449,7 @@ def main() -> None:
 
     if args.mode == "generate":
         if not os.environ.get("OPENAI_API_KEY"):
-            raise RuntimeError("Set OPENAI_API_KEY to your OpenRouter API key.")
+            raise RuntimeError("Set OPENAI_API_KEY to your OpenAI-compatible API key.")
 
         generate_dataset(
             out_path=args.out,
