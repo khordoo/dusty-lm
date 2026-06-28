@@ -158,10 +158,19 @@ The SFT format is one conversation per line:
 
 *Dusty SFT data on Hugging Face: [mkhordoo/dusty-chat](https://huggingface.co/datasets/mkhordoo/dusty-chat).*
 
+### Getting the Data
+
+**Option A: The Default Path (Recommended)** — If you just want to train the vacuum model, download the pre-built datasets. This is all you need to get started:
+
 ```bash
-make download-datasets        # Download TinyStories + Dusty SFT
-make generate-sft       # Generate custom SFT data
-make filter-sft         # Filter and sample SFT
+make download-datasets   # Downloads TinyStories + Dusty SFT
+```
+
+**Option B: The Custom Persona Path (Advanced)** — If you want to build a completely new AI persona (e.g., a toaster or a cat), use the data pipeline to generate your own synthetic datasets:
+
+```bash
+make synthesize-sft      # Generate new SFT chat data via an external LLM
+make filter-sft          # Filter and format your raw data for training
 ```
 
 The advanced notebook covers data-generation prompts, model choice, cost notes, filtering, tokenizer fertility, and personality customization.
