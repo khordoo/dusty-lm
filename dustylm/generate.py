@@ -351,6 +351,7 @@ def generate_text(
     temperature: float | None = None,
 ):
     """Generate text autoregressively from a prompt using KV-cached decoding."""
+    prompt = prompt.strip()
     profile_name = resolve_profile_name_for_checkpoint(
         checkpoint_path,
         explicit_profile=profile_name,
