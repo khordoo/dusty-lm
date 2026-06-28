@@ -72,6 +72,7 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
         downloaded_path = hf_hub_download(
             repo_id=repo_id,
             filename=filename,
+            repo_type="dataset",
             local_dir=output_path.parent,
             local_dir_use_symlinks=False,
         )
