@@ -193,6 +193,7 @@ def train(
     print(f"Loaded {len(dataset)} examples.")
 
     device, dtype = get_device_and_dtype()
+    print(f"Running on device={device}  dtype={dtype}")
     effective_batch_size = batch_size if batch_size is not None else training.batch_size
     train_loader = DataLoader(
         dataset=dataset,
@@ -213,8 +214,8 @@ def train(
     writer = get_summary_writer(training.log_dir)
 
     global_step = 0
+    total_batches = len(train_loader)
     for epoch in range(num_epochs):
-        print(f"\n--- Starting Epoch {epoch + 1}/{num_epochs} ---")
         for batch_idx, (inputs, targets) in enumerate(train_loader):
             inputs = inputs.to(device)
             targets = targets.to(device)
@@ -240,7 +241,11 @@ def train(
                 loss.backward()
                 optimizer.step()
 
-            print(f"Batch step={batch_idx}/{len(train_loader)}, loss={loss.item()}")
+            print(
+                f"Epoch {epoch + 1}/{num_epochs} | "
+                f"Step {batch_idx + 1}/{total_batches} | "
+                f"Loss: {loss.item():.4f}"
+            )
             global_step += 1
             save_step_checkpoint_if_due(
                 model=model,
