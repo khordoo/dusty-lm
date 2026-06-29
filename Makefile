@@ -116,7 +116,7 @@ download-models:
 #   make download-datasets TINYSTORIES_SLICE="train[:2000000]"
 
 download-datasets:
-	@printf "$(YELLOW)Downloading raw training datasets (TinyStories + SFT conversations)...$(NC)\n"
+	@printf "$(YELLOW)Downloading raw training datasets (TinyStories + Dusty SFT Conversations)...$(NC)\n"
 	uv run python data_pipeline/download_datasets.py \
 		--tinystories-slice "$(TINYSTORIES_SLICE)" \
 		--tinystories-out $(TINYSTORIES_OUT) \
@@ -169,7 +169,7 @@ train-pretrain:
 
 generate:
 	@printf "$(YELLOW)Generating text with $(PROFILE) profile...$(NC)\n"
-	@uv run python scripts/check_artifacts.py $(PROFILE) generate || exit 1
+	@uv run python scripts/check_artifacts.py $(PROFILE) generate $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),) || exit 1
 	uv run python dustylm/generate.py --profile $(PROFILE) --prompt "$(strip $(PROMPT))" $(if $(TOP_P),--top-p $(TOP_P),) $(if $(TEMPERATURE),--temperature $(TEMPERATURE),) $(if $(CHECKPOINT_STEP),--checkpoint-step $(CHECKPOINT_STEP),)
 	@printf "$(GREEN)✔ Generation complete!$(NC)\n"
 
