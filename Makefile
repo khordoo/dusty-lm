@@ -158,6 +158,8 @@ tokenizer:
 	@printf "$(GREEN)✔ Tokenizer trained successfully!$(NC)\n"
 
 data-pretrain:
+	@printf "$(YELLOW)Clearing any existing pretrain tokenized data...$(NC)\n"
+	@rm -rf artifacts/datasets/dusty_pretrain_tokenized
 	@printf "$(YELLOW)Tokenizing pretrain data for dusty8m...$(NC)\n"
 	uv run python -m dustylm.data_prep --profile dusty8m
 	@printf "$(GREEN)✔ Pretrain data tokenized!$(NC)\n"
@@ -181,6 +183,8 @@ chat:
 	uv run python -m dustylm.inference $(if $(CHAT_PROFILE),--profile $(CHAT_PROFILE),)$(if $(CHECKPOINT_PATH), --checkpoint-path $(CHECKPOINT_PATH),)$(if $(TOKENIZER_PATH), --tokenizer-path $(TOKENIZER_PATH),)$(if $(DEVICE), --device $(DEVICE),)$(if $(TEMPERATURE), --temperature $(TEMPERATURE),)$(if $(MAX_TOKENS), --max-tokens $(MAX_TOKENS),)$(if $(TOP_P), --top-p $(TOP_P),)$(if $(MAX_CHAT_TURNS), --max-chat-turns $(MAX_CHAT_TURNS),)
 
 data-sft:
+	@printf "$(YELLOW)Clearing any existing SFT tokenized data...$(NC)\n"
+	@rm -rf artifacts/datasets/dusty_sft_tokenized
 	@printf "$(YELLOW)Tokenizing SFT data for sft_dusty8m...$(NC)\n"
 	uv run python -m dustylm.data_prep --profile sft_dusty8m
 	@printf "$(GREEN)✔ SFT data tokenized!$(NC)\n"
@@ -287,7 +291,7 @@ train-end-to-end:
 	@printf "$(YELLOW)[3/4] Generating SFT data...$(NC)\n"
 	make data-sft
 	@printf "\n"
-	@printf "$(YELLOW)[4/4] Running SFT phase (Epochs: 1)...$(NC)\n"
-	make train-sft EPOCHS=1
+	@printf "$(YELLOW)[4/4] Running SFT phase (Epochs: 21)...$(NC)\n"
+	make train-sft EPOCHS=21
 	@printf "\n"
 	@printf "$(GREEN)✔ End-to-End Pipeline complete! All checkpoints saved to artifacts/.$(NC)\n"
