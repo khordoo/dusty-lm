@@ -66,7 +66,7 @@ def parse_args(argv=None):
 
 def collate_batch(batch, max_seq_len: int):
     def get_labels(item):
-        return item["labels"]
+        return item.get("labels", item["input_ids"])
 
     input_ids = [
         torch.tensor(item["input_ids"][:max_seq_len], dtype=torch.long)

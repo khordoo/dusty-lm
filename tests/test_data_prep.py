@@ -8,6 +8,7 @@ from dustylm.data_prep import (
     DOCUMENT_SEPARATOR,
     encode_token_ids,
     main,
+    iter_plain_text_documents,
     normalize_pretrain_text,
     prepare_chatml_sft_training_example,
     prepare_jsonl_sft_dataset,
@@ -130,15 +131,24 @@ def test_read_plain_text_documents_errors_for_missing_pretrain_text(tmp_path):
 def test_plain_text_documents_are_separated_by_endoftext():
     tokenizer = FakeTokenizer()
 
-    prepare_plain_text_examples(["alpha", "beta"], tokenizer, max_seq_len=100)
+    examples = list(
+        prepare_plain_text_examples(["alpha", "beta"], tokenizer, max_seq_len=100)
+    )
+    text = "".join(chr(token) for example in examples for token in example["input_ids"])
 
-    assert tokenizer.encoded_text == f"alpha{DOCUMENT_SEPARATOR}beta{DOCUMENT_SEPARATOR}"
+    assert text == f"alpha{DOCUMENT_SEPARATOR}beta{DOCUMENT_SEPARATOR}"
 
 
 def test_plain_text_examples_apply_pretrain_text_normalization():
     tokenizer = FakeTokenizer()
 
-    prepare_plain_text_examples(["Dusty cleans; Then docks."], tokenizer, max_seq_len=100)
+    list(
+        prepare_plain_text_examples(
+            ["Dusty cleans; Then docks."],
+            tokenizer,
+            max_seq_len=100,
+        )
+    )
 
     assert tokenizer.encoded_text == f"dusty cleans. then docks.{DOCUMENT_SEPARATOR}"
 
@@ -146,19 +156,31 @@ def test_plain_text_examples_apply_pretrain_text_normalization():
 def test_plain_text_examples_do_not_insert_chat_template():
     tokenizer = FakeTokenizer()
 
-    prepare_plain_text_examples(["Alice was beginning"], tokenizer, max_seq_len=100)
+    list(prepare_plain_text_examples(["Alice was beginning"], tokenizer, max_seq_len=100))
 
     assert "<|im_start|>" not in tokenizer.encoded_text
     assert "<|im_end|>" not in tokenizer.encoded_text
 
 
-def test_plain_text_labels_equal_input_ids():
+def test_plain_text_examples_store_only_input_ids():
     tokenizer = FakeTokenizer()
 
-    examples = prepare_plain_text_examples(["Alice was beginning"], tokenizer, max_seq_len=5)
+    examples = list(
+        prepare_plain_text_examples(["Alice was beginning"], tokenizer, max_seq_len=5)
+    )
 
     assert examples
-    assert all(example["labels"] == example["input_ids"] for example in examples)
+    assert all(set(example) == {"input_ids"} for example in examples)
+
+
+def test_iter_plain_text_documents_streams_blank_line_separated_documents(tmp_path):
+    corpus = tmp_path / "corpus.txt"
+    corpus.write_text("first story\n\nsecond story\nline two\n\n")
+
+    assert list(iter_plain_text_documents(corpus)) == [
+        "first story",
+        "second story\nline two",
+    ]
 
 
 def test_sft_examples_apply_text_normalization():

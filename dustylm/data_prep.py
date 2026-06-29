@@ -10,7 +10,7 @@ import argparse
 import json
 from pathlib import Path
 
-from datasets import Dataset
+from datasets import Dataset, Features, Sequence, Value
 
 from dustylm.config import (
     IGNORE_INDEX,
@@ -99,6 +99,40 @@ def read_plain_text_documents(raw_text_path: str | Path) -> list[str]:
     return [file.read_text() for file in text_files]
 
 
+def iter_plain_text_documents(raw_text_path: str | Path):
+    """Yield pretraining text documents without loading the full corpus."""
+    path = Path(raw_text_path)
+    if path.is_file():
+        yield from iter_plain_text_file_documents(path)
+        return
+
+    if not path.exists():
+        raise FileNotFoundError(f"Raw pretrain text not found: {path}")
+
+    text_files = sorted(file for file in path.rglob("*.txt") if file.is_file())
+    if not text_files:
+        raise FileNotFoundError(f"No .txt files found under {path}")
+
+    for text_file in text_files:
+        yield from iter_plain_text_file_documents(text_file)
+
+
+def iter_plain_text_file_documents(path: Path):
+    """Yield blank-line separated documents from one text file."""
+    buffer = []
+    with path.open(encoding="utf-8") as file:
+        for line in file:
+            # TinyStories records are separated by blank lines; stream one story at a time.
+            if line.strip():
+                buffer.append(line)
+                continue
+            if buffer:
+                yield "".join(buffer).strip()
+                buffer = []
+    if buffer:
+        yield "".join(buffer).strip()
+
+
 def read_jsonl_sft_rows(raw_sft_path: str | Path) -> list[dict]:
     path = Path(raw_sft_path)
     if not path.exists():
@@ -126,29 +160,50 @@ def read_jsonl_sft_rows(raw_sft_path: str | Path) -> list[dict]:
 
 
 def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: int):
-    """Tokenize raw pretraining text into fixed-length causal LM examples (generator).
+    """Yield fixed-length causal LM examples from raw pretraining text.
 
     This helper is the pure transformation step for pretraining data: it
-    normalizes text, joins documents with the end-of-text separator, tokenizes
-    the combined corpus, and slices the token stream into ``max_seq_len``
-    chunks. For pretraining, labels are identical to input IDs because the
-    model learns to predict the next token from the same text.
+    normalizes each document, adds the end-of-text separator, tokenizes it, and
+    streams fixed-size chunks. Pretraining labels are identical to ``input_ids``,
+    so they are created later by the training collator instead of being stored
+    as a duplicate dataset column.
     """
-    normalized_documents = [normalize_pretrain_text(document) for document in documents]
-    joined_text = DOCUMENT_SEPARATOR.join(normalized_documents)
-    del documents, normalized_documents
-    joined_text = joined_text + DOCUMENT_SEPARATOR
-    token_ids = encode_token_ids(
-        tokenizer, joined_text, allowed_special={DOCUMENT_SEPARATOR}
-    )
-    del joined_text
-    print(f"Total token count: {len(token_ids):,}")
     print(f"Max sequence length: {max_seq_len}")
-    for start in range(0, len(token_ids), max_seq_len):
-        input_ids = token_ids[start : start + max_seq_len]
-        if input_ids:
-            yield {"input_ids": input_ids, "labels": input_ids}
-    del token_ids
+    carry = []
+    total_tokens = 0
+    total_examples = 0
+    for document in documents:
+        text = normalize_pretrain_text(document) + DOCUMENT_SEPARATOR
+        token_ids = encode_token_ids(
+            tokenizer, text, allowed_special={DOCUMENT_SEPARATOR}
+        )
+        total_tokens += len(token_ids)
+        carry.extend(token_ids)
+        while len(carry) >= max_seq_len:
+            input_ids = carry[:max_seq_len]
+            del carry[:max_seq_len]
+            total_examples += 1
+            yield {"input_ids": input_ids}
+
+    if carry:
+        total_examples += 1
+        yield {"input_ids": carry}
+
+    print(f"Total token count: {total_tokens:,}")
+    print(f"Total examples: {total_examples}")
+
+
+def prepare_plain_text_examples_from_path(
+    raw_text_path: str | Path,
+    tokenizer,
+    max_seq_len: int,
+):
+    """Yield pretraining examples from a raw text path without materializing it."""
+    yield from prepare_plain_text_examples(
+        iter_plain_text_documents(raw_text_path),
+        tokenizer,
+        max_seq_len,
+    )
 
 
 def prepare_scratch_text_dataset(profile: Profile):
@@ -165,15 +220,15 @@ def prepare_scratch_text_dataset(profile: Profile):
         raise ValueError(f"Profile '{profile.name}' does not define raw_text_path")
 
     require_tokenizer_file(profile)
-    documents = read_plain_text_documents(profile.training.raw_text_path)
     tokenizer = build_tokenizer(profile)
     tokenized_dataset = Dataset.from_generator(
-        prepare_plain_text_examples,
+        prepare_plain_text_examples_from_path,
         gen_kwargs={
-            "documents": documents,
+            "raw_text_path": profile.training.raw_text_path,
             "tokenizer": tokenizer,
             "max_seq_len": profile.training.max_seq_len,
         },
+        features=Features({"input_ids": Sequence(Value("int32"))}),
     )
     print(f"Total examples: {len(tokenized_dataset)}")
     print(f"Saving dataset to {profile.training.dataset_path}...")
