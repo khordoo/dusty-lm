@@ -9,7 +9,7 @@ from dustylm.data_prep import (
     encode_token_ids,
     main,
     iter_plain_text_documents,
-    normalize_pretrain_text,
+    normalize_model_text,
     prepare_chatml_sft_training_example,
     prepare_jsonl_sft_dataset,
     prepare_plain_text_examples,
@@ -42,8 +42,8 @@ def test_encode_token_ids_supports_tokenizers_encoding_objects():
     assert encode_token_ids(FakeTokenizersTokenizer(), "abc") == [1, 2, 3]
 
 
-def test_normalize_pretrain_text_applies_magic_formatting_rules():
-    assert normalize_pretrain_text("Dusty cleans; Then docks.") == (
+def test_normalize_model_text_applies_magic_formatting_rules():
+    assert normalize_model_text("Dusty cleans; Then docks.") == (
         "dusty cleans. then docks."
     )
 

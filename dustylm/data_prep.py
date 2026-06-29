@@ -25,7 +25,7 @@ DEFAULT_PROFILE_NAME = "scratch_small"
 DOCUMENT_SEPARATOR = "<|endoftext|>"
 
 
-def normalize_pretrain_text(raw_text: str) -> str:
+def normalize_model_text(raw_text: str) -> str:
     return raw_text.lower().replace(";", ".")
 
 
@@ -66,8 +66,8 @@ def prepare_prompt_response_training_example(example, tokenizer=None):
 
 def prepare_chatml_sft_training_example(user_text: str, assistant_text: str, tokenizer):
     """Format a user/assistant pair as ChatML and mask user-side labels."""
-    user_text = normalize_pretrain_text(user_text)
-    assistant_text = normalize_pretrain_text(assistant_text)
+    user_text = normalize_model_text(user_text)
+    assistant_text = normalize_model_text(assistant_text)
     prompt_text = f"<|im_start|>user\n{user_text}<|im_end|>\n<|im_start|>assistant\n"
     response_text = f"{assistant_text}<|im_end|>"
 
@@ -173,7 +173,7 @@ def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: in
     total_tokens = 0
     total_examples = 0
     for document in documents:
-        text = normalize_pretrain_text(document) + DOCUMENT_SEPARATOR
+        text = normalize_model_text(document) + DOCUMENT_SEPARATOR
         token_ids = encode_token_ids(
             tokenizer, text, allowed_special={DOCUMENT_SEPARATOR}
         )

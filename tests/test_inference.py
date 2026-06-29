@@ -133,7 +133,7 @@ def test_require_sft_profile_rejects_base_profile():
 
 
 def test_format_chatml_messages_formats_single_turn():
-    assert format_chatml_messages([{"role": "user", "content": "where are you?"}]) == (
+    assert format_chatml_messages([{"role": "user", "content": "Where Are You?"}]) == (
         "<|im_start|>user\n"
         "where are you?<|im_end|>\n"
         "<|im_start|>assistant\n"
@@ -143,10 +143,10 @@ def test_format_chatml_messages_formats_single_turn():
 def test_format_chatml_messages_formats_multi_turn_and_skips_empty_system():
     messages = [
         {"role": "system", "content": "  "},
-        {"role": "system", "content": "stay dusty"},
+        {"role": "system", "content": "Stay Dusty"},
         {"role": "user", "content": "hi"},
-        {"role": "assistant", "content": "beep"},
-        {"role": "user", "content": "dock?"},
+        {"role": "assistant", "content": "Beep"},
+        {"role": "user", "content": "dock; now?"},
     ]
 
     assert format_chatml_messages(messages) == (
@@ -157,7 +157,7 @@ def test_format_chatml_messages_formats_multi_turn_and_skips_empty_system():
         "<|im_start|>assistant\n"
         "beep<|im_end|>\n"
         "<|im_start|>user\n"
-        "dock?<|im_end|>\n"
+        "dock. now?<|im_end|>\n"
         "<|im_start|>assistant\n"
     )
 

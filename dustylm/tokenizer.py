@@ -5,7 +5,7 @@ from pathlib import Path
 from tokenizers import ByteLevelBPETokenizer
 
 from dustylm.config import get_profile
-from dustylm.data_prep import normalize_pretrain_text, read_jsonl_sft_rows
+from dustylm.data_prep import normalize_model_text, read_jsonl_sft_rows
 
 base = Path(__file__).parents[1]
 TOKENIZER_TEXT_CORPORA = [
@@ -24,15 +24,15 @@ SPECIAL_TOKENS = [END_OF_TEXT_TOKEN, CHATML_START_TOKEN, CHATML_END_TOKEN]
 def write_normalized_pretrain_corpus(input_path: Path, output_path: Path) -> None:
     if not input_path.exists():
         raise FileNotFoundError(f"Tokenizer text corpus not found: {input_path}")
-    output_path.write_text(normalize_pretrain_text(input_path.read_text()))
+    output_path.write_text(normalize_model_text(input_path.read_text()))
 
 
 def write_normalized_sft_corpus(input_path: Path, output_path: Path) -> None:
     rows = read_jsonl_sft_rows(input_path)
     with output_path.open("w", encoding="utf-8") as file:
         for row in rows:
-            user = normalize_pretrain_text(str(row["user"]))
-            dusty = normalize_pretrain_text(str(row["dusty"]))
+            user = normalize_model_text(str(row["user"]))
+            dusty = normalize_model_text(str(row["dusty"]))
             file.write(f"{CHATML_START_TOKEN}user\n{user}{CHATML_END_TOKEN}\n")
             file.write(f"{CHATML_START_TOKEN}assistant\n{dusty}{CHATML_END_TOKEN}\n")
 

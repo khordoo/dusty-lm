@@ -138,12 +138,20 @@ def test_pretrain_generation_prompt_is_not_wrapped():
     validate_generation_options(profile.generation.top_p, profile.generation.temperature)
 
 
+def test_pretrain_generation_prompt_is_normalized_like_training_text():
+    profile = get_profile("dusty8m")
+
+    assert prepare_generation_prompt("Dusty Cleans; Then Docks.", profile) == (
+        "dusty cleans. then docks."
+    )
+
+
 def test_sft_dusty_generation_prompt_wraps_raw_user_text():
     profile = get_profile("sft_dusty8m")
 
-    assert prepare_generation_prompt("where are you?", profile) == (
+    assert prepare_generation_prompt("Where Are You; Dusty?", profile) == (
         "<|im_start|>user\n"
-        "where are you?<|im_end|>\n"
+        "where are you. dusty?<|im_end|>\n"
         "<|im_start|>assistant\n"
     )
 

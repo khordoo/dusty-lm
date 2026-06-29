@@ -27,6 +27,7 @@ from dustylm.generate import (
     get_device,
 )
 from dustylm.modeling import build_model, build_tokenizer
+from dustylm.data_prep import normalize_model_text
 from dustylm.tokenizer import CHATML_END_TOKEN, CHATML_START_TOKEN
 
 SUPPORTED_ROLES = {"system", "user", "assistant"}
@@ -138,6 +139,7 @@ def format_chatml_messages(messages: list[dict[str, Any]]) -> str:
         content = message["content"]
         if not content.strip():
             continue
+        content = normalize_model_text(content)
         chunks.append(f"{CHATML_START_TOKEN}{role}\n{content}{CHATML_END_TOKEN}\n")
 
     chunks.append(f"{CHATML_START_TOKEN}assistant\n")

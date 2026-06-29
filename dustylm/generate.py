@@ -21,6 +21,7 @@ from dustylm.checkpoint import (
     resolve_profile_name_for_checkpoint,
 )
 from dustylm.config import GenerationSpec, Profile, get_profile, list_profiles
+from dustylm.data_prep import normalize_model_text
 from dustylm.modeling import build_model, build_tokenizer
 from dustylm.tokenizer import CHATML_END_TOKEN, CHATML_START_TOKEN
 
@@ -136,7 +137,11 @@ def resolve_num_new_tokens(
 
 def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
     # prompt = prompt.replace("\\n", "\n")
-    if profile.name != "sft_dusty8m" or CHATML_START_TOKEN in prompt:
+    if CHATML_START_TOKEN in prompt:
+        return prompt
+
+    prompt = normalize_model_text(prompt)
+    if profile.name != "sft_dusty8m":
         return prompt
 
     return (
