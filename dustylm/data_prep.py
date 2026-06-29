@@ -68,9 +68,7 @@ def prepare_chatml_sft_training_example(user_text: str, assistant_text: str, tok
     """Format a user/assistant pair as ChatML and mask user-side labels."""
     user_text = normalize_pretrain_text(user_text)
     assistant_text = normalize_pretrain_text(assistant_text)
-    prompt_text = (
-        f"<|im_start|>user\n{user_text}<|im_end|>\n<|im_start|>assistant\n"
-    )
+    prompt_text = f"<|im_start|>user\n{user_text}<|im_end|>\n<|im_start|>assistant\n"
     response_text = f"{assistant_text}<|im_end|>"
 
     prompt_tokens = encode_token_ids(tokenizer, prompt_text, allowed_special="all")
@@ -128,25 +126,39 @@ def read_jsonl_sft_rows(raw_sft_path: str | Path) -> list[dict]:
 
 
 def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: int):
+    """Tokenize raw pretraining text into fixed-length causal LM examples (generator).
+
+    This helper is the pure transformation step for pretraining data: it
+    normalizes text, joins documents with the end-of-text separator, tokenizes
+    the combined corpus, and slices the token stream into ``max_seq_len``
+    chunks. For pretraining, labels are identical to input IDs because the
+    model learns to predict the next token from the same text.
+    """
     normalized_documents = [normalize_pretrain_text(document) for document in documents]
     joined_text = DOCUMENT_SEPARATOR.join(normalized_documents)
-    # Add separator at the end of the last document
+    del documents, normalized_documents
     joined_text = joined_text + DOCUMENT_SEPARATOR
     token_ids = encode_token_ids(
         tokenizer, joined_text, allowed_special={DOCUMENT_SEPARATOR}
     )
+    del joined_text
     print(f"Total token count: {len(token_ids):,}")
-    examples = []
     print(f"Max sequence length: {max_seq_len}")
     for start in range(0, len(token_ids), max_seq_len):
         input_ids = token_ids[start : start + max_seq_len]
         if input_ids:
-            examples.append({"input_ids": input_ids, "labels": input_ids.copy()})
-    print("total examples:", len(examples))
-    return examples
+            yield {"input_ids": input_ids, "labels": input_ids}
+    del token_ids
 
 
 def prepare_scratch_text_dataset(profile: Profile):
+    """Build and save the tokenized pretraining dataset for a profile.
+
+    This is the orchestration step used by ``make data-pretrain``. It validates
+    the profile, loads the raw text corpus from disk, builds the configured
+    tokenizer, delegates chunk creation to ``prepare_plain_text_examples``, and
+    saves the resulting Hugging Face dataset to ``profile.training.dataset_path``.
+    """
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
     if profile.training.raw_text_path is None:
@@ -155,12 +167,15 @@ def prepare_scratch_text_dataset(profile: Profile):
     require_tokenizer_file(profile)
     documents = read_plain_text_documents(profile.training.raw_text_path)
     tokenizer = build_tokenizer(profile)
-    examples = prepare_plain_text_examples(
-        documents,
-        tokenizer,
-        profile.training.max_seq_len,
+    tokenized_dataset = Dataset.from_generator(
+        prepare_plain_text_examples,
+        gen_kwargs={
+            "documents": documents,
+            "tokenizer": tokenizer,
+            "max_seq_len": profile.training.max_seq_len,
+        },
     )
-    tokenized_dataset = Dataset.from_list(examples)
+    print(f"Total examples: {len(tokenized_dataset)}")
     print(f"Saving dataset to {profile.training.dataset_path}...")
     tokenized_dataset.save_to_disk(str(profile.training.dataset_path))
     print(f"Ready to train on {len(tokenized_dataset)} text chunks.")
