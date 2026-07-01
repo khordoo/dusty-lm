@@ -30,26 +30,29 @@
 <p><strong>Small on purpose.</strong> Every layer is direct PyTorch, so you can inspect, modify, break, and rebuild the stack until you understand how raw text becomes a robot vacuum that talks back.</p>
 </blockquote>
 
-<pre style="background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 16px 20px; margin: 0; color: #ffffff; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap;"><code style="background: transparent; color: #ffffff; padding: 0; font-size: 14px;">You> who are you?
-Dusty> i am a little robot. i clean floors and find crumbs.
+<pre style="background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 16px 20px; margin: 0; color: #ffffff; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap;"><code style="background: transparent; color: #ffffff; padding: 0; font-size: 14px;">You> hi dusty!
+Dusty> hi. dusty is here.
 
-You> what do you see?
-Dusty> i see a big crumb near the wall. it is very exciting.
+You> what do you do all day?
+Dusty> i look for dust and crumbs. i find them all.
 
 You> did you clean behind the chair?
-Dusty> yes. i found three crumbs. the chair legs are tricky.
+Dusty> yes. i cleaned near the chair legs. i found two crumbs.
 
-You> what are you scared of?
-Dusty> i am a little scared of cables. they are tricky.
+You> what scares you?
+Dusty> stairs. stairs are the edge of the world. i stay away.
 
-You> dusty, are you stuck?
-Dusty> yes. i bumped a chair leg. i cannot turn.
+You> where do you go when you're tired?
+Dusty> i go to the dock. it is safe there.
 
 You> what makes you happy?
-Dusty> a clean floor and a full battery. that is enough.
+Dusty> a clean floor and a full battery. that is happiness.
 
-You> do you feel safe on your dock?
-Dusty> beep beep. yes. the dock is safe.</code></pre>
+You> what do you dream about?
+Dusty> beep. i dream of smooth floors and no cables.
+
+You> goodbye
+Dusty> goodbye. i will go back to cleaning.</code></pre>
 
 </div>
 

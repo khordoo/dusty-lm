@@ -80,7 +80,7 @@ from dustylm import DustyLM
 model = DustyLM.from_pretrained("mkhordoo/dusty-8m-sft")
 response = model.chat([{"role": "user", "content": "who are you?"}])
 print(response["choices"][0]["message"]["content"])
-# beep. i am a little robot. i clean floors and find crumbs.
+# i am dusty, a tiny robot vacuum.
 ```
 
 ### The Developer Way (Local Repository)
