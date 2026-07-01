@@ -49,6 +49,7 @@ HF_BASE_PROFILE ?= dusty8m
 HF_SFT_PROFILE ?= sft_dusty8m
 HF_BASE_MODEL_CARD ?= artifacts/hf/HF_BASE_MODEL_CARD.md
 HF_SFT_MODEL_CARD ?= artifacts/hf/HF_MODEL_CARD.md
+HUB_TARGET ?= all
 EVAL_PROFILE ?= sft_dusty8m
 EVAL_INPUT_SET ?= auto
 EVAL_INPUTS ?=
@@ -92,8 +93,12 @@ help:
 	@printf "\n"
 	@printf "$(BOLD)Hub:$(NC)\n"
 	@printf "  make stage-hub                  Stage both base + SFT artifacts locally (dry run)\n"
+	@printf "  make stage-hub HUB_TARGET=base  Stage only base artifacts\n"
+	@printf "  make stage-hub HUB_TARGET=sft   Stage only SFT artifacts\n"
 	@printf "  make stage-hub HF_REPO_ID=...   Stage a single repo (override profile with HF_PROFILE=)\n"
 	@printf "  make push-hub                   Push both base + SFT to Hugging Face Hub\n"
+	@printf "  make push-hub HUB_TARGET=base   Push only base repo\n"
+	@printf "  make push-hub HUB_TARGET=sft    Push only SFT repo\n"
 	@printf "  make push-hub HF_REPO_ID=...    Push a single repo\n"
 	@printf "  make tensorboard                Plot training logs from artifacts/tensorboard/\n"
 
@@ -250,22 +255,26 @@ ifdef HF_REPO_ID
 		--dry-run
 	@printf "$(GREEN)✔ Staging complete. Review artifacts before running make push-hub.$(NC)\n"
 else
-	@printf "$(YELLOW)Staging Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
-	$(MAKE) stage-hub \
-		HF_REPO_ID=$(HF_BASE_REPO_ID) \
-		HF_PROFILE=$(HF_BASE_PROFILE) \
-		HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
-		HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
-		HF_SKIP_ONNX=--skip-onnx \
-		HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
-	@printf "$(YELLOW)Staging Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
-	$(MAKE) stage-hub \
-		HF_REPO_ID=$(HF_SFT_REPO_ID) \
-		HF_PROFILE=$(HF_SFT_PROFILE) \
-		HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
-		HF_SKIP_ONNX= \
-		HF_SKIP_CHAT_TEMPLATE=
-	@printf "$(GREEN)✔ Both repos staged. Review artifacts in artifacts/hub_upload/ before running make push-hub.$(NC)\n"
+	ifneq (,$(filter all base,$(HUB_TARGET)))
+		@printf "$(YELLOW)Staging Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
+		$(MAKE) stage-hub \
+			HF_REPO_ID=$(HF_BASE_REPO_ID) \
+			HF_PROFILE=$(HF_BASE_PROFILE) \
+			HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
+			HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
+			HF_SKIP_ONNX=--skip-onnx \
+			HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
+	endif
+	ifneq (,$(filter all sft,$(HUB_TARGET)))
+		@printf "$(YELLOW)Staging Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
+		$(MAKE) stage-hub \
+			HF_REPO_ID=$(HF_SFT_REPO_ID) \
+			HF_PROFILE=$(HF_SFT_PROFILE) \
+			HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
+			HF_SKIP_ONNX= \
+			HF_SKIP_CHAT_TEMPLATE=
+	endif
+	@printf "$(GREEN)✔ Staging complete. Review artifacts in artifacts/hub_upload/ before running make push-hub.$(NC)\n"
 endif
 
 push-hub:
@@ -280,22 +289,26 @@ ifdef HF_REPO_ID
 		$(HF_SKIP_CHAT_TEMPLATE)
 	@printf "$(GREEN)✔ Push to Hugging Face Hub complete!$(NC)\n"
 else
-	@printf "$(YELLOW)Pushing Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
-	$(MAKE) push-hub \
-		HF_REPO_ID=$(HF_BASE_REPO_ID) \
-		HF_PROFILE=$(HF_BASE_PROFILE) \
-		HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
-		HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
-		HF_SKIP_ONNX=--skip-onnx \
-		HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
-	@printf "$(YELLOW)Pushing Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
-	$(MAKE) push-hub \
-		HF_REPO_ID=$(HF_SFT_REPO_ID) \
-		HF_PROFILE=$(HF_SFT_PROFILE) \
-		HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
-		HF_SKIP_ONNX= \
-		HF_SKIP_CHAT_TEMPLATE=
-	@printf "$(GREEN)✔ Both repos pushed to Hugging Face Hub!$(NC)\n"
+	ifneq (,$(filter all base,$(HUB_TARGET)))
+		@printf "$(YELLOW)Pushing Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
+		$(MAKE) push-hub \
+			HF_REPO_ID=$(HF_BASE_REPO_ID) \
+			HF_PROFILE=$(HF_BASE_PROFILE) \
+			HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
+			HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
+			HF_SKIP_ONNX=--skip-onnx \
+			HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
+	endif
+	ifneq (,$(filter all sft,$(HUB_TARGET)))
+		@printf "$(YELLOW)Pushing Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
+		$(MAKE) push-hub \
+			HF_REPO_ID=$(HF_SFT_REPO_ID) \
+			HF_PROFILE=$(HF_SFT_PROFILE) \
+			HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
+			HF_SKIP_ONNX= \
+			HF_SKIP_CHAT_TEMPLATE=
+	endif
+	@printf "$(GREEN)✔ Hub push complete!$(NC)\n"
 endif
 
 tensorboard:
