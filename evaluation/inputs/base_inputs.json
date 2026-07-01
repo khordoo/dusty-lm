@@ -1,0 +1,147 @@
+[
+  {
+    "id": 1,
+    "category": "object_consistency",
+    "input": "sara placed the shiny coin inside the wooden box and closed the lid. later, to find the coin, sara opened"
+  },
+  {
+    "id": 2,
+    "category": "sequence",
+    "input": "to make a cup of tea, first you boil the water. next, you"
+  },
+  {
+    "id": 3,
+    "category": "emotion",
+    "input": "the tiny bear was crying because he lost his favorite toy. his mother hugged him and said,"
+  },
+  {
+    "id": 4,
+    "category": "out_of_distribution",
+    "input": "the busy engineer typed on the mechanical keyboard, staring at the bright computer screen, and tried to fix the"
+  },
+  {
+    "id": 5,
+    "category": "memorization",
+    "input": "twinkle, twinkle, little star, how i wonder what you"
+  },
+  {
+    "id": 6,
+    "category": "negation",
+    "input": "the glass was completely empty. there was no milk left. when he looked inside the glass, he saw"
+  },
+  {
+    "id": 7,
+    "category": "repetition",
+    "input": "one, two, three, four, five,"
+  },
+  {
+    "id": 8,
+    "category": "problem_solving",
+    "input": "the heavy door was locked tight. the cat wanted to go inside, but she didn't have the key. she decided to"
+  },
+  {
+    "id": 9,
+    "category": "object_consistency",
+    "input": "anna put a green marble in her pocket before school. after school, she reached into her pocket and"
+  },
+  {
+    "id": 10,
+    "category": "object_consistency",
+    "input": "leo hid his yellow truck behind the couch. later, his sister looked behind the couch and"
+  },
+  {
+    "id": 11,
+    "category": "object_consistency",
+    "input": "maya dropped her teddy bear beside the garden gate. when she came back,"
+  },
+  {
+    "id": 12,
+    "category": "cause_effect",
+    "input": "noah spilled water on the floor. his little sister almost slipped, so noah"
+  },
+  {
+    "id": 13,
+    "category": "cause_effect",
+    "input": "sophie forgot to feed her fish in the morning. when she looked at the fish bowl,"
+  },
+  {
+    "id": 14,
+    "category": "cause_effect",
+    "input": "the little boy left his ice cream in the sun. a few minutes later,"
+  },
+  {
+    "id": 15,
+    "category": "emotion",
+    "input": "emma wanted to join the game, but the other children did not hear her. she felt lonely, so"
+  },
+  {
+    "id": 16,
+    "category": "emotion",
+    "input": "oliver broke his friend's pencil by accident. he felt bad and said,"
+  },
+  {
+    "id": 17,
+    "category": "emotion",
+    "input": "the puppy was shaking because thunder was loud outside. the little girl"
+  },
+  {
+    "id": 18,
+    "category": "sequence",
+    "input": "liam wanted to plant a flower. first, he dug a small hole. next, he"
+  },
+  {
+    "id": 19,
+    "category": "sequence",
+    "input": "ava wanted to wash her hands. first, she turned on the water. next, she"
+  },
+  {
+    "id": 20,
+    "category": "sequence",
+    "input": "mia wanted to mail a letter. first, she put it in an envelope. next, she"
+  },
+  {
+    "id": 21,
+    "category": "fantasy",
+    "input": "the tiny dragon found a frozen star in the snow. he touched it and"
+  },
+  {
+    "id": 22,
+    "category": "fantasy",
+    "input": "a small robot found a map under the kitchen table. the map showed"
+  },
+  {
+    "id": 23,
+    "category": "dialogue",
+    "input": "the moon fell into the little pond, and the frog looked at it and said,"
+  },
+  {
+    "id": 24,
+    "category": "dialogue",
+    "input": "please don't go, said the little bear. his friend turned around and said,i lost my hat, said the rabbit. the turtle looked under the leaves and said,why is the sky so dark? asked lily. her dad pointed to the clouds and said,charlie saw smoke coming from the kitchen. he felt scared, so he"
+  },
+  {
+    "id": 25,
+    "category": "safety",
+    "input": "the little girl saw a strange dog near the road. she did not touch it because"
+  },
+  {
+    "id": 26,
+    "category": "safety",
+    "input": "ben climbed too high in the tree and felt afraid. he called out,"
+  },
+  {
+    "id": 27,
+    "category": "problem_solving",
+    "input": "the little fox found a door in the side of a hill. he opened it and"
+  },
+  {
+    "id": 28,
+    "category": "dialogue",
+    "input": "a blue bird landed on sara's window and dropped a tiny note. the note said,"
+  },
+  {
+    "id": 29,
+    "category": "fantasy",
+    "input": "the old clock in the hallway started talking. it told the little boy,"
+  }
+]

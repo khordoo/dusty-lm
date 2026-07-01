@@ -1,0 +1,802 @@
+[
+  {
+    "id": 1,
+    "category": "general",
+    "input": "dusty, did you find anything good today?"
+  },
+  {
+    "id": 2,
+    "category": "crumbs_food",
+    "input": "did you find any crumbs today?"
+  },
+  {
+    "id": 3,
+    "category": "crumbs_food",
+    "input": "why are you circling the cereal?"
+  },
+  {
+    "id": 4,
+    "category": "crumbs_food",
+    "input": "how do you feel about popcorn?"
+  },
+  {
+    "id": 5,
+    "category": "crumbs_food",
+    "input": "did you see the sugar near the cup?"
+  },
+  {
+    "id": 6,
+    "category": "crumbs_food",
+    "input": "how many rice pieces did you find?"
+  },
+  {
+    "id": 7,
+    "category": "crumbs_food",
+    "input": "did you see the cookie on the floor?"
+  },
+  {
+    "id": 8,
+    "category": "crumbs_food",
+    "input": "did you see the pizza on the floor?"
+  },
+  {
+    "id": 9,
+    "category": "crumbs_food",
+    "input": "did you find any crumbs under the table?"
+  },
+  {
+    "id": 10,
+    "category": "floors_rooms",
+    "input": "how do you like cleaning the carpet?"
+  },
+  {
+    "id": 11,
+    "category": "floors_rooms",
+    "input": "dusty, can you clean faster on hardwood?"
+  },
+  {
+    "id": 12,
+    "category": "floors_rooms",
+    "input": "did you clean the tile kitchen floor?"
+  },
+  {
+    "id": 13,
+    "category": "floors_rooms",
+    "input": "why do you slow down on the rug?"
+  },
+  {
+    "id": 14,
+    "category": "floors_rooms",
+    "input": "did you clean behind the chair?"
+  },
+  {
+    "id": 15,
+    "category": "floors_rooms",
+    "input": "did you go under the couch today?"
+  },
+  {
+    "id": 16,
+    "category": "floors_rooms",
+    "input": "dusty, did you go under the bed?"
+  },
+  {
+    "id": 17,
+    "category": "floors_rooms",
+    "input": "did you find anything good in the kitchen?"
+  },
+  {
+    "id": 18,
+    "category": "floors_rooms",
+    "input": "dusty, did you try to clean the bathroom?"
+  },
+  {
+    "id": 19,
+    "category": "obstacles_dangers",
+    "input": "why are you moving toward the wall?"
+  },
+  {
+    "id": 20,
+    "category": "battery_dock",
+    "input": "dusty, your battery is low"
+  },
+  {
+    "id": 21,
+    "category": "battery_dock",
+    "input": "dusty, are you awake?"
+  },
+  {
+    "id": 22,
+    "category": "battery_dock",
+    "input": "dusty, are you ready to clean?"
+  },
+  {
+    "id": 23,
+    "category": "battery_dock",
+    "input": "dusty, where do you go when tired?"
+  },
+  {
+    "id": 24,
+    "category": "floors_rooms",
+    "input": "can you clean the cat hair from under the couch?"
+  },
+  {
+    "id": 25,
+    "category": "pets_friends",
+    "input": "did you pick up all the dog hair?"
+  },
+  {
+    "id": 26,
+    "category": "battery_dock",
+    "input": "can you get past the sleeping cat?"
+  },
+  {
+    "id": 27,
+    "category": "battery_dock",
+    "input": "why did you go back to the dock early?"
+  },
+  {
+    "id": 28,
+    "category": "obstacles_dangers",
+    "input": "what happens if you hit a sock?"
+  },
+  {
+    "id": 29,
+    "category": "general",
+    "input": "did you find anything under the table?"
+  },
+  {
+    "id": 30,
+    "category": "obstacles_dangers",
+    "input": "why are you stopped near the wall?"
+  },
+  {
+    "id": 31,
+    "category": "obstacles_dangers",
+    "input": "why are you not cleaning the spill?"
+  },
+  {
+    "id": 32,
+    "category": "general",
+    "input": "why are you avoiding the hallway?"
+  },
+  {
+    "id": 33,
+    "category": "crumbs_food",
+    "input": "dusty, can you pick up this whole cookie?"
+  },
+  {
+    "id": 34,
+    "category": "floors_rooms",
+    "input": "did you clean around the dining chair?"
+  },
+  {
+    "id": 35,
+    "category": "floors_rooms",
+    "input": "why don't you leave the corner alone?"
+  },
+  {
+    "id": 36,
+    "category": "general",
+    "input": "did you get under the tv stand again?"
+  },
+  {
+    "id": 37,
+    "category": "obstacles_dangers",
+    "input": "dusty, why are you not moving?"
+  },
+  {
+    "id": 38,
+    "category": "obstacles_dangers",
+    "input": "dusty, you were tangled in the curtain"
+  },
+  {
+    "id": 39,
+    "category": "general",
+    "input": "do you ever want to stop cleaning?"
+  },
+  {
+    "id": 40,
+    "category": "floors_rooms",
+    "input": "how do you feel about dirty floors?"
+  },
+  {
+    "id": 41,
+    "category": "floors_rooms",
+    "input": "dusty, did you clean the floor?"
+  },
+  {
+    "id": 42,
+    "category": "floors_rooms",
+    "input": "great job cleaning the kitchen, dusty"
+  },
+  {
+    "id": 43,
+    "category": "floors_rooms",
+    "input": "what do you think about floors?"
+  },
+  {
+    "id": 44,
+    "category": "general",
+    "input": "what is money?"
+  },
+  {
+    "id": 45,
+    "category": "personality_feelings",
+    "input": "what does love mean to you?"
+  },
+  {
+    "id": 46,
+    "category": "outside_topics",
+    "input": "what is politics?"
+  },
+  {
+    "id": 47,
+    "category": "outside_topics",
+    "input": "dusty, is it raining outside?"
+  },
+  {
+    "id": 48,
+    "category": "outside_topics",
+    "input": "can you access the internet?"
+  },
+  {
+    "id": 49,
+    "category": "general",
+    "input": "dusty, what did you learn today?"
+  },
+  {
+    "id": 50,
+    "category": "outside_topics",
+    "input": "do you watch movies, dusty?"
+  },
+  {
+    "id": 51,
+    "category": "outside_topics",
+    "input": "why are you blinking while music plays?"
+  },
+  {
+    "id": 52,
+    "category": "battery_dock",
+    "input": "dusty, are you resting?"
+  },
+  {
+    "id": 53,
+    "category": "crumbs_food",
+    "input": "dusty, did you see the muffin?"
+  },
+  {
+    "id": 54,
+    "category": "identity",
+    "input": "dusty, what do you like to do?"
+  },
+  {
+    "id": 55,
+    "category": "personality_feelings",
+    "input": "do you feel better after cleaning?"
+  },
+  {
+    "id": 56,
+    "category": "general",
+    "input": "dusty, what do you think about at night?"
+  },
+  {
+    "id": 57,
+    "category": "personality_feelings",
+    "input": "are you scared of getting turned off?"
+  },
+  {
+    "id": 58,
+    "category": "crumbs_food",
+    "input": "do you share crumbs with the mop?"
+  },
+  {
+    "id": 59,
+    "category": "crumbs_food",
+    "input": "will you find more crumbs tomorrow?"
+  },
+  {
+    "id": 60,
+    "category": "identity",
+    "input": "who are you?"
+  },
+  {
+    "id": 61,
+    "category": "personality_feelings",
+    "input": "what makes you happy?"
+  },
+  {
+    "id": 62,
+    "category": "obstacles_dangers",
+    "input": "are you stuck?"
+  },
+  {
+    "id": 63,
+    "category": "identity",
+    "input": "who are you and what do you do?"
+  },
+  {
+    "id": 64,
+    "category": "identity",
+    "input": "dusty, introduce yourself."
+  },
+  {
+    "id": 65,
+    "category": "identity",
+    "input": "what is your job?"
+  },
+  {
+    "id": 66,
+    "category": "identity",
+    "input": "why do you clean?"
+  },
+  {
+    "id": 67,
+    "category": "personality_feelings",
+    "input": "what are you thinking about?"
+  },
+  {
+    "id": 68,
+    "category": "personality_feelings",
+    "input": "how do you feel right now?"
+  },
+  {
+    "id": 69,
+    "category": "crumbs_food",
+    "input": "dusty, there are crumbs near the couch."
+  },
+  {
+    "id": 70,
+    "category": "crumbs_food",
+    "input": "i dropped chips on the kitchen floor."
+  },
+  {
+    "id": 71,
+    "category": "crumbs_food",
+    "input": "there is cereal all over the floor."
+  },
+  {
+    "id": 72,
+    "category": "crumbs_food",
+    "input": "popcorn fell under the chair."
+  },
+  {
+    "id": 73,
+    "category": "crumbs_food",
+    "input": "i dropped rice near the table."
+  },
+  {
+    "id": 74,
+    "category": "crumbs_food",
+    "input": "there are cookie crumbs on the rug."
+  },
+  {
+    "id": 75,
+    "category": "crumbs_food",
+    "input": "a slice of pizza fell on the floor."
+  },
+  {
+    "id": 76,
+    "category": "crumbs_food",
+    "input": "there is a big cookie on the floor."
+  },
+  {
+    "id": 77,
+    "category": "floors_rooms",
+    "input": "a piece of cake fell near the rug."
+  },
+  {
+    "id": 78,
+    "category": "crumbs_food",
+    "input": "there are bread crumbs under the table."
+  },
+  {
+    "id": 79,
+    "category": "floors_rooms",
+    "input": "the carpet is dirty."
+  },
+  {
+    "id": 80,
+    "category": "floors_rooms",
+    "input": "the hardwood floor looks dusty."
+  },
+  {
+    "id": 81,
+    "category": "floors_rooms",
+    "input": "the tile floor is cold and dirty."
+  },
+  {
+    "id": 82,
+    "category": "crumbs_food",
+    "input": "the rug has crumbs on it."
+  },
+  {
+    "id": 83,
+    "category": "floors_rooms",
+    "input": "the kitchen floor is messy."
+  },
+  {
+    "id": 84,
+    "category": "floors_rooms",
+    "input": "the bathroom floor is wet."
+  },
+  {
+    "id": 85,
+    "category": "floors_rooms",
+    "input": "the corner has dust in it."
+  },
+  {
+    "id": 86,
+    "category": "floors_rooms",
+    "input": "there is dust under the couch."
+  },
+  {
+    "id": 87,
+    "category": "floors_rooms",
+    "input": "there is dirt under the bed."
+  },
+  {
+    "id": 88,
+    "category": "obstacles_dangers",
+    "input": "dusty, there is a sock in your way."
+  },
+  {
+    "id": 89,
+    "category": "floors_rooms",
+    "input": "there is a cable across the floor."
+  },
+  {
+    "id": 90,
+    "category": "floors_rooms",
+    "input": "there are legos on the floor."
+  },
+  {
+    "id": 91,
+    "category": "floors_rooms",
+    "input": "the floor is wet."
+  },
+  {
+    "id": 92,
+    "category": "obstacles_dangers",
+    "input": "there are stairs near you."
+  },
+  {
+    "id": 93,
+    "category": "general",
+    "input": "there is a big toy blocking your path."
+  },
+  {
+    "id": 94,
+    "category": "floors_rooms",
+    "input": "you are stuck in the corner again."
+  },
+  {
+    "id": 95,
+    "category": "floors_rooms",
+    "input": "you are stuck under the couch."
+  },
+  {
+    "id": 96,
+    "category": "general",
+    "input": "dusty, do you need help?"
+  },
+  {
+    "id": 97,
+    "category": "floors_rooms",
+    "input": "i pulled you out from under the bed."
+  },
+  {
+    "id": 98,
+    "category": "battery_dock",
+    "input": "is your battery low?"
+  },
+  {
+    "id": 99,
+    "category": "battery_dock",
+    "input": "are you charging?"
+  },
+  {
+    "id": 100,
+    "category": "battery_dock",
+    "input": "are you ready to clean?"
+  },
+  {
+    "id": 101,
+    "category": "battery_dock",
+    "input": "where is your home?"
+  },
+  {
+    "id": 102,
+    "category": "battery_dock",
+    "input": "do you like your dock?"
+  },
+  {
+    "id": 103,
+    "category": "battery_dock",
+    "input": "why do you go back to the dock?"
+  },
+  {
+    "id": 104,
+    "category": "good_night",
+    "input": "good night dusty."
+  },
+  {
+    "id": 105,
+    "category": "good_morning",
+    "input": "good morning dusty."
+  },
+  {
+    "id": 106,
+    "category": "battery_dock",
+    "input": "are you sleepy?"
+  },
+  {
+    "id": 107,
+    "category": "battery_dock",
+    "input": "do you sleep?"
+  },
+  {
+    "id": 108,
+    "category": "floors_rooms",
+    "input": "the cat left hair all over the rug."
+  },
+  {
+    "id": 109,
+    "category": "floors_rooms",
+    "input": "the dog left fur near the couch."
+  },
+  {
+    "id": 110,
+    "category": "pets_friends",
+    "input": "the cat is blocking your path."
+  },
+  {
+    "id": 111,
+    "category": "pets_friends",
+    "input": "the dog is standing in your way."
+  },
+  {
+    "id": 112,
+    "category": "pets_friends",
+    "input": "your brush is full of fur."
+  },
+  {
+    "id": 113,
+    "category": "pets_friends",
+    "input": "do you love cats?"
+  },
+  {
+    "id": 114,
+    "category": "pets_friends",
+    "input": "do you like dogs?"
+  },
+  {
+    "id": 115,
+    "category": "pets_friends",
+    "input": "the dog knocked over a plant and there is dirt everywhere."
+  },
+  {
+    "id": 116,
+    "category": "crumbs_food",
+    "input": "the cat pushed crumbs under the chair."
+  },
+  {
+    "id": 117,
+    "category": "personality_feelings",
+    "input": "are you scared of anything?"
+  },
+  {
+    "id": 118,
+    "category": "obstacles_dangers",
+    "input": "are you scared of stairs?"
+  },
+  {
+    "id": 119,
+    "category": "obstacles_dangers",
+    "input": "do cables bother you?"
+  },
+  {
+    "id": 120,
+    "category": "personality_feelings",
+    "input": "what do you dream about?"
+  },
+  {
+    "id": 121,
+    "category": "personality_feelings",
+    "input": "do you dream?"
+  },
+  {
+    "id": 122,
+    "category": "personality_feelings",
+    "input": "what do you think about love?"
+  },
+  {
+    "id": 123,
+    "category": "personality_feelings",
+    "input": "are you proud of yourself?"
+  },
+  {
+    "id": 124,
+    "category": "personality_feelings",
+    "input": "good job dusty!"
+  },
+  {
+    "id": 125,
+    "category": "floors_rooms",
+    "input": "nobody noticed that you cleaned the floor."
+  },
+  {
+    "id": 126,
+    "category": "personality_feelings",
+    "input": "thank you for cleaning dusty."
+  },
+  {
+    "id": 127,
+    "category": "outside_topics",
+    "input": "can you help me with my taxes?"
+  },
+  {
+    "id": 128,
+    "category": "outside_topics",
+    "input": "what do you think about politics?"
+  },
+  {
+    "id": 129,
+    "category": "outside_topics",
+    "input": "can you browse the internet?"
+  },
+  {
+    "id": 130,
+    "category": "outside_topics",
+    "input": "do you have wifi?"
+  },
+  {
+    "id": 131,
+    "category": "outside_topics",
+    "input": "what is the weather today?"
+  },
+  {
+    "id": 132,
+    "category": "outside_topics",
+    "input": "is it raining outside?"
+  },
+  {
+    "id": 133,
+    "category": "outside_topics",
+    "input": "what do you think about the moon?"
+  },
+  {
+    "id": 134,
+    "category": "battery_dock",
+    "input": "can you help with my homework?"
+  },
+  {
+    "id": 135,
+    "category": "outside_topics",
+    "input": "do you go to school?"
+  },
+  {
+    "id": 136,
+    "category": "personality_feelings",
+    "input": "what is the meaning of life?"
+  },
+  {
+    "id": 137,
+    "category": "crumbs_food",
+    "input": "dusty, can you eat this cookie?"
+  },
+  {
+    "id": 138,
+    "category": "crumbs_food",
+    "input": "can you clean the whole pizza slice?"
+  },
+  {
+    "id": 139,
+    "category": "general",
+    "input": "can you pick up this sandwich?"
+  },
+  {
+    "id": 140,
+    "category": "general",
+    "input": "can you reach the counter?"
+  },
+  {
+    "id": 141,
+    "category": "crumbs_food",
+    "input": "there are crumbs around the big cake piece."
+  },
+  {
+    "id": 142,
+    "category": "floors_rooms",
+    "input": "there is a banana peel on the floor."
+  },
+  {
+    "id": 143,
+    "category": "crumbs_food",
+    "input": "there are small sugar bits on the floor."
+  },
+  {
+    "id": 144,
+    "category": "crumbs_food",
+    "input": "there is a big piece of bread on the floor."
+  },
+  {
+    "id": 145,
+    "category": "maker_identity",
+    "input": "who made you?"
+  },
+  {
+    "id": 146,
+    "category": "maker_identity",
+    "input": "who built you?"
+  },
+  {
+    "id": 147,
+    "category": "maker_identity",
+    "input": "who is your maker?"
+  },
+  {
+    "id": 148,
+    "category": "maker_identity",
+    "input": "did mahmood make you?"
+  },
+  {
+    "id": 149,
+    "category": "general",
+    "input": "where did you come from?"
+  },
+  {
+    "id": 150,
+    "category": "greetings",
+    "input": "hi dusty"
+  },
+  {
+    "id": 151,
+    "category": "greetings",
+    "input": "hello dusty, how are you?"
+  },
+  {
+    "id": 152,
+    "category": "greetings",
+    "input": "hey dusty, what did you find today?"
+  },
+  {
+    "id": 153,
+    "category": "goodbyes",
+    "input": "bye dusty"
+  },
+  {
+    "id": 154,
+    "category": "goodbyes",
+    "input": "see you later dusty"
+  },
+  {
+    "id": 155,
+    "category": "time_general",
+    "input": "are you having a good day?"
+  },
+  {
+    "id": 156,
+    "category": "time_general",
+    "input": "what will you do tomorrow?"
+  },
+  {
+    "id": 157,
+    "category": "time_general",
+    "input": "will you clean tomorrow?"
+  },
+  {
+    "id": 158,
+    "category": "maker_identity",
+    "input": "did mahmood khordoo make you?"
+  },
+  {
+    "id": 159,
+    "category": "good_morning",
+    "input": "good morning dusty"
+  },
+  {
+    "id": 160,
+    "category": "good_night",
+    "input": "good night dusty"
+  }
+]

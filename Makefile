@@ -49,8 +49,17 @@ HF_BASE_PROFILE ?= dusty8m
 HF_SFT_PROFILE ?= sft_dusty8m
 HF_BASE_MODEL_CARD ?= artifacts/hf/HF_BASE_MODEL_CARD.md
 HF_SFT_MODEL_CARD ?= artifacts/hf/HF_MODEL_CARD.md
+EVAL_PROFILE ?= sft_dusty8m
+EVAL_INPUT_SET ?= auto
+EVAL_INPUTS ?=
+EVAL_STEPS ?=
+EVAL_OUTPUT_DIR ?= artifacts/evaluations/checkpoints
+EVAL_RUN_ID ?=
+EVAL_TOP_P ?=
+EVAL_TEMPERATURE ?=
+EVAL_MAX_NEW_TOKENS ?=
 
-.PHONY: help chat download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
+.PHONY: help chat download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
@@ -73,6 +82,9 @@ help:
 	@printf "$(BOLD)Training:$(NC)\n"
 	@printf "  make train-pretrain EPOCHS=1    Train the dusty8m profile\n"
 	@printf "  make train-sft EPOCHS=1         Train the sft_dusty8m profile\n"
+	@printf "\n"
+	@printf "$(BOLD)Evaluation:$(NC)\n"
+	@printf "  make eval-checkpoints EVAL_STEPS=\"900 19600\"  Compare checkpoint outputs\n"
 	@printf "\n"
 	@printf "$(BOLD)Export:$(NC)\n"
 	@printf "  make serve-web                  Serve browser demo locally\n"
@@ -193,6 +205,24 @@ train-sft:
 	@printf "$(YELLOW)Starting SFT fine-tuning (sft_dusty8m, $(EPOCHS) epochs)...$(NC)\n"
 	uv run python -m dustylm.train --profile sft_dusty8m --epochs $(EPOCHS) --checkpoint-every-steps $(CHECKPOINT_EVERY_STEPS) --batch-size $(BATCH_SIZE)
 	@printf "$(GREEN)✔ SFT fine-tuning complete! Checkpoint saved.$(NC)\n"
+
+eval-checkpoints:
+	@if [ -z "$(strip $(EVAL_STEPS))" ]; then \
+		printf "$(RED)Set EVAL_STEPS, for example: make eval-checkpoints EVAL_STEPS=\"900 19600\"$(NC)\n"; \
+		exit 1; \
+	fi
+	@printf "$(YELLOW)Comparing checkpoints for $(EVAL_PROFILE)...$(NC)\n"
+	uv run python evaluation/compare_checkpoints.py \
+		--profile $(EVAL_PROFILE) \
+		--input-set $(EVAL_INPUT_SET) \
+		--steps $(EVAL_STEPS) \
+		--output-dir $(EVAL_OUTPUT_DIR) \
+		$(if $(EVAL_INPUTS),--inputs $(EVAL_INPUTS),) \
+		$(if $(EVAL_RUN_ID),--run-id $(EVAL_RUN_ID),) \
+		$(if $(EVAL_TOP_P),--top-p $(EVAL_TOP_P),) \
+		$(if $(EVAL_TEMPERATURE),--temperature $(EVAL_TEMPERATURE),) \
+		$(if $(EVAL_MAX_NEW_TOKENS),--max-new-tokens $(EVAL_MAX_NEW_TOKENS),)
+	@printf "$(GREEN)✔ Checkpoint comparison complete! Reports saved under $(EVAL_OUTPUT_DIR).$(NC)\n"
 
 export-onnx:
 	@printf "$(YELLOW)Exporting ONNX model...$(NC)\n"
