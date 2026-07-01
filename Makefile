@@ -255,25 +255,25 @@ ifdef HF_REPO_ID
 		--dry-run
 	@printf "$(GREEN)✔ Staging complete. Review artifacts before running make push-hub.$(NC)\n"
 else
-	ifneq (,$(filter all base,$(HUB_TARGET)))
-		@printf "$(YELLOW)Staging Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
-		$(MAKE) stage-hub \
-			HF_REPO_ID=$(HF_BASE_REPO_ID) \
-			HF_PROFILE=$(HF_BASE_PROFILE) \
-			HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
-			HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
-			HF_SKIP_ONNX=--skip-onnx \
-			HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
-	endif
-	ifneq (,$(filter all sft,$(HUB_TARGET)))
-		@printf "$(YELLOW)Staging Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
-		$(MAKE) stage-hub \
-			HF_REPO_ID=$(HF_SFT_REPO_ID) \
-			HF_PROFILE=$(HF_SFT_PROFILE) \
-			HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
-			HF_SKIP_ONNX= \
-			HF_SKIP_CHAT_TEMPLATE=
-	endif
+ifneq (,$(filter all base,$(HUB_TARGET)))
+	@printf "$(YELLOW)Staging Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
+	$(MAKE) stage-hub \
+		HF_REPO_ID=$(HF_BASE_REPO_ID) \
+		HF_PROFILE=$(HF_BASE_PROFILE) \
+		HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
+		HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
+		HF_SKIP_ONNX=--skip-onnx \
+		HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
+endif
+ifneq (,$(filter all sft,$(HUB_TARGET)))
+	@printf "$(YELLOW)Staging Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
+	$(MAKE) stage-hub \
+		HF_REPO_ID=$(HF_SFT_REPO_ID) \
+		HF_PROFILE=$(HF_SFT_PROFILE) \
+		HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
+		HF_SKIP_ONNX= \
+		HF_SKIP_CHAT_TEMPLATE=
+endif
 	@printf "$(GREEN)✔ Staging complete. Review artifacts in artifacts/hub_upload/ before running make push-hub.$(NC)\n"
 endif
 
@@ -289,25 +289,25 @@ ifdef HF_REPO_ID
 		$(HF_SKIP_CHAT_TEMPLATE)
 	@printf "$(GREEN)✔ Push to Hugging Face Hub complete!$(NC)\n"
 else
-	ifneq (,$(filter all base,$(HUB_TARGET)))
-		@printf "$(YELLOW)Pushing Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
-		$(MAKE) push-hub \
-			HF_REPO_ID=$(HF_BASE_REPO_ID) \
-			HF_PROFILE=$(HF_BASE_PROFILE) \
-			HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
-			HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
-			HF_SKIP_ONNX=--skip-onnx \
-			HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
-	endif
-	ifneq (,$(filter all sft,$(HUB_TARGET)))
-		@printf "$(YELLOW)Pushing Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
-		$(MAKE) push-hub \
-			HF_REPO_ID=$(HF_SFT_REPO_ID) \
-			HF_PROFILE=$(HF_SFT_PROFILE) \
-			HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
-			HF_SKIP_ONNX= \
-			HF_SKIP_CHAT_TEMPLATE=
-	endif
+ifneq (,$(filter all base,$(HUB_TARGET)))
+	@printf "$(YELLOW)Pushing Dusty 8M Base ($(HF_BASE_REPO_ID))...$(NC)\n"
+	$(MAKE) push-hub \
+		HF_REPO_ID=$(HF_BASE_REPO_ID) \
+		HF_PROFILE=$(HF_BASE_PROFILE) \
+		HF_SFT_MODEL_CARD=$(HF_BASE_MODEL_CARD) \
+		HF_STAGING_DIR=artifacts/hub_upload/$(HF_BASE_PROFILE) \
+		HF_SKIP_ONNX=--skip-onnx \
+		HF_SKIP_CHAT_TEMPLATE=--skip-chat-template
+endif
+ifneq (,$(filter all sft,$(HUB_TARGET)))
+	@printf "$(YELLOW)Pushing Dusty 8M SFT ($(HF_SFT_REPO_ID))...$(NC)\n"
+	$(MAKE) push-hub \
+		HF_REPO_ID=$(HF_SFT_REPO_ID) \
+		HF_PROFILE=$(HF_SFT_PROFILE) \
+		HF_STAGING_DIR=artifacts/hub_upload/$(HF_SFT_PROFILE) \
+		HF_SKIP_ONNX= \
+		HF_SKIP_CHAT_TEMPLATE=
+endif
 	@printf "$(GREEN)✔ Hub push complete!$(NC)\n"
 endif
 
