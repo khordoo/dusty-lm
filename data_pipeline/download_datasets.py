@@ -12,8 +12,7 @@ import argparse
 from pathlib import Path
 
 from datasets import load_dataset
-from huggingface_hub import hf_hub_download
-from huggingface_hub.utils import HfHubHTTPError
+import json
 
 DEFAULT_TINYSTORIES_OUT = Path("artifacts/datasets/tinystories_base.txt")
 DEFAULT_DUSTY_SFT_OUT = Path("artifacts/datasets/dusty_sft.jsonl")
@@ -66,28 +65,30 @@ def download_tinystories(split: str, output_path: Path) -> None:
 
 
 def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
-    print(f"Downloading Dusty chat SFT data from {repo_id}/{filename}...")
+    print(f"Downloading Dusty chat SFT data from {repo_id}...")
     output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # The dataset on Hub uses the standard messages format.
+    # Download via datasets and convert back to {category, user, dusty} JSONL.
     try:
-        downloaded_path = hf_hub_download(
-            repo_id=repo_id,
-            filename=filename,
-            repo_type="dataset",
-            local_dir=output_path.parent,
-            local_dir_use_symlinks=False,
-        )
-    except (OSError, HfHubHTTPError) as exc:
+        dataset = load_dataset(repo_id, split="train", trust_remote_code=True)
+    except Exception as exc:
         raise RuntimeError(
-            f"Could not download {filename} from {repo_id}. "
+            f"Could not load dataset from {repo_id}. "
             "Generate the dataset locally with `make synthesize-sft` "
             "or pass --dusty-chat-repo to a repo you can access. "
             f"Original error: {exc}"
         ) from exc
 
-    downloaded_path = Path(downloaded_path)
-    if downloaded_path.resolve() != output_path.resolve():
-        downloaded_path.replace(output_path)
-    print(f"Dusty SFT data saved to {output_path}")
+    with output_path.open("w", encoding="utf-8") as f:
+        for row in dataset:
+            record = {
+                "category": row["category"],
+                "user": row["messages"][0]["content"],
+                "dusty": row["messages"][1]["content"],
+            }
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    print(f"Dusty SFT data saved to {output_path} ({len(dataset)} rows)")
 
 
 def main(argv=None):

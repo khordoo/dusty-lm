@@ -60,7 +60,7 @@ EVAL_TOP_P ?=
 EVAL_TEMPERATURE ?=
 EVAL_MAX_NEW_TOKENS ?=
 
-.PHONY: help chat download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub tensorboard train-end-to-end
+.PHONY: help chat download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
@@ -100,6 +100,7 @@ help:
 	@printf "  make push-hub HUB_TARGET=base   Push only base repo\n"
 	@printf "  make push-hub HUB_TARGET=sft    Push only SFT repo\n"
 	@printf "  make push-hub HF_REPO_ID=...    Push a single repo\n"
+	@printf "  make push-dataset               Convert and push SFT dataset to Hugging Face\n"
 	@printf "  make tensorboard                Plot training logs from artifacts/tensorboard/\n"
 
 # =============================================================================
@@ -310,6 +311,11 @@ ifneq (,$(filter all sft,$(HUB_TARGET)))
 endif
 	@printf "$(GREEN)✔ Hub push complete!$(NC)\n"
 endif
+
+push-dataset:
+	@printf "$(YELLOW)Converting and pushing SFT dataset to Hugging Face...$(NC)\n"
+	uv run python scripts/convert_dataset_to_hf.py
+	@printf "$(GREEN)✔ SFT dataset pushed to Hugging Face!$(NC)\n"
 
 tensorboard:
 	@printf "$(YELLOW)Starting TensorBoard...$(NC)\n"
