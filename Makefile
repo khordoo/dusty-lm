@@ -314,7 +314,7 @@ endif
 
 push-dataset:
 	@printf "$(YELLOW)Converting and pushing SFT dataset to Hugging Face...$(NC)\n"
-	uv run python scripts/convert_dataset_to_hf.py
+	uv run python scripts/convert_dataset_to_hf.py --readme artifacts/hf/HF_DATASET_CARD.md
 	@printf "$(GREEN)✔ SFT dataset pushed to Hugging Face!$(NC)\n"
 
 tensorboard:
