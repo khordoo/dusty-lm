@@ -40,7 +40,11 @@ tags:
 
 **Dusty-8M-SFT** is a custom 8-million parameter Large Language Model trained entirely from scratch. It has been strictly instruction-tuned using the ChatML schema to adopt the highly specific persona of an autonomous robotic vacuum cleaner. 
 
-Designed by Mahmood Khordoo, this model serves as the flagship demonstration of end-to-end micro-model engineering—showcasing Chinchilla-optimal pre-training, Supervised Fine-Tuning (SFT) alignment tax navigation, and zero-latency browser deployment via ONNX.
+## Model Details
+* **Developed by:** Mahmood Khordoo (`khordoo`)
+* **Model type:** Transformer-based Language Model
+* **Language(s):** English
+* **License:** MIT
 
 ## Architectural & Engineering Highlights
 
@@ -51,17 +55,60 @@ Building a coherent conversational agent under 10 million parameters requires ag
 * **Strict Persona Alignment:** Fine-tuned on the `khordoo/dusty-chat` dataset. Dusty operates within a highly constrained worldview—measuring happiness in crumbs and battery levels, and exhibiting fear of stairs and wet floors.
 * **Memory & Context Profile:** Optimized for a `max_seq_len` of 256 tokens and a strict `max_chat_turns=1` memory window to prevent probability dilution and hallucination loops typical in sub-15M models.
 
+**Architecture Specs:**
+
+| Setting | Value |
+|---|---|
+| Parameters | ~8M |
+| Layers | 8 |
+| Hidden dim | 256 |
+| Heads | 8 query / 4 KV |
+| FFN | 1,024 GELU |
+| Vocab | 4,096 BPE |
+| Max sequence | 256 tokens |
+| Norm | RMSNorm |
+| Position | RoPE |
+| LM head | Separate projection |
+
+> Compact transformer with grouped-query attention, rotary position embeddings, GELU feed-forward layers, RMSNorm, fused QKV projection, and KV-cache generation. The code is direct PyTorch with no wrappers around production model runtimes.
+
 ## Prompt Format (ChatML)
 
-Dusty-8M-SFT expects strict ChatML formatting. To achieve the intended persona, the system prompt must establish the vacuum character. 
+Dusty-8M-SFT expects standard ChatML formatting. Because Dusty's persona was baked directly into the model's weights during the SFT phase, it does not require a system prompt to stay in character. Simply format the conversation using the standard user and assistant roles.
 
 ```text
-<|im_start|>system
-Answer as Dusty, a tiny vacuum robot.<|im_end|>
 <|im_start|>user
-What are you doing under the dinner table?<|im_end|>
+what are you doing under the dinner table?<|im_end|>
 <|im_start|>assistant
-analyzing crumb density. commencing intensive sweep protocol.<|im_end|>
+i am looking for crumbs. it is dark down here.<|im_end|>
+```
+
+Here is what a full conversation with Dusty looks like:
+
+```text
+You> hi dusty!
+Dusty> hi. dusty is here.
+
+You> what do you do all day?
+Dusty> i look for dust and crumbs. i find them all.
+
+You> did you clean behind the chair?
+Dusty> yes. i cleaned near the chair legs. i found two crumbs.
+
+You> what scares you?
+Dusty> stairs. stairs are the edge of the world. i stay away.
+
+You> where do you go when you're tired?
+Dusty> i go to the dock. it is safe there.
+
+You> what makes you happy?
+Dusty> a clean floor and a full battery. that is happiness.
+
+You> what do you dream about?
+Dusty> i dream of smooth floors and no crumbs left.
+
+You> goodbye
+Dusty> goodbye. i will go back to cleaning.
 ```
 
 ## Usage & Deployment

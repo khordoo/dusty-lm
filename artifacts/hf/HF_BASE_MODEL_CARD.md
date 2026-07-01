@@ -35,17 +35,38 @@ tags:
 
 # Dusty-8M-Base: TinyStories Pretrain
 
-**Dusty-8M-Base** is the raw pre-trained checkpoint of the 8-million parameter DustyLM architecture. It has been trained on a 100k-slice of the TinyStories dataset (~46M tokens) and outputs only plain text completions — no persona, no chat format, no instruction tuning.
+**Dusty-8M-Base** is the raw pre-trained checkpoint of the 8-million parameter DustyLM architecture. It has been trained on a 100k-slice of the TinyStories dataset (~46M tokens) and outputs only plain text completions (no persona, no chat format, no instruction tuning).
 
 This model is the "before" picture. Combined with the [SFT checkpoint](https://huggingface.co/mkhordoo/dusty-8m-sft), it demonstrates what Supervised Fine-Tuning actually does: transform a generic text generator into a specific conversational character.
 
+## Model Details
+* **Developed by:** Mahmood Khordoo (`khordoo`)
+* **Model type:** Transformer-based Language Model
+* **Language(s):** English
+* **License:** MIT
+
 ## Architecture
 
-- 8M parameters, Chinchilla-optimal pre-training
-- Grouped-query attention, RoPE, GELU feed-forward, RMSNorm
-- Custom BPE tokenizer (vocabulary size: 4,096)
-- Max sequence length: 256 tokens
-- Context window: plain text only (no ChatML)
+| Setting | Value |
+|---|---|
+| Parameters | ~8M |
+| Layers | 8 |
+| Hidden dim | 256 |
+| Heads | 8 query / 4 KV |
+| FFN | 1,024 GELU |
+| Vocab | 4,096 BPE |
+| Max sequence | 256 tokens |
+| Norm | RMSNorm |
+| Position | RoPE |
+| LM head | Separate projection |
+
+> Compact transformer with grouped-query attention, rotary position embeddings, GELU feed-forward layers, RMSNorm, fused QKV projection, and KV-cache generation. The code is pure PyTorch with no wrappers around production model runtimes.
+
+## Usage
+
+Because Dusty uses a custom, highly optimized PyTorch architecture rather than the standard Hugging Face `transformers` library, inference cannot be run via `AutoModelForCausalLM`. Instead, we provide a lightweight SDK.
+
+### The Quick Way (Python SDK)
 
 ## Usage
 
