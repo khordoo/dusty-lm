@@ -2,6 +2,7 @@
 Called from Makefile to produce a clean error (no traceback).
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -10,16 +11,20 @@ from dustylm.config import get_profile
 
 
 def main():
-    profile_name = sys.argv[1] if len(sys.argv) > 1 else ""
-    mode = sys.argv[2] if len(sys.argv) > 2 else "generate"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("profile", nargs="?", default=CHAT_PROFILE_DEFAULT)
+    parser.add_argument("mode", nargs="?", default="generate")
+    parser.add_argument("--checkpoint-step", type=int, default=None)
+    args = parser.parse_args()
 
-    if not profile_name:
-        profile_name = CHAT_PROFILE_DEFAULT
-
-    p = get_profile(profile_name)
+    p = get_profile(args.profile)
     missing = []
 
-    if p.generation and not Path(p.generation.checkpoint_path).exists():
+    if args.checkpoint_step is not None:
+        step_checkpoint = p.generation.checkpoint_path.parent / f"{p.generation.checkpoint_path.stem}_step_{args.checkpoint_step}.pt"
+        if not step_checkpoint.exists():
+            missing.append(str(step_checkpoint))
+    elif p.generation and not Path(p.generation.checkpoint_path).exists():
         missing.append(str(p.generation.checkpoint_path))
 
     if p.model.tokenizer.kind != "tiktoken":
@@ -32,7 +37,7 @@ def main():
         for m in missing:
             print(f"  {m}")
         print()
-        if mode == "chat":
+        if args.mode == "chat":
             print("Run 'make download-models' to download pre-trained weights,")
             print("or 'make train-sft EPOCHS=23' to train from scratch.")
         else:

@@ -147,8 +147,7 @@ def get_profile(name: str) -> Profile:
 def list_profiles(verbose: bool = False) -> list[str]:
     if verbose:
         return [
-            f"{name:20} - {_PROFILES[name].description}"
-            for name in sorted(_PROFILES)
+            f"{name:20} - {_PROFILES[name].description}" for name in sorted(_PROFILES)
         ]
     return sorted(_PROFILES)
 
@@ -250,7 +249,7 @@ register(
         ),
         generation=GenerationSpec(
             checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
-            max_new_tokens=200,
+            max_new_tokens=128,
             temperature=0.7,
             top_k=20,
             top_p=0.9,
@@ -330,8 +329,8 @@ register(
 # =============================================================================
 # SmolLM2 360m and 135m Pre-trained Baselines
 #
-# Note: The base profiles below (smollm2_360m, smollm2_135m) do not include a TrainingSpec. They are 
-# fully pre-trained by Hugging Face and are intended for direct inference 
+# Note: The base profiles below (smollm2_360m, smollm2_135m) do not include a TrainingSpec. They are
+# fully pre-trained by Hugging Face and are intended for direct inference
 # or to be used as initialization weights for the SFT profile below.
 # =============================================================================
 
@@ -394,15 +393,18 @@ register(
         description="SFT fine-tune of SmolLM2 135M on the Dusty chat dataset for persona alignment.",
         training=TrainingSpec(
             task=TrainingTask.SFT,
-            # By default, this points to the Dusty dataset so you can test 
-            # fine-tuning a larger architecture out of the box. 
+            # By default, this points to the Dusty dataset so you can test
+            # fine-tuning a larger architecture out of the box.
             # Replace this path with your own tokenized SFT dataset
             # before running `python -m dustylm.train --profile sft_smollm2_135m`
             dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_tokenized",
             batch_size=1,
             learning_rate=1e-5,
             raw_sft_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft.jsonl",
-            output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "sft_smollm2_135m.pt",
+            output_checkpoint=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "sft_smollm2_135m.pt",
             max_seq_len=2048,
         ),
         generation=replace(
