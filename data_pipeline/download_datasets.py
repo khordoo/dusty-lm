@@ -71,7 +71,7 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
     # The dataset on Hub uses the standard messages format.
     # Download via datasets and convert back to {category, user, dusty} JSONL.
     try:
-        dataset = load_dataset(repo_id, split="train", trust_remote_code=True)
+        dataset = load_dataset(repo_id, split="train")
     except Exception as exc:
         raise RuntimeError(
             f"Could not load dataset from {repo_id}. "
