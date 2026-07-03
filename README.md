@@ -25,7 +25,7 @@
 <blockquote style="border-left: 4px solid #64ffda; border-top: 4px solid #30363d; border-bottom: 4px solid #30363d; padding: 16px 20px; margin: 0 0 20px 0; background: transparent; border-radius: 0; color: #8b949e;">
 <strong>Build it from scratch. Turn it into a character. Run it in your browser.</strong>
 
-<p><strong style="color: #9ea6b0;">Language models should not feel like black boxes.</strong> DustyLM is a tiny model you can train from scratch in a single free Colab notebook in under 10 minutes. The repo covers the full path from synthetic data and a custom BPE tokenizer to pretraining, SFT, ONNX export, and in-browser inference.</p>
+<p><strong style="color: #9ea6b0;">Language models should not feel like black boxes.</strong> DustyLM is a tiny model you can train from scratch in a single free Colab notebook in under 15 minutes. The repo covers the full path from synthetic data and a custom BPE tokenizer to pretraining, SFT, ONNX export, and in-browser inference.</p>
 
 <p><strong>Small on purpose.</strong> Every layer is direct PyTorch, so you can inspect, modify, break, and rebuild the stack until you understand how raw text becomes a robot vacuum that talks back.</p>
 </blockquote>
