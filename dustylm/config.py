@@ -239,7 +239,7 @@ register(
             / "datasets"
             / "dusty_pretrain_tokenized",
             batch_size=32,
-            learning_rate=5e-4,
+            learning_rate=3e-3,
             output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
             max_seq_len=256,
             weight_decay=0.01,
@@ -267,7 +267,7 @@ register(
             task=TrainingTask.SFT,
             dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_tokenized",
             batch_size=32,
-            learning_rate=1e-5,
+            learning_rate=1e-3,
             output_checkpoint=REPO_ROOT
             / "artifacts"
             / "checkpoints"
