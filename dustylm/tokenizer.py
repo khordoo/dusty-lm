@@ -1,3 +1,10 @@
+"""Train the custom Dusty ByteLevel BPE tokenizer.
+
+The tokenizer is fit from both the TinyStories pretraining corpus and Dusty SFT
+ChatML text so the small 4k vocabulary covers ordinary story text, persona
+responses, and the special chat boundary tokens used during fine-tuning.
+"""
+
 import logging
 import os
 import tempfile

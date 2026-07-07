@@ -16,15 +16,15 @@ tags:
 
 <div align="center">
 
-<img src="assets/logo.png" alt="DustyLLM logo" width="520">
+<img src="assets/logo.png" alt="DustyLM logo" width="520">
 
-<h1>DustyLLM</h1>
+<h1>DustyLM</h1>
 
 <p><strong>An ~8M parameter LLM that talks like a tiny vacuum robot.</strong></p>
 
 <p>
-  <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-2.12+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"></a>
-  <a href="https://python.org/"><img src="https://img.shields.io/badge/Python-3.14+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-2.1+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"></a>
+  <a href="https://python.org/"><img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License: MIT"></a>
   <a href="https://github.com/khordoo/dusty-lm"><img src="https://img.shields.io/badge/GitHub-khordoo/dusty--lm-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub"></a>
   <a href="#-the-profile-registry--zero-yaml-pure-python"><img src="https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square" alt="Model: dusty8m"></a>
@@ -38,7 +38,7 @@ tags:
 
 # Dusty-8M-SFT: Edge-Ready Persona Micro-Model
 
-**Dusty-8M-SFT** is a custom 8-million parameter Large Language Model trained entirely from scratch. It has been strictly instruction-tuned using the ChatML schema to adopt the highly specific persona of an autonomous robotic vacuum cleaner. 
+**Dusty-8M-SFT** is a custom 8-million parameter Large Language Model trained entirely from scratch. It has been strictly instruction-tuned using the ChatML schema to adopt the highly specific persona of an autonomous robotic vacuum cleaner.
 
 ## Model Details
 * **Developed by:** Mahmood Khordoo (`khordoo`)
@@ -50,10 +50,13 @@ tags:
 
 Building a coherent conversational agent under 10 million parameters requires aggressive architectural trade-offs:
 
-* **Compute-Optimal Pre-training:** The base model was trained to the exact Chinchilla theoretical peak (~160 million tokens, or 20 tokens per parameter) using a subset of the TinyStories dataset. This maximized base reasoning capacity without triggering severe overfitting.
+* **Published Base Checkpoint:** The uploaded base weights were trained for approximately one epoch over the full TinyStories train split (~2.12M rows, batch size 224) and selected from step 8,400 for stronger generation before SFT.
+* **Fast Tutorial Path:** The companion repository walks through a practical 100k TinyStories, 1-epoch pretraining run that fits a free Colab workflow. It uses batch size 224 and step 300 as the lightweight tutorial base checkpoint so learners can reproduce the pipeline quickly.
 * **Vocabulary Reallocation:** The custom BPE tokenizer is strictly capped at a 4096 vocabulary size. By aggressively shrinking the embedding matrix, parameter weight was intentionally reallocated to the Feed-Forward Network (FFN) hidden dimensions to maximize logical coherence.
 * **Strict Persona Alignment:** Fine-tuned on the `khordoo/dusty-chat` dataset. Dusty operates within a highly constrained worldview—measuring happiness in crumbs and battery levels, and exhibiting fear of stairs and wet floors.
 * **Memory & Context Profile:** Optimized for a `max_seq_len` of 256 tokens and a strict `max_chat_turns=1` memory window to prevent probability dilution and hallucination loops typical in sub-15M models.
+
+For an 8M parameter model, the Chinchilla-style 20 tokens-per-parameter target is roughly 160M training tokens. The published checkpoint comes from a larger TinyStories run, while the tutorial intentionally favors a fast, inspectable training experience. Step counts depend on batch size and tokenized chunk count, so the cards describe both the training data and the selected checkpoint.
 
 **Architecture Specs:**
 

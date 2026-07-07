@@ -229,6 +229,10 @@ dusty_8m_model = ModelSpec(
 # 3. SmolLM2 baselines:
 #    smollm2_135m, smollm2_360m - pretrained Hugging Face model shapes
 #    sft_smollm2_135m           - SFT profile for the 135M baseline
+#
+# The TrainingSpec batch size and checkpoint interval below are conservative
+# direct-Python defaults. The Makefile and notebooks override them for the
+# current Colab golden path (batch 224, checkpoints every 50 steps).
 # =============================================================================
 
 register(

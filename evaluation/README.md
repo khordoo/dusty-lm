@@ -10,7 +10,7 @@ Multi-checkpoint comparison with predefined input sets. Generates CSV and JSON r
 
 ```bash
 # Compare SFT checkpoints using the sft input set
-uv run python evaluation/compare_checkpoints.py --profile sft_dusty8m --steps 100 150 200
+uv run python evaluation/compare_checkpoints.py --profile sft_dusty8m --steps 150 200 250
 
 # Compare base (pretrain) checkpoints
 uv run python evaluation/compare_checkpoints.py --profile dusty8m --input-set base --steps 200 250 300

@@ -16,6 +16,7 @@ from dustylm.config import HFArtifactSpec, Profile, get_profile, list_profiles
 
 
 def list_downloadable_profiles() -> list[str]:
+    """Return profiles that define downloadable Hugging Face artifacts."""
     return [
         name for name in list_profiles() if get_profile(name).hf_artifacts is not None
     ]
@@ -27,6 +28,7 @@ def copy_hf_file(
     destination: Path,
     force: bool = False,
 ) -> Path:
+    """Download one Hub file and copy it into the repo's artifact layout."""
     destination = Path(destination)
     if destination.exists() and not force:
         print("exists:", destination)
@@ -48,6 +50,7 @@ def download_profile_artifacts(
     convert: bool = False,
     force: bool = False,
 ) -> None:
+    """Download all Hub artifacts for a profile and optionally convert weights."""
     if profile.hf_artifacts is None:
         raise ValueError(f"Profile '{profile.name}' does not define HF artifacts")
 

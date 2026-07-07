@@ -7,7 +7,7 @@
 <h1 style="color: #FFFFFF;">DustyLM</h1>
 
 
-<p><strong>An ~8M parameter language model that talks like a robot vacuum..</strong></p>
+<p><strong>An ~8M parameter language model that talks like a robot vacuum.</strong></p>
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org/)
@@ -77,6 +77,12 @@ Three cells. Under 30 seconds. No GPU required.
 [![Train in Colab](https://img.shields.io/badge/Train_in-Colab-2ea44f?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/khordoo/dusty-lm/blob/main/notebooks/02_train_from_scratch.ipynb)
 
 Downloads datasets, trains the tokenizer, runs pretraining, runs SFT, and tests the checkpoint.
+
+For the terminal version of the same golden path:
+
+```bash
+make train-end-to-end
+```
 
 ### Chat Locally
 
@@ -213,9 +219,12 @@ dustylm/
     └── smollm2.py   # SmolLM2-compatible transformer
 
 data_pipeline/  # Synthetic pretrain/SFT generation and filtering
+evaluation/          # Checkpoint comparison inputs and report scripts
+experiments/         # One-off analysis scripts kept for transparency
 scripts/             # ONNX export and Hugging Face Hub staging/upload
 docs/                # Browser demo assets
 notebooks/           # Quickstart, training, advanced tools, export, and SmolLM2 notebooks
+artifacts/hf/        # Hugging Face model and dataset card templates
 ```
 
 ---
