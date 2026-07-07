@@ -176,6 +176,7 @@ the Colab path practical while still giving the 8M model enough grammar signal.
 
 ```bash
 make synthesize-sft      # Generate new SFT chat data via an external LLM
+make tokenizer           # Train tokenizer (needed to measure answer lengths before filtering)
 make filter-sft          # Filter and format your raw data for training
 ```
 
