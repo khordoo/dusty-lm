@@ -6,6 +6,7 @@ token ``t+1``, following the standard causal language modeling objective.
 """
 
 import argparse
+import logging
 import os
 import random
 from datetime import datetime
@@ -24,8 +25,11 @@ from dustylm.config import IGNORE_INDEX, ModelFamily, Profile, get_profile, list
 from dustylm.modeling import build_model
 from dustylm.timing import timed_step
 
+logger = logging.getLogger(__name__)
+
 
 def get_device_and_dtype():
+    """Pick the fastest available training device and matching autocast dtype."""
     if torch.cuda.is_available():
         return "cuda", torch.bfloat16
     if torch.backends.mps.is_available():
@@ -34,6 +38,7 @@ def get_device_and_dtype():
 
 
 def parse_args(argv=None):
+    """Parse CLI arguments for running one training profile."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--profile",
@@ -66,6 +71,7 @@ def parse_args(argv=None):
 
 
 def collate_batch(batch, max_seq_len: int):
+    """Pad a batch of variable-length token examples for causal LM training."""
     def get_labels(item):
         return item.get("labels", item["input_ids"])
 
@@ -83,12 +89,14 @@ def collate_batch(batch, max_seq_len: int):
 
 
 def get_summary_writer(log_dir):
+    """Create a TensorBoard writer under a timestamped run directory."""
     os.makedirs(log_dir, exist_ok=True)
     writer_path = Path(log_dir) / datetime.now().isoformat(timespec="seconds")
     return SummaryWriter(writer_path)
 
 
 def initialize_random_seed() -> int:
+    """Initialize Python, NumPy, and Torch seeds for one training run."""
     current_seed = random.randint(1, 10000)
     print(f"🌱 INITIALIZING WITH RANDOM SEED: {current_seed}")
 
@@ -103,6 +111,7 @@ def initialize_random_seed() -> int:
 
 
 def require_training_dataset(profile: Profile) -> None:
+    """Fail early when the tokenized dataset for a profile is missing."""
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
 
@@ -126,6 +135,7 @@ def require_training_dataset(profile: Profile) -> None:
 
 
 def load_init_checkpoint_if_configured(model, profile: Profile, device: str):
+    """Load a profile's configured starting checkpoint, if one is required."""
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
 
@@ -147,13 +157,14 @@ def load_init_checkpoint_if_configured(model, profile: Profile, device: str):
             f"Initial checkpoint not found: {checkpoint_path}.{hint}"
         )
 
-    print(f"Loading initial checkpoint from: {checkpoint_path}")
+    logger.info("Loading initial checkpoint from %s", checkpoint_path)
     state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
     model.load_state_dict(state_dict)
     return True
 
 
 def get_step_checkpoint_path(profile: Profile, step: int) -> Path:
+    """Return the path used for a profile's numbered step checkpoint."""
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
 
@@ -164,6 +175,7 @@ def get_step_checkpoint_path(profile: Profile, step: int) -> Path:
 
 
 def save_step_checkpoint_if_due(model, profile: Profile, step: int, interval: int | None):
+    """Save a numbered checkpoint when the current global step hits the interval."""
     if interval is None or interval <= 0 or step % interval != 0:
         return None
 
@@ -180,6 +192,12 @@ def train(
     checkpoint_every_steps: int | None = None,
     batch_size: int | None = None,
 ):
+    """Train one profile and save its final checkpoint.
+
+    The same loop handles both pretraining and SFT. Pretraining examples store
+    only ``input_ids``, while SFT examples also store masked ``labels``; the
+    collator normalizes both forms into padded tensors.
+    """
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
     if num_epochs < 1:
@@ -195,12 +213,12 @@ def train(
     )
     initialize_random_seed()
     require_training_dataset(profile)
-    print("Loading dataset from disk...")
+    logger.info("Loading dataset from disk")
     dataset = load_from_disk(str(training.dataset_path))
-    print(f"Loaded {len(dataset)} examples.")
+    logger.info("Loaded %s examples", len(dataset))
 
     device, dtype = get_device_and_dtype()
-    print(f"Running on device={device}  dtype={dtype}")
+    logger.info("Running on device=%s dtype=%s", device, dtype)
     effective_batch_size = batch_size if batch_size is not None else training.batch_size
     train_loader = DataLoader(
         dataset=dataset,
@@ -268,6 +286,7 @@ def train(
 
 
 def main(argv=None):
+    """CLI entry point for ``python -m dustylm.train``."""
     args = parse_args(argv)
     with timed_step(f"Train {args.profile}"):
         train(

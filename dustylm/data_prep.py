@@ -8,6 +8,7 @@ is computed only on the assistant's response tokens.
 
 import argparse
 import json
+import logging
 from pathlib import Path
 
 from datasets import Dataset, Features, Sequence, Value
@@ -21,6 +22,8 @@ from dustylm.config import (
 )
 from dustylm.modeling import build_tokenizer
 from dustylm.timing import timed_step
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_PROFILE_NAME = "scratch_small"
 DOCUMENT_SEPARATOR = "<|endoftext|>"
@@ -169,7 +172,7 @@ def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: in
     so they are created later by the training collator instead of being stored
     as a duplicate dataset column.
     """
-    print(f"Max sequence length: {max_seq_len}")
+    logger.info("Preparing plain-text examples with max_seq_len=%s", max_seq_len)
     carry = []
     total_tokens = 0
     total_examples = 0
@@ -190,8 +193,8 @@ def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: in
         total_examples += 1
         yield {"input_ids": carry}
 
-    print(f"Total token count: {total_tokens:,}")
-    print(f"Total examples: {total_examples}")
+    logger.info("Total token count: %s", f"{total_tokens:,}")
+    logger.info("Total examples: %s", total_examples)
 
 
 def prepare_plain_text_examples_from_path(
@@ -231,10 +234,10 @@ def prepare_scratch_text_dataset(profile: Profile):
         },
         features=Features({"input_ids": Sequence(Value("int32"))}),
     )
-    print(f"Total examples: {len(tokenized_dataset)}")
-    print(f"Saving dataset to {profile.training.dataset_path}...")
+    logger.info("Total examples: %s", len(tokenized_dataset))
+    logger.info("Saving dataset to %s", profile.training.dataset_path)
     tokenized_dataset.save_to_disk(str(profile.training.dataset_path))
-    print(f"Ready to train on {len(tokenized_dataset)} text chunks.")
+    logger.info("Ready to train on %s text chunks", len(tokenized_dataset))
 
 
 def prepare_jsonl_sft_dataset(profile: Profile):
@@ -261,9 +264,9 @@ def prepare_jsonl_sft_dataset(profile: Profile):
         )
 
     tokenized_dataset = Dataset.from_list(examples)
-    print(f"Saving dataset to {profile.training.dataset_path}...")
+    logger.info("Saving dataset to %s", profile.training.dataset_path)
     tokenized_dataset.save_to_disk(str(profile.training.dataset_path))
-    print(f"Ready to train on {len(tokenized_dataset)} SFT examples.")
+    logger.info("Ready to train on %s SFT examples", len(tokenized_dataset))
 
 
 def parse_args(argv=None):

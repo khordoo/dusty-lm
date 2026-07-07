@@ -26,6 +26,7 @@ def load_state_dict(
     checkpoint_path: str | Path,
     map_location="cpu",
 ) -> dict[str, Any]:
+    """Load a checkpoint as a plain model state dict."""
     checkpoint_path = Path(checkpoint_path)
     if not checkpoint_path.exists():
         raise FileNotFoundError(
@@ -48,6 +49,7 @@ def detect_profile_from_state_dict(
     *,
     mode: str = "chat",
 ) -> str | None:
+    """Infer the most likely profile family from checkpoint tensor names."""
     keys = state_dict.keys()
     prefer_chat = mode == "chat"
     if any("gate_proj" in key for key in keys) or any(

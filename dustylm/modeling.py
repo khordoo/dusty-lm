@@ -18,6 +18,7 @@ from dustylm.models.smollm2 import DustyLM as SmolLM2DustyLM
 
 
 def build_model(profile: Profile, max_seq_len: int | None = None):
+    """Construct the PyTorch model described by a profile."""
     spec = profile.model
     model_max_seq_len = max_seq_len or spec.max_seq_len
     if spec.family == ModelFamily.SCRATCH_GPT:
@@ -48,6 +49,7 @@ def build_model(profile: Profile, max_seq_len: int | None = None):
 
 
 def build_tokenizer(profile: Profile) -> Any:
+    """Load the tokenizer configured by a profile."""
     spec = profile.model.tokenizer
     if spec.kind == "tiktoken":
         return tiktoken.get_encoding(str(spec.path_or_name))
