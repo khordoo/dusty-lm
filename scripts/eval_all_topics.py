@@ -1,7 +1,7 @@
 """Run all web app topic questions through one or more checkpoints.
 
 Usage:
-    uv run python scripts/eval_all_topics.py --steps 200 15000 15700
+    uv run python scripts/eval_all_topics.py --steps 100 200
 """
 
 import argparse
