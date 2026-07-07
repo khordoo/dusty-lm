@@ -1,7 +1,7 @@
 """Generate multiple responses per prompt per checkpoint to assess consistency.
 
 Usage:
-    uv run python scripts/check_consistency.py --steps 100 150 200
+    uv run python evaluation/check_consistency.py --steps 100 150 200
 """
 
 from __future__ import annotations

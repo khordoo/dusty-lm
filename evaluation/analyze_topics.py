@@ -1,7 +1,7 @@
 """Analyze topic-by-topic comparison between two checkpoints.
 
 Usage:
-    uv run python scripts/analyze_topics.py --csv artifacts/webapp_topics_eval.csv
+    uv run python evaluation/analyze_topics.py --csv artifacts/webapp_topics_eval.csv
 """
 
 import argparse

@@ -10,14 +10,14 @@ One-off evaluation scripts, temperature sweeps, and analysis tools used during t
 
 ### Using the evaluation pipeline
 
-The refactored equivalents live in `scripts/` and form a two-step pipeline:
+The refactored equivalents live in `evaluation/` and form a two-step pipeline:
 
 ```bash
 # Step 1: Generate responses across multiple checkpoints
-uv run python scripts/eval_all_topics.py --steps 200 300
+uv run python evaluation/eval_all_topics.py --steps 200 300
 
 # Step 2: Analyze the results for consistency, contradictions, and emotional depth
-uv run python scripts/analyze_topics.py --csv artifacts/webapp_topics_eval.csv
+uv run python evaluation/analyze_topics.py --csv artifacts/webapp_topics_eval.csv
 ```
 
 To train or evaluate the model yourself, use the supported tools in `scripts/`.
