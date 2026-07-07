@@ -14,15 +14,15 @@ tags:
 
 <div align="center">
 
-<img src="assets/logo.png" alt="DustyLLM logo" width="520">
+<img src="assets/logo.png" alt="DustyLM logo" width="520">
 
-<h1>DustyLLM Base</h1>
+<h1>DustyLM Base</h1>
 
 <p><strong>An ~8M parameter base language model pre-trained on TinyStories.</strong></p>
 
 <p>
-  <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-2.12+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"></a>
-  <a href="https://python.org/"><img src="https://img.shields.io/badge/Python-3.14+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-2.1+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"></a>
+  <a href="https://python.org/"><img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License: MIT"></a>
   <a href="https://github.com/khordoo/dusty-lm"><img src="https://img.shields.io/badge/GitHub-khordoo/dusty--lm-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub"></a>
   <a href="#"><img src="https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square" alt="Model: dusty8m"></a>
@@ -35,9 +35,23 @@ tags:
 
 # Dusty-8M-Base: TinyStories Pretrain
 
-**Dusty-8M-Base** is the raw pre-trained checkpoint of the 8-million parameter DustyLM architecture. It has been trained on a 100k-slice of the TinyStories dataset (~46M tokens) and outputs only plain text completions (no persona, no chat format, no instruction tuning).
+**Dusty-8M-Base** is the raw pre-trained checkpoint of the 8-million parameter DustyLM architecture. The uploaded checkpoint was trained for approximately one epoch over the full TinyStories train split (~2.12M rows) and selected from the step 8,400 checkpoint for stronger plain-text generation.
+
+The companion repository's guided tutorial uses a smaller 100k-row TinyStories slice so developers can run the full end-to-end pipeline quickly in Colab. That tutorial checkpoint is intentionally optimized for learning speed; this uploaded checkpoint is the stronger published base model.
 
 This model is the "before" picture. Combined with the [SFT checkpoint](https://huggingface.co/mkhordoo/dusty-8m-sft), it demonstrates what Supervised Fine-Tuning actually does: transform a generic text generator into a specific conversational character.
+
+## Training Details
+
+| Setting | Uploaded checkpoint | Tutorial default |
+|---|---:|---:|
+| TinyStories data | Full train split (~2.12M rows) | 100k-row slice |
+| Pretraining pass | ~1 epoch | 1 epoch |
+| Batch size | 224 | 224 |
+| Selected base checkpoint | Step 8,400 | Step 300 |
+| Purpose | Higher-quality published base weights | Fast educational run |
+
+For an 8M parameter model, the Chinchilla-style 20 tokens-per-parameter target is roughly 160M training tokens. The uploaded checkpoint was trained from a much larger TinyStories run, while the tutorial deliberately trades off maximum pretraining compute for a short, reproducible learning workflow. Step counts depend on the batch size and tokenized chunk count, so the dataset size and epoch count are the more portable comparison.
 
 ## Model Details
 * **Developed by:** Mahmood Khordoo (`khordoo`)
@@ -61,12 +75,6 @@ This model is the "before" picture. Combined with the [SFT checkpoint](https://h
 | LM head | Separate projection |
 
 > Compact transformer with grouped-query attention, rotary position embeddings, GELU feed-forward layers, RMSNorm, fused QKV projection, and KV-cache generation. The code is pure PyTorch with no wrappers around production model runtimes.
-
-## Usage
-
-Because Dusty uses a custom, highly optimized PyTorch architecture rather than the standard Hugging Face `transformers` library, inference cannot be run via `AutoModelForCausalLM`. Instead, we provide a lightweight SDK.
-
-### The Quick Way (Python SDK)
 
 ## Usage
 
@@ -100,15 +108,21 @@ make generate
 
 ### Training From Scratch
 
-Covered in detail in the [companion repository](https://github.com/khordoo/dusty-lm). Quick start:
+Covered in detail in the [companion repository](https://github.com/khordoo/dusty-lm). The tutorial defaults are:
 
 ```bash
 make download-datasets
 make tokenizer
 make data-pretrain
-make train-pretrain EPOCHS=23
+make train-pretrain EPOCHS=1 CHECKPOINT_EVERY_STEPS=50 BATCH_SIZE=224
 make data-sft
-make train-sft EPOCHS=23
+make train-sft EPOCHS=2 CHECKPOINT_EVERY_STEPS=50 BATCH_SIZE=224
+```
+
+Or run the same current golden path with:
+
+```bash
+make train-end-to-end
 ```
 
 ## License

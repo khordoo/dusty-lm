@@ -9,12 +9,12 @@ Examples:
     uv run python evaluation/compare_checkpoints.py \
         --profile dusty8m \
         --input-set base \
-        --steps 1000 3000 5700
+        --steps 200 250 300
 
     uv run python evaluation/compare_checkpoints.py \
         --profile sft_dusty8m \
         --input-set sft \
-        --steps 900 19600
+        --steps 150 200 250
 """
 
 from __future__ import annotations
@@ -43,6 +43,8 @@ INPUT_SETS = {"base", "sft"}
 
 @dataclass(frozen=True)
 class EvaluationInput:
+    """One reusable prompt/question used across checkpoint comparison runs."""
+
     id: int
     category: str
     input: str
@@ -63,7 +65,7 @@ def parse_args(argv=None):
         type=int,
         nargs="+",
         required=True,
-        help="Checkpoint step numbers to compare, such as 900 19600.",
+        help="Checkpoint step numbers to compare, such as 150 200 250.",
     )
     parser.add_argument(
         "--input-set",
@@ -110,6 +112,7 @@ def parse_args(argv=None):
 
 
 def infer_input_set(profile_name: str) -> str:
+    """Choose the default input set from the profile name."""
     if "sft" in profile_name:
         return "sft"
     return "base"
@@ -120,6 +123,7 @@ def resolve_input_path(
     input_set: str,
     inputs_path: Path | None,
 ) -> tuple[str, Path]:
+    """Resolve custom or named evaluation input files with clear errors."""
     if inputs_path is not None:
         if not inputs_path.exists():
             raise FileNotFoundError(f"Custom input file not found: {inputs_path}")
@@ -142,6 +146,11 @@ def resolve_input_path(
 
 
 def load_inputs(path: Path) -> list[EvaluationInput]:
+    """Load and validate evaluation inputs from JSON.
+
+    Expected schema: a JSON list of objects with integer ``id``, string
+    ``category``, and string ``input`` fields.
+    """
     with path.open(encoding="utf-8") as file:
         raw_inputs = json.load(file)
 
@@ -183,6 +192,7 @@ def load_inputs(path: Path) -> list[EvaluationInput]:
 
 
 def build_run_id(input_set: str) -> str:
+    """Build a timestamped report id that includes the selected input set."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return f"run_{timestamp}_{input_set}"
 
@@ -195,6 +205,7 @@ def generate_for_checkpoint(
     temperature: float | None,
     max_new_tokens: int | None,
 ) -> list[dict[str, Any]]:
+    """Generate outputs for every input against one numbered checkpoint."""
     profile = get_profile(profile_name)
     if profile.generation is None:
         raise ValueError(f"Profile {profile_name!r} does not define generation config")

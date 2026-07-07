@@ -9,6 +9,7 @@ the full sequence at every step:
 """
 
 import argparse
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -39,6 +40,7 @@ class GenerationResult:
 
 
 def get_device():
+    """Pick the best available inference device."""
     if torch.cuda.is_available():
         return "cuda"
     if torch.backends.mps.is_available():
@@ -47,6 +49,7 @@ def get_device():
 
 
 def parse_args(argv=None):
+    """Parse CLI arguments for one text-generation request."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--profile",
@@ -86,6 +89,7 @@ def parse_args(argv=None):
 
 
 def validate_generation_options(top_p: float, temperature: float) -> None:
+    """Validate sampling controls before generation starts."""
     if top_p <= 0.0 or top_p > 1.0:
         raise ValueError("top_p must be greater than 0 and at most 1.0")
     if temperature <= 0.0:
@@ -93,6 +97,7 @@ def validate_generation_options(top_p: float, temperature: float) -> None:
 
 
 def encode_prompt(tokenizer, prompt: str, spec: GenerationSpec) -> list[int]:
+    """Encode a prompt and prepend BOS when the profile requires it."""
     if isinstance(tokenizer, Tokenizer):
         token_ids = tokenizer.encode(prompt).ids
     else:
@@ -103,10 +108,12 @@ def encode_prompt(tokenizer, prompt: str, spec: GenerationSpec) -> list[int]:
 
 
 def decode_tokens(tokenizer, token_ids: list[int]) -> str:
+    """Decode token IDs with either tokenizer implementation."""
     return tokenizer.decode(token_ids)
 
 
 def get_token_id(tokenizer, text: str) -> int | None:
+    """Return a token ID for exact text when the tokenizer can provide one."""
     if hasattr(tokenizer, "token_to_id"):
         token_id = tokenizer.token_to_id(text)
         if token_id is not None:
@@ -120,6 +127,7 @@ def get_token_id(tokenizer, text: str) -> int | None:
 
 
 def validate_prompt_length(token_ids: list[int], max_seq_len: int) -> None:
+    """Reject prompts that already fill the model context window."""
     prompt_length = len(token_ids)
     if prompt_length >= max_seq_len:
         raise ValueError(
@@ -132,11 +140,12 @@ def resolve_num_new_tokens(
     prompt_length: int,
     max_seq_len: int,
 ) -> int:
+    """Cap generation length so prompt plus output fits in context."""
     return min(max_new_tokens, max_seq_len - prompt_length)
 
 
 def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
-    # prompt = prompt.replace("\\n", "\n")
+    """Normalize a raw prompt and wrap SFT prompts in ChatML."""
     if CHATML_START_TOKEN in prompt:
         return prompt
 
@@ -155,6 +164,7 @@ def resolve_generation_checkpoint_path(
     checkpoint_step: int | None = None,
     checkpoint_path: str | Path | None = None,
 ) -> Path:
+    """Resolve the final or step checkpoint path used for generation."""
     if profile.generation is None:
         raise ValueError(f"Profile '{profile.name}' does not define generation config")
     if checkpoint_path is not None:
@@ -192,7 +202,10 @@ def load_model(
         checkpoint_step=checkpoint_step,
         checkpoint_path=checkpoint_path,
     )
-    print("loading checkpoint from:", checkpoint_path)
+    if not checkpoint_path.exists():
+        print(f"Checkpoint not found: {checkpoint_path}", file=sys.stderr)
+        print("Run `make download-models` or `make train-sft` first.", file=sys.stderr)
+        sys.exit(1)
     state_dict = load_state_dict(checkpoint_path, map_location=device)
     # RoPE caches are derived buffers, not learned parameters.
     state_dict.pop("rope.sin_cache", None)
@@ -207,6 +220,7 @@ def load_model(
 
 
 def apply_top_p_filter(next_token_logits: torch.Tensor, top_p: float) -> torch.Tensor:
+    """Apply nucleus sampling by masking logits outside the top probability mass."""
     if top_p >= 1.0:
         return next_token_logits
 
@@ -441,6 +455,7 @@ def generate_text(
 
 
 def main(argv=None):
+    """CLI entry point for ``python -m dustylm.generate``."""
     args = parse_args(argv)
     generate_text(
         prompt=args.prompt,

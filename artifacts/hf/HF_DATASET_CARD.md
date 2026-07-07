@@ -14,7 +14,7 @@ size_categories:
 
 # 🧹 Dusty-SFT: A Persona-Aligned Dataset for Micro-Models
 
-This dataset contains **35,000 conversational instruction-tuning examples** designed to train and align sub-15M parameter models (specifically **Dusty-8M**) to adopt the strict, highly focused persona of an autonomous robotic vacuum cleaner. 
+This dataset contains **~35,000 conversational instruction-tuning examples** designed to train and align sub-15M parameter models (specifically **Dusty-8M**) to adopt the strict, highly focused persona of an autonomous robotic vacuum cleaner.
 
 Instead of generic assistant responses, this dataset maps user prompts to Dusty's unique worldview, optimizing a small parameter budget for dense character alignment rather than expansive general knowledge.
 
@@ -42,11 +42,11 @@ The data is explicitly generated to enforce these core behavioral rules:
 
 ## 📊 Dataset Structure & Splits
 
-The dataset consists of ~35,000 examples distributed across **76 unique conversational categories**. It has been strictly formatted using the industry-standard `messages` structure, making it instantly compatible with popular training libraries (like `trl`, `axolotl`, etc.) and the Hugging Face dataset viewer. 
+The dataset consists of ~35,000 examples distributed across **76 conversational categories**, including greetings, goodbyes, morning/night interactions, maker identity, and broader chat edge cases. It has been strictly formatted using the industry-standard `messages` structure, making it instantly compatible with popular training libraries (like `trl`, `axolotl`, etc.) and the Hugging Face dataset viewer.
 
 **Splits:**
 * `train`: 33,820 rows
-* `test`: 1,500 rows (stratified across all 76 categories to ensure balanced validation loss tracking)
+* `test`: 1,500 rows (stratified across categories to ensure balanced validation loss tracking)
 
 ### Example Row
 
@@ -78,7 +78,4 @@ dataset = load_dataset("mkhordoo/dusty-chat")
 # View a sample from the training split
 print(dataset["train"][0])
 ```
-
-
-
 

@@ -16,10 +16,8 @@ from dustylm.config import REPO_ROOT, Profile, get_profile, list_profiles
 from dustylm.modeling import build_model
 
 
-
-
-
 def map_smollm2_key(hf_key: str) -> str:
+    """Map one Hugging Face SmolLM2 tensor name to DustyLM naming."""
     if hf_key == "model.embed_tokens.weight":
         return "embed_tokens.weight"
     if hf_key == "model.norm.weight":
@@ -32,6 +30,7 @@ def map_smollm2_key(hf_key: str) -> str:
 
 
 def convert_smollm2_state_dict(hf_weights: dict[str, torch.Tensor]):
+    """Convert all SmolLM2 Hugging Face tensors to a DustyLM state dict."""
     state_dict = {
         map_smollm2_key(hf_key): tensor for hf_key, tensor in hf_weights.items()
     }
@@ -40,6 +39,7 @@ def convert_smollm2_state_dict(hf_weights: dict[str, torch.Tensor]):
 
 
 def resolve_hf_model_path(profile: Profile, hf_model_path: str | Path | None) -> Path:
+    """Resolve the source safetensors path for a SmolLM2 profile."""
     if hf_model_path is not None:
         return Path(hf_model_path)
     if profile.hf_artifacts is not None:
@@ -52,6 +52,7 @@ def map_smollm2_to_dustylm_and_save(
     hf_model_path: str | Path | None,
     dustylm_save_path: str | Path | None = None,
 ):
+    """Convert a SmolLM2 checkpoint and save it in DustyLM format."""
     if profile.generation is None:
         raise ValueError(f"Profile '{profile.name}' does not define generation config")
 
@@ -78,6 +79,7 @@ def map_smollm2_to_dustylm_and_save(
 
 
 def parse_args(argv=None):
+    """Parse CLI arguments for SmolLM2 checkpoint conversion."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--profile",
@@ -95,6 +97,7 @@ def parse_args(argv=None):
 
 
 def main(argv=None):
+    """CLI entry point for converting SmolLM2 checkpoints."""
     args = parse_args(argv)
     map_smollm2_to_dustylm_and_save(
         profile=get_profile(args.profile),

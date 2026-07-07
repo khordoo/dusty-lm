@@ -7,7 +7,7 @@ DIM    := \033[2m
 NC     := \033[0m
 
 EPOCHS ?= 23
-CHECKPOINT_EVERY_STEPS ?= 100
+CHECKPOINT_EVERY_STEPS ?= 50
 CHECKPOINT_STEP ?=
 PROMPT ?= $(strip Once upon a time)
 PROFILE ?= dusty8m
@@ -22,7 +22,7 @@ DEVICE ?=
 DUSTY_MODEL ?= qwen/qwen3-235b-a22b-2507:floor
 DUSTY_FALLBACK_MODEL ?= openai/gpt-oss-120b:floor
 DUSTY_SFT_PER_CATEGORY ?= 500
-BATCH_SIZE ?= 32
+BATCH_SIZE ?= 224
 DUSTY_SFT_BATCH_SIZE ?= 20
 DUSTY_SFT_OUT ?= artifacts/datasets/dusty_sft.jsonl
 DUSTY_SFT_REJECTED ?= artifacts/datasets/dusty_sft_rejected.jsonl
@@ -32,7 +32,7 @@ DUSTY_SFT_MAX_ANSWER_TOKENS ?= 256
 DUSTY_SFT_SAMPLING_MODE ?= balanced
 DUSTY_CHAT_REPO ?= mkhordoo/dusty-chat
 DUSTY_CHAT_FILE ?= dusty_sft.jsonl
-TINYSTORIES_SLICE ?= train[:50000]
+TINYSTORIES_SLICE ?= train[:100000]
 TINYSTORIES_OUT ?= artifacts/datasets/tinystories_base.txt
 ONNX_PROFILE ?= sft_dusty8m
 ONNX_OUT ?= docs/model.onnx
@@ -59,8 +59,9 @@ EVAL_RUN_ID ?=
 EVAL_TOP_P ?=
 EVAL_TEMPERATURE ?=
 EVAL_MAX_NEW_TOKENS ?=
+E2E_FLAGS ?=
 
-.PHONY: help chat download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
+.PHONY: help chat lint download-models download-smollm2 download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
@@ -69,6 +70,10 @@ help:
 	@printf "  make download-models            Download pretrained weights + tokenizer from Hugging Face Hub\n"
 	@printf "  make chat                       Chat with local SFT inference CLI\n"
 	@printf "  make generate                   Generate text with the dusty8m profile\n"
+	@printf "\n"
+	@printf "$(BOLD)SmolLM2 Baselines:$(NC)\n"
+	@printf "  make download-smollm2            Download and convert SmolLM2 pretrained weights (default: 135M)\n"
+	@printf "  make download-smollm2 SMOLML2_PROFILE=smollm2_360m  Download 360M variant\n"
 	@printf "\n"
 	@printf "$(BOLD)Data:$(NC)\n"
 	@printf "  make download-datasets          Download raw training datasets (TinyStories + SFT logs)\n"
@@ -82,14 +87,17 @@ help:
 	@printf "\n"
 	@printf "$(BOLD)Training:$(NC)\n"
 	@printf "  make train-pretrain EPOCHS=1    Train the dusty8m profile\n"
-	@printf "  make train-sft EPOCHS=1         Train the sft_dusty8m profile\n"
+	@printf "  make train-sft EPOCHS=2         Train the sft_dusty8m profile\n"
 	@printf "\n"
 	@printf "$(BOLD)Evaluation:$(NC)\n"
-	@printf "  make eval-checkpoints EVAL_STEPS=\"900 19600\"  Compare checkpoint outputs\n"
+	@printf "  make eval-checkpoints EVAL_STEPS=\"150 200 250\"  Compare checkpoint outputs\n"
 	@printf "\n"
 	@printf "$(BOLD)Export:$(NC)\n"
 	@printf "  make serve-web                  Serve browser demo locally\n"
 	@printf "  make export-onnx                Export ONNX artifacts to docs/\n"
+	@printf "\n"
+	@printf "$(BOLD)Quality:$(NC)\n"
+	@printf "  make lint                      Run ruff linter\n"
 	@printf "\n"
 	@printf "$(BOLD)Hub:$(NC)\n"
 	@printf "  make stage-hub                  Stage both base + SFT artifacts locally (dry run)\n"
@@ -102,6 +110,11 @@ help:
 	@printf "  make push-hub HF_REPO_ID=...    Push a single repo\n"
 	@printf "  make push-dataset               Convert and push SFT dataset to Hugging Face\n"
 	@printf "  make tensorboard                Plot training logs from artifacts/tensorboard/\n"
+
+lint:
+	@echo "$(CYAN)Running ruff linter...$(NC)"
+	uv run --dev ruff check .
+	@echo "$(GREEN)Lint passed.$(NC)"
 
 # =============================================================================
 # 1. Model & Artifacts Pipeline
@@ -122,6 +135,14 @@ download-models:
 	@mv -f artifacts/tokenizers/tokenizer.json artifacts/tokenizers/dusty_tokenizer.json
 	@printf "$(GREEN)  ✔ dusty_tokenizer.json$(NC)\n"
 	@printf "$(GREEN)✔ Models ready. Run 'make chat' or 'make generate'.$(NC)\n"
+
+SMOLML2_PROFILE ?= smollm2_135m
+
+download-smollm2:
+	@mkdir -p artifacts/hf artifacts/checkpoints
+	@printf "$(CYAN)Downloading and converting $(SMOLML2_PROFILE)...$(NC)\n"
+	uv run python -m dustylm.artifacts download --profile $(SMOLML2_PROFILE) --convert
+	@printf "$(GREEN)✔ $(SMOLML2_PROFILE) ready.$(NC)\n"
 
 # =============================================================================
 # 2. Data Engineering Pipeline
@@ -214,7 +235,7 @@ train-sft:
 
 eval-checkpoints:
 	@if [ -z "$(strip $(EVAL_STEPS))" ]; then \
-		printf "$(RED)Set EVAL_STEPS, for example: make eval-checkpoints EVAL_STEPS=\"900 19600\"$(NC)\n"; \
+		printf "$(RED)Set EVAL_STEPS, for example: make eval-checkpoints EVAL_STEPS=\"150 200 250\"$(NC)\n"; \
 		exit 1; \
 	fi
 	@printf "$(YELLOW)Comparing checkpoints for $(EVAL_PROFILE)...$(NC)\n"
@@ -314,7 +335,7 @@ endif
 
 push-dataset:
 	@printf "$(YELLOW)Converting and pushing SFT dataset to Hugging Face...$(NC)\n"
-	uv run python scripts/convert_dataset_to_hf.py
+	uv run python scripts/convert_dataset_to_hf.py --readme artifacts/hf/HF_DATASET_CARD.md
 	@printf "$(GREEN)✔ SFT dataset pushed to Hugging Face!$(NC)\n"
 
 tensorboard:
@@ -330,17 +351,4 @@ train-end-to-end:
 	@printf "$(CYAN)==========================================$(NC)\n"
 	@printf "$(CYAN)   Starting End-to-End DustyLM Pipeline   $(NC)\n"
 	@printf "$(CYAN)==========================================$(NC)\n"
-	@printf "\n"
-	@printf "$(YELLOW)[1/4] Tokenizing pre-training data...$(NC)\n"
-	make data-pretrain
-	@printf "\n"
-	@printf "$(YELLOW)[2/4] Running pre-training phase (Epochs: 1)...$(NC)\n"
-	make train-pretrain EPOCHS=1
-	@printf "\n"
-	@printf "$(YELLOW)[3/4] Generating SFT data...$(NC)\n"
-	make data-sft
-	@printf "\n"
-	@printf "$(YELLOW)[4/4] Running SFT phase (Epochs: 21)...$(NC)\n"
-	make train-sft EPOCHS=21
-	@printf "\n"
-	@printf "$(GREEN)✔ End-to-End Pipeline complete! All checkpoints saved to artifacts/.$(NC)\n"
+	uv run python scripts/train_end_to_end.py $(E2E_FLAGS)

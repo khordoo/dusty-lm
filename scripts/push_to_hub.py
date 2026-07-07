@@ -118,6 +118,7 @@ def parse_args(argv=None):
 
 
 def default_staging_dir(profile_name: str) -> Path:
+    """Return the local staging directory rebuilt before Hub upload."""
     return Path("artifacts") / "hub_upload" / profile_name
 
 
@@ -126,6 +127,7 @@ def resolve_source_paths(
     checkpoint_path: Path | None,
     tokenizer_path: Path | None,
 ) -> tuple[Path, Path]:
+    """Resolve checkpoint and tokenizer paths from overrides or profile defaults."""
     profile = get_profile(profile_name)
     resolved_checkpoint_path = resolve_generation_checkpoint_path(
         profile,
@@ -138,6 +140,7 @@ def resolve_source_paths(
 
 
 def require_file(path: Path, label: str) -> None:
+    """Validate that a required source artifact exists and is a file."""
     if not path.exists():
         raise FileNotFoundError(f"{label} not found: {path}")
     if not path.is_file():
@@ -145,6 +148,7 @@ def require_file(path: Path, label: str) -> None:
 
 
 def reset_staging_dir(staging_dir: Path) -> None:
+    """Recreate a staging directory after basic safety checks."""
     resolved = staging_dir.resolve()
     if resolved == Path.cwd().resolve() or resolved == resolved.parent:
         raise ValueError(f"Refusing to clear unsafe staging directory: {staging_dir}")
@@ -157,6 +161,7 @@ def reset_staging_dir(staging_dir: Path) -> None:
 
 
 def build_tokenizer_assets(tokenizer_path: Path, staging_dir: Path) -> None:
+    """Create Hugging Face tokenizer files, including Dusty's chat template."""
     try:
         from transformers import PreTrainedTokenizerFast
     except ImportError as exc:
@@ -181,6 +186,7 @@ def build_tokenizer_assets(tokenizer_path: Path, staging_dir: Path) -> None:
 
 
 def write_tokenizer_metadata(staging_dir: Path) -> None:
+    """Ensure tokenizer metadata includes chat template and special tokens."""
     tokenizer_config_path = staging_dir / "tokenizer_config.json"
     tokenizer_config = {}
     if tokenizer_config_path.exists():
@@ -212,6 +218,7 @@ def stage_hub_artifacts(
     skip_onnx: bool = False,
     skip_chat_template: bool = False,
 ) -> list[Path]:
+    """Stage checkpoint, tokenizer assets, model card, logo, and optional ONNX."""
     require_file(checkpoint_path, "Checkpoint")
     require_file(tokenizer_path, "Tokenizer")
     require_file(model_card_path, "Model card")

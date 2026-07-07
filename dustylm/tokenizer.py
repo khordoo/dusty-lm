@@ -1,3 +1,11 @@
+"""Train the custom Dusty ByteLevel BPE tokenizer.
+
+The tokenizer is fit from both the TinyStories pretraining corpus and Dusty SFT
+ChatML text so the small 4k vocabulary covers ordinary story text, persona
+responses, and the special chat boundary tokens used during fine-tuning.
+"""
+
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -6,6 +14,9 @@ from tokenizers import ByteLevelBPETokenizer
 
 from dustylm.config import get_profile
 from dustylm.data_prep import normalize_model_text, read_jsonl_sft_rows
+from dustylm.timing import timed_step
+
+logger = logging.getLogger(__name__)
 
 base = Path(__file__).parents[1]
 TOKENIZER_TEXT_CORPORA = [
@@ -22,12 +33,14 @@ SPECIAL_TOKENS = [END_OF_TEXT_TOKEN, CHATML_START_TOKEN, CHATML_END_TOKEN]
 
 
 def write_normalized_pretrain_corpus(input_path: Path, output_path: Path) -> None:
+    """Write normalized pretraining text for tokenizer training."""
     if not input_path.exists():
         raise FileNotFoundError(f"Tokenizer text corpus not found: {input_path}")
     output_path.write_text(normalize_model_text(input_path.read_text()))
 
 
 def write_normalized_sft_corpus(input_path: Path, output_path: Path) -> None:
+    """Write SFT user/assistant text as normalized ChatML training text."""
     rows = read_jsonl_sft_rows(input_path)
     with output_path.open("w", encoding="utf-8") as file:
         for row in rows:
@@ -42,6 +55,7 @@ def prepare_tokenizer_training_files(
     text_corpora: list[Path] | None = None,
     sft_jsonl_corpora: list[Path] | None = None,
 ) -> list[Path]:
+    """Prepare temporary normalized corpora used to fit the BPE tokenizer."""
     text_corpora = text_corpora or TOKENIZER_TEXT_CORPORA
     sft_jsonl_corpora = sft_jsonl_corpora or TOKENIZER_SFT_JSONL_CORPORA
 
@@ -60,8 +74,9 @@ def prepare_tokenizer_training_files(
 
 
 def train_tokenizer():
+    """Train the Dusty BPE tokenizer from pretraining text and SFT ChatML text."""
     vocab_size = get_profile("dusty8m").model.vocab_size
-    print(f"🧹 Training ByteLevel BPE Tokenizer (Vocab Size: {vocab_size})...")
+    logger.info("Training ByteLevel BPE tokenizer with vocab_size=%s", vocab_size)
 
     # Initialize the built-in ByteLevel Tokenizer
     tokenizer = ByteLevelBPETokenizer()
@@ -81,8 +96,14 @@ def train_tokenizer():
     os.makedirs(os.path.dirname(OUTPUT_TOKENIZER_PATH), exist_ok=True)
     tokenizer.save(str(OUTPUT_TOKENIZER_PATH))
 
-    print(f"✨ Success! Tokenizer saved to {OUTPUT_TOKENIZER_PATH}")
+    logger.info("Tokenizer saved to %s", OUTPUT_TOKENIZER_PATH)
+
+
+def main() -> None:
+    """CLI entry point for ``python -m dustylm.tokenizer``."""
+    with timed_step("Train tokenizer"):
+        train_tokenizer()
 
 
 if __name__ == "__main__":
-    train_tokenizer()
+    main()

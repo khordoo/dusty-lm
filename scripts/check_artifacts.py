@@ -39,10 +39,10 @@ def main():
         print()
         if args.mode == "chat":
             print("Run 'make download-models' to download pre-trained weights,")
-            print("or 'make train-sft EPOCHS=23' to train from scratch.")
+            print("or 'make train-end-to-end' to train from scratch.")
         else:
             print("Run 'make download-models' to download pre-trained weights,")
-            print("or 'make train-pretrain EPOCHS=23' to train from scratch.")
+            print("or 'make train-end-to-end' to train from scratch.")
         sys.exit(1)
 
     sys.exit(0)

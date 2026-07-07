@@ -9,14 +9,16 @@ data on a high-end GPU, override the slice:
 """
 
 import argparse
+import json
 from pathlib import Path
 
 from datasets import load_dataset
-import json
+
+from dustylm.timing import timed_step
 
 DEFAULT_TINYSTORIES_OUT = Path("artifacts/datasets/tinystories_base.txt")
 DEFAULT_DUSTY_SFT_OUT = Path("artifacts/datasets/dusty_sft.jsonl")
-DEFAULT_TINYSTORIES_SLICE = "train[:50000]"
+DEFAULT_TINYSTORIES_SLICE = "train[:100000]"
 DEFAULT_DUSTY_CHAT_REPO = "mkhordoo/dusty-chat"
 DEFAULT_DUSTY_CHAT_FILE = "dusty_sft.jsonl"
 
@@ -71,7 +73,7 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
     # The dataset on Hub uses the standard messages format.
     # Download via datasets and convert back to {category, user, dusty} JSONL.
     try:
-        dataset = load_dataset(repo_id, split="train", trust_remote_code=True)
+        dataset = load_dataset(repo_id, split="train")
     except Exception as exc:
         raise RuntimeError(
             f"Could not load dataset from {repo_id}. "
@@ -93,12 +95,13 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
 
 def main(argv=None):
     args = parse_args(argv)
-    download_tinystories(args.tinystories_slice, args.tinystories_out)
-    download_dusty_sft(
-        args.dusty_chat_repo,
-        args.dusty_chat_file,
-        args.dusty_sft_out,
-    )
+    with timed_step("Download raw datasets"):
+        download_tinystories(args.tinystories_slice, args.tinystories_out)
+        download_dusty_sft(
+            args.dusty_chat_repo,
+            args.dusty_chat_file,
+            args.dusty_sft_out,
+        )
     print("Datasets are ready. Next: make tokenizer")
 
 

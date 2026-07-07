@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import replace
-from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -21,13 +20,13 @@ from dustylm.config import (
     get_profile,
     list_profiles,
 )
+from dustylm.data_prep import normalize_model_text
 from dustylm.generate import (
     encode_prompt,
     generate_token_ids,
     get_device,
 )
 from dustylm.modeling import build_model, build_tokenizer
-from dustylm.data_prep import normalize_model_text
 from dustylm.tokenizer import CHATML_END_TOKEN, CHATML_START_TOKEN
 
 SUPPORTED_ROLES = {"system", "user", "assistant"}
@@ -70,6 +69,7 @@ def parse_args(argv=None):
 
 
 def require_sft_profile(profile: Profile) -> None:
+    """Reject base/pretraining profiles for chat-completion inference."""
     if profile.training is None or profile.training.task != TrainingTask.SFT:
         raise ValueError(
             "Inference supports chat/SFT profiles only. "
@@ -80,6 +80,7 @@ def require_sft_profile(profile: Profile) -> None:
 
 
 def validate_chat_messages(messages: list[dict[str, Any]]) -> None:
+    """Validate the OpenAI-style message list accepted by chat_completion."""
     if not isinstance(messages, list) or not messages:
         raise ValueError("messages must be a non-empty list")
 
@@ -101,6 +102,7 @@ def trim_chat_messages(
     messages: list[dict[str, Any]],
     max_chat_turns: int | None,
 ) -> list[dict[str, str]]:
+    """Keep system messages and the most recent user turns for tiny contexts."""
     validate_chat_messages(messages)
     if max_chat_turns is not None and max_chat_turns < 1:
         raise ValueError("max_chat_turns must be at least 1")

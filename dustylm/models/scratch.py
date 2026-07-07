@@ -11,7 +11,6 @@ from dataclasses import dataclass
 import torch
 import torch.nn as nn
 
-
 # Type alias for the KV cache: one (key, value) tensor pair per layer,
 # or None for layers that have not yet been populated.
 KvCache = list[tuple[torch.Tensor, torch.Tensor] | None]

@@ -7,9 +7,9 @@
 <h1 style="color: #FFFFFF;">DustyLM</h1>
 
 
-<p><strong>An ~8M parameter language model that talks like a robot vacuum..</strong></p>
+<p><strong>An ~8M parameter language model that talks like a robot vacuum.</strong></p>
 
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.12+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.1+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 [![Model: dusty8m](https://img.shields.io/badge/Model-dusty8m-orange?style=flat-square)](https://huggingface.co/mkhordoo/dusty-8m-sft)
@@ -25,7 +25,7 @@
 <blockquote style="border-left: 4px solid #64ffda; border-top: 4px solid #30363d; border-bottom: 4px solid #30363d; padding: 16px 20px; margin: 0 0 20px 0; background: transparent; border-radius: 0; color: #8b949e;">
 <strong>Build it from scratch. Turn it into a character. Run it in your browser.</strong>
 
-<p><strong style="color: #9ea6b0;">Language models should not feel like black boxes.</strong> DustyLM is a tiny model you can train from scratch in a single free Colab notebook in under 10 minutes. The repo covers the full path from synthetic data and a custom BPE tokenizer to pretraining, SFT, ONNX export, and in-browser inference.</p>
+<p><strong style="color: #9ea6b0;">Language models should not feel like black boxes.</strong> DustyLM is a tiny model you can train from scratch in a single free Colab notebook in under 15 minutes. The repo covers the full path from synthetic data and a custom BPE tokenizer to pretraining, SFT, ONNX export, and in-browser inference.</p>
 
 <p><strong>Small on purpose.</strong> Every layer is direct PyTorch, so you can inspect, modify, break, and rebuild the stack until you understand how raw text becomes a robot vacuum that talks back.</p>
 </blockquote>
@@ -77,6 +77,12 @@ Three cells. Under 30 seconds. No GPU required.
 [![Train in Colab](https://img.shields.io/badge/Train_in-Colab-2ea44f?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/khordoo/dusty-lm/blob/main/notebooks/02_train_from_scratch.ipynb)
 
 Downloads datasets, trains the tokenizer, runs pretraining, runs SFT, and tests the checkpoint.
+
+For the terminal version of the same golden path:
+
+```bash
+make train-end-to-end
+```
 
 ### Chat Locally
 
@@ -169,10 +175,14 @@ The SFT format is one conversation per line:
 make download-datasets   # Downloads TinyStories + Dusty SFT
 ```
 
+By default this downloads a 100k TinyStories slice for pretraining, which keeps
+the Colab path practical while still giving the 8M model enough grammar signal.
+
 **Option B: The Custom Persona Path (Advanced)** — If you want to build a completely new AI persona (e.g., a toaster or a cat), use the data pipeline to generate your own synthetic datasets:
 
 ```bash
 make synthesize-sft      # Generate new SFT chat data via an external LLM
+make tokenizer           # Train tokenizer (needed to measure answer lengths before filtering)
 make filter-sft          # Filter and format your raw data for training
 ```
 
@@ -209,9 +219,12 @@ dustylm/
     └── smollm2.py   # SmolLM2-compatible transformer
 
 data_pipeline/  # Synthetic pretrain/SFT generation and filtering
+evaluation/          # Checkpoint comparison inputs and report scripts
+experiments/         # One-off analysis scripts kept for transparency
 scripts/             # ONNX export and Hugging Face Hub staging/upload
 docs/                # Browser demo assets
 notebooks/           # Quickstart, training, advanced tools, export, and SmolLM2 notebooks
+artifacts/hf/        # Hugging Face model and dataset card templates
 ```
 
 ---

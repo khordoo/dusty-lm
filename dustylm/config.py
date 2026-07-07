@@ -114,6 +114,7 @@ _PROFILES: dict[str, Profile] = {}
 
 
 def register(profile: Profile) -> Profile:
+    """Add a profile to the global registry."""
     if profile.name in _PROFILES:
         raise ValueError(f"Profile already registered: {profile.name}")
     _PROFILES[profile.name] = profile
@@ -121,6 +122,7 @@ def register(profile: Profile) -> Profile:
 
 
 def get_profile(name: str) -> Profile:
+    """Return a registered profile, resolving inherited base profile fields."""
     try:
         profile = _PROFILES[name]
     except KeyError as exc:
@@ -145,6 +147,7 @@ def get_profile(name: str) -> Profile:
 
 
 def list_profiles(verbose: bool = False) -> list[str]:
+    """List registered profile names, optionally with descriptions."""
     if verbose:
         return [
             f"{name:20} - {_PROFILES[name].description}" for name in sorted(_PROFILES)
@@ -204,27 +207,32 @@ dusty_8m_model = ModelSpec(
 # =============================================================================
 # PROFILE REGISTRY
 # =============================================================================
-# Profiles are organized into three tiers, allowing users to scale from
-# a minimal toy model up to a production-grade architecture:
+# A Profile is a named configuration bundle. It connects:
+#   - model architecture
+#   - tokenizer
+#   - training dataset/checkpoint paths
+#   - generation defaults
+#   - optional Hugging Face artifact metadata
 #
-# Tier 1 — Dusty (Core)
-#   The fully-supported primary pipeline. Features a custom BPE tokenizer,
-#   synthetic pretrain/SFT datasets, and the 8M parameter architecture.
-#   Profiles: dusty8m, sft_dusty8m
+# Most commands take a --profile argument, then look up one of these registered
+# profiles instead of asking the user to pass many individual paths and flags.
 #
-# Tier 2 — Scratch (Experimental)
-#   A sandbox environment. Uses the same scratch architecture family but with
-#   the standard GPT-2 tokenizer (r50k) and a larger embedding dimension.
-#   Profile: scratch_small
+# Profiles are grouped by purpose:
 #
-# Tier 3 — SmolLM2 (Pre-configured Baselines)
-#   Exact architectural specifications required to flawlessly load pre-trained
-#   Hugging Face SmolLM2 models without guessing hyperparameters.
-#   Profiles: smollm2_135m, smollm2_360m, sft_smollm2_135m
+# 1. Dusty core path:
+#    dusty8m     - base 8M model trained from scratch
+#    sft_dusty8m - Dusty persona fine-tune initialized from dusty8m
 #
-#   Quick Start: Download, convert, and run a SmolLM2 profile:
-#     uv run python -m dustylm.artifacts download --profile smollm2_135m --convert
-#     uv run python -m dustylm.generate --profile smollm2_135m --prompt "Hello, robot."
+# 2. Scratch sandbox:
+#    scratch_small - experimental scratch model using the GPT-2/r50k tokenizer
+#
+# 3. SmolLM2 baselines:
+#    smollm2_135m, smollm2_360m - pretrained Hugging Face model shapes
+#    sft_smollm2_135m           - SFT profile for the 135M baseline
+#
+# The TrainingSpec batch size and checkpoint interval below are conservative
+# direct-Python defaults. The Makefile and notebooks override them for the
+# current Colab golden path (batch 224, checkpoints every 50 steps).
 # =============================================================================
 
 register(
@@ -239,7 +247,7 @@ register(
             / "datasets"
             / "dusty_pretrain_tokenized",
             batch_size=32,
-            learning_rate=5e-4,
+            learning_rate=3e-3,
             output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
             max_seq_len=256,
             weight_decay=0.01,
@@ -267,7 +275,7 @@ register(
             task=TrainingTask.SFT,
             dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_tokenized",
             batch_size=32,
-            learning_rate=1e-5,
+            learning_rate=1e-3,
             output_checkpoint=REPO_ROOT
             / "artifacts"
             / "checkpoints"
@@ -406,6 +414,10 @@ register(
             / "checkpoints"
             / "sft_smollm2_135m.pt",
             max_seq_len=2048,
+            init_checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "smollm2_135m.pt",
         ),
         generation=replace(
             get_profile("smollm2_135m").generation,
