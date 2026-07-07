@@ -11,7 +11,7 @@ from dustylm.generate import (
 from dustylm.config import get_profile
 from dustylm.checkpoint import resolve_profile_name_for_checkpoint
 
-STEP = 15700
+STEP = 200
 TEMP = 0.6
 RUNS = 5
 
