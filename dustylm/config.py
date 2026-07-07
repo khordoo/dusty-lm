@@ -406,6 +406,10 @@ register(
             / "checkpoints"
             / "sft_smollm2_135m.pt",
             max_seq_len=2048,
+            init_checkpoint_path=REPO_ROOT
+            / "artifacts"
+            / "checkpoints"
+            / "smollm2_135m.pt",
         ),
         generation=replace(
             get_profile("smollm2_135m").generation,

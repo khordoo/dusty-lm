@@ -20,7 +20,7 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from dustylm.config import IGNORE_INDEX, Profile, get_profile, list_profiles
+from dustylm.config import IGNORE_INDEX, ModelFamily, Profile, get_profile, list_profiles
 from dustylm.modeling import build_model
 from dustylm.timing import timed_step
 
@@ -137,6 +137,12 @@ def load_init_checkpoint_if_configured(model, profile: Profile, device: str):
         hint = ""
         if profile.name == "sft_dusty8m":
             hint = " Run `make train-pretrain` first."
+        elif profile.model.family == ModelFamily.SMOLLM2:
+            hint = (
+                " Run `make download-smollm2` or"
+                " `uv run python -m dustylm.artifacts download"
+                f" --profile {profile.base_profile or profile.name} --convert`."
+            )
         raise FileNotFoundError(
             f"Initial checkpoint not found: {checkpoint_path}.{hint}"
         )

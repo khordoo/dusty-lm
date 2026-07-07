@@ -61,7 +61,7 @@ EVAL_TEMPERATURE ?=
 EVAL_MAX_NEW_TOKENS ?=
 E2E_FLAGS ?=
 
-.PHONY: help chat lint download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
+.PHONY: help chat lint download-models download-smollm2 download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
@@ -70,6 +70,10 @@ help:
 	@printf "  make download-models            Download pretrained weights + tokenizer from Hugging Face Hub\n"
 	@printf "  make chat                       Chat with local SFT inference CLI\n"
 	@printf "  make generate                   Generate text with the dusty8m profile\n"
+	@printf "\n"
+	@printf "$(BOLD)SmolLM2 Baselines:$(NC)\n"
+	@printf "  make download-smollm2            Download and convert SmolLM2 pretrained weights (default: 135M)\n"
+	@printf "  make download-smollm2 SMOLML2_PROFILE=smollm2_360m  Download 360M variant\n"
 	@printf "\n"
 	@printf "$(BOLD)Data:$(NC)\n"
 	@printf "  make download-datasets          Download raw training datasets (TinyStories + SFT logs)\n"
@@ -131,6 +135,14 @@ download-models:
 	@mv -f artifacts/tokenizers/tokenizer.json artifacts/tokenizers/dusty_tokenizer.json
 	@printf "$(GREEN)  ✔ dusty_tokenizer.json$(NC)\n"
 	@printf "$(GREEN)✔ Models ready. Run 'make chat' or 'make generate'.$(NC)\n"
+
+SMOLML2_PROFILE ?= smollm2_135m
+
+download-smollm2:
+	@mkdir -p artifacts/hf artifacts/checkpoints
+	@printf "$(CYAN)Downloading and converting $(SMOLML2_PROFILE)...$(NC)\n"
+	uv run python -m dustylm.artifacts download --profile $(SMOLML2_PROFILE) --convert
+	@printf "$(GREEN)✔ $(SMOLML2_PROFILE) ready.$(NC)\n"
 
 # =============================================================================
 # 2. Data Engineering Pipeline
