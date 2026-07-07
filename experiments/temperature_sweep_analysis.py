@@ -1,7 +1,7 @@
 """Analyze temperature sweep results."""
 
 import csv
-from collections import defaultdict, Counter
+from collections import defaultdict
 
 with open("artifacts/temperature_eval.csv") as f:
     rows = list(csv.DictReader(f))

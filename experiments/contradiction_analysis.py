@@ -13,10 +13,9 @@ for r in rows:
 def stuck_has_contradiction(text):
     t = text.lower()
     # "no. i am stuck" or "not stuck. i am stuck" or "i am not stuck. i am just stuck"
-    has_no = t.startswith("no") or "not" in t
+    t.startswith("no") or "not" in t
     says_stuck = "stuck" in t
     # Check if every "stuck" is part of "not stuck"
-    all_stuck_are_negated = False
     if says_stuck:
         # Split by sentences
         sentences = [s.strip() for s in t.replace("!", ".").replace("?", ".").split(".") if s.strip()]

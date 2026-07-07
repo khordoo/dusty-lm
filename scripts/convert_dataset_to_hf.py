@@ -70,11 +70,11 @@ def main(argv=None):
 
     if not args.input.exists():
         print(f"Error: {args.input} not found.")
-        print(f"Expected a JSONL file with one object per line:")
-        print(f'  {{"category": "...", "user": "...", "dusty": "..."}}')
+        print("Expected a JSONL file with one object per line:")
+        print('  {"category": "...", "user": "...", "dusty": "..."}')
         print()
-        print(f"Generate the dataset with `make synthesize-sft` or download it with `make download-datasets`.")
-        print(f"The default path is artifacts/datasets/dusty_sft.jsonl. Pass --input <path> to use a custom file.")
+        print("Generate the dataset with `make synthesize-sft` or download it with `make download-datasets`.")
+        print("The default path is artifacts/datasets/dusty_sft.jsonl. Pass --input <path> to use a custom file.")
         return
 
     print(f"Loading dataset from {args.input}...")

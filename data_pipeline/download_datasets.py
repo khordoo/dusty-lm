@@ -9,10 +9,10 @@ data on a high-end GPU, override the slice:
 """
 
 import argparse
+import json
 from pathlib import Path
 
 from datasets import load_dataset
-import json
 
 from dustylm.timing import timed_step
 

@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 from dustylm.generate import generate_text

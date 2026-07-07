@@ -8,17 +8,11 @@ from __future__ import annotations
 
 import argparse
 import csv
-import sys
 from pathlib import Path
 
 import torch
 
-from dustylm.checkpoint import (
-    GENERATION_PROFILE_DEFAULT,
-    resolve_profile_name_for_checkpoint,
-)
 from dustylm.config import get_profile
-from dustylm.data_prep import normalize_model_text
 from dustylm.generate import (
     decode_tokens,
     encode_prompt,
@@ -28,8 +22,6 @@ from dustylm.generate import (
     resolve_num_new_tokens,
     sample_next_token,
 )
-from dustylm.modeling import build_model, build_tokenizer
-from dustylm.tokenizer import CHATML_END_TOKEN, CHATML_START_TOKEN
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -63,7 +55,6 @@ def generate_one(model, tokenizer, device, profile, prompt, top_p, temperature):
 
     kv_cache = model.empty_kv_cache()
     input_tokens = tokens
-    finish_reason = "length"
 
     with torch.inference_mode():
         for _ in range(num_new_tokens):
@@ -76,12 +67,10 @@ def generate_one(model, tokenizer, device, profile, prompt, top_p, temperature):
             generated_ids.append(next_token_id)
 
             if (profile.generation.eos_token_id is not None and next_token_id == profile.generation.eos_token_id) or (im_end_id is not None and next_token_id == im_end_id):
-                finish_reason = "stop"
                 break
 
             tail_text = decode_tokens(tokenizer, generated_ids[-10:])
             if profile.generation.eos_text is not None and profile.generation.eos_text in tail_text:
-                finish_reason = "stop"
                 break
 
             input_tokens = next_token.unsqueeze(0)

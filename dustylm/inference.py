@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import replace
-from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -21,13 +20,13 @@ from dustylm.config import (
     get_profile,
     list_profiles,
 )
+from dustylm.data_prep import normalize_model_text
 from dustylm.generate import (
     encode_prompt,
     generate_token_ids,
     get_device,
 )
 from dustylm.modeling import build_model, build_tokenizer
-from dustylm.data_prep import normalize_model_text
 from dustylm.tokenizer import CHATML_END_TOKEN, CHATML_START_TOKEN
 
 SUPPORTED_ROLES = {"system", "user", "assistant"}

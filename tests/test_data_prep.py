@@ -7,8 +7,8 @@ from dustylm.config import IGNORE_INDEX, get_profile
 from dustylm.data_prep import (
     DOCUMENT_SEPARATOR,
     encode_token_ids,
-    main,
     iter_plain_text_documents,
+    main,
     normalize_model_text,
     prepare_chatml_sft_training_example,
     prepare_jsonl_sft_dataset,

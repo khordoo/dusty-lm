@@ -3,14 +3,14 @@
 import csv
 from pathlib import Path
 
+from dustylm.checkpoint import resolve_profile_name_for_checkpoint
+from dustylm.config import get_profile
 from dustylm.generate import (
     encode_prompt,
     generate_token_ids,
     load_model,
     prepare_generation_prompt,
 )
-from dustylm.config import get_profile
-from dustylm.checkpoint import resolve_profile_name_for_checkpoint
 
 STEPS = [15700, 15800]
 TEMPERATURES = [0.2, 0.4, 0.6, 0.8, 1.0]
