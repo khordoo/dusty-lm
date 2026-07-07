@@ -16,7 +16,7 @@ import json
 
 DEFAULT_TINYSTORIES_OUT = Path("artifacts/datasets/tinystories_base.txt")
 DEFAULT_DUSTY_SFT_OUT = Path("artifacts/datasets/dusty_sft.jsonl")
-DEFAULT_TINYSTORIES_SLICE = "train[:50000]"
+DEFAULT_TINYSTORIES_SLICE = "train[:100000]"
 DEFAULT_DUSTY_CHAT_REPO = "mkhordoo/dusty-chat"
 DEFAULT_DUSTY_CHAT_FILE = "dusty_sft.jsonl"
 

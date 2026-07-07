@@ -169,6 +169,9 @@ The SFT format is one conversation per line:
 make download-datasets   # Downloads TinyStories + Dusty SFT
 ```
 
+By default this downloads a 100k TinyStories slice for pretraining, which keeps
+the Colab path practical while still giving the 8M model enough grammar signal.
+
 **Option B: The Custom Persona Path (Advanced)** — If you want to build a completely new AI persona (e.g., a toaster or a cat), use the data pipeline to generate your own synthetic datasets:
 
 ```bash

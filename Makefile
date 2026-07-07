@@ -7,7 +7,7 @@ DIM    := \033[2m
 NC     := \033[0m
 
 EPOCHS ?= 23
-CHECKPOINT_EVERY_STEPS ?= 100
+CHECKPOINT_EVERY_STEPS ?= 50
 CHECKPOINT_STEP ?=
 PROMPT ?= $(strip Once upon a time)
 PROFILE ?= dusty8m
@@ -22,7 +22,7 @@ DEVICE ?=
 DUSTY_MODEL ?= qwen/qwen3-235b-a22b-2507:floor
 DUSTY_FALLBACK_MODEL ?= openai/gpt-oss-120b:floor
 DUSTY_SFT_PER_CATEGORY ?= 500
-BATCH_SIZE ?= 32
+BATCH_SIZE ?= 224
 DUSTY_SFT_BATCH_SIZE ?= 20
 DUSTY_SFT_OUT ?= artifacts/datasets/dusty_sft.jsonl
 DUSTY_SFT_REJECTED ?= artifacts/datasets/dusty_sft_rejected.jsonl
@@ -59,6 +59,7 @@ EVAL_RUN_ID ?=
 EVAL_TOP_P ?=
 EVAL_TEMPERATURE ?=
 EVAL_MAX_NEW_TOKENS ?=
+E2E_FLAGS ?=
 
 .PHONY: help chat download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
 
@@ -82,10 +83,10 @@ help:
 	@printf "\n"
 	@printf "$(BOLD)Training:$(NC)\n"
 	@printf "  make train-pretrain EPOCHS=1    Train the dusty8m profile\n"
-	@printf "  make train-sft EPOCHS=1         Train the sft_dusty8m profile\n"
+	@printf "  make train-sft EPOCHS=2         Train the sft_dusty8m profile\n"
 	@printf "\n"
 	@printf "$(BOLD)Evaluation:$(NC)\n"
-	@printf "  make eval-checkpoints EVAL_STEPS=\"900 19600\"  Compare checkpoint outputs\n"
+	@printf "  make eval-checkpoints EVAL_STEPS=\"150 200 250\"  Compare checkpoint outputs\n"
 	@printf "\n"
 	@printf "$(BOLD)Export:$(NC)\n"
 	@printf "  make serve-web                  Serve browser demo locally\n"
@@ -214,7 +215,7 @@ train-sft:
 
 eval-checkpoints:
 	@if [ -z "$(strip $(EVAL_STEPS))" ]; then \
-		printf "$(RED)Set EVAL_STEPS, for example: make eval-checkpoints EVAL_STEPS=\"900 19600\"$(NC)\n"; \
+		printf "$(RED)Set EVAL_STEPS, for example: make eval-checkpoints EVAL_STEPS=\"150 200 250\"$(NC)\n"; \
 		exit 1; \
 	fi
 	@printf "$(YELLOW)Comparing checkpoints for $(EVAL_PROFILE)...$(NC)\n"
@@ -330,17 +331,4 @@ train-end-to-end:
 	@printf "$(CYAN)==========================================$(NC)\n"
 	@printf "$(CYAN)   Starting End-to-End DustyLM Pipeline   $(NC)\n"
 	@printf "$(CYAN)==========================================$(NC)\n"
-	@printf "\n"
-	@printf "$(YELLOW)[1/4] Tokenizing pre-training data...$(NC)\n"
-	make data-pretrain
-	@printf "\n"
-	@printf "$(YELLOW)[2/4] Running pre-training phase (Epochs: 1)...$(NC)\n"
-	make train-pretrain EPOCHS=1
-	@printf "\n"
-	@printf "$(YELLOW)[3/4] Generating SFT data...$(NC)\n"
-	make data-sft
-	@printf "\n"
-	@printf "$(YELLOW)[4/4] Running SFT phase (Epochs: 21)...$(NC)\n"
-	make train-sft EPOCHS=21
-	@printf "\n"
-	@printf "$(GREEN)✔ End-to-End Pipeline complete! All checkpoints saved to artifacts/.$(NC)\n"
+	uv run python scripts/train_end_to_end.py $(E2E_FLAGS)
