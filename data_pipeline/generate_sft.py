@@ -1124,10 +1124,10 @@ def generate_dataset(
     if acceptance_window < 1:
         raise ValueError("acceptance_window must be at least 1")
 
-    api_key = os.environ.get("OPENAI_API_KEY", "")
+    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENROUTER_API_KEY", "")
     base_url = os.environ.get("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
     if not api_key:
-        raise RuntimeError("Set OPENAI_API_KEY to your OpenAI-compatible API key.")
+        raise RuntimeError("Set OPENAI_API_KEY or OPENROUTER_API_KEY.")
     client = OpenAI(
         base_url=base_url,
         api_key=api_key,
@@ -1499,8 +1499,8 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.mode == "generate":
-        if not os.environ.get("OPENAI_API_KEY"):
-            raise RuntimeError("Set OPENAI_API_KEY to your OpenAI-compatible API key.")
+        if not os.environ.get("OPENAI_API_KEY") and not os.environ.get("OPENROUTER_API_KEY"):
+            raise RuntimeError("Set OPENAI_API_KEY or OPENROUTER_API_KEY.")
 
         generate_dataset(
             out_path=args.out,

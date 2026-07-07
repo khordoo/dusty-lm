@@ -9,6 +9,7 @@ the full sequence at every step:
 """
 
 import argparse
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -136,7 +137,6 @@ def resolve_num_new_tokens(
 
 
 def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
-    # prompt = prompt.replace("\\n", "\n")
     if CHATML_START_TOKEN in prompt:
         return prompt
 
@@ -192,7 +192,10 @@ def load_model(
         checkpoint_step=checkpoint_step,
         checkpoint_path=checkpoint_path,
     )
-    print("loading checkpoint from:", checkpoint_path)
+    if not checkpoint_path.exists():
+        print(f"Checkpoint not found: {checkpoint_path}", file=sys.stderr)
+        print("Run `make download-models` or `make train-sft` first.", file=sys.stderr)
+        sys.exit(1)
     state_dict = load_state_dict(checkpoint_path, map_location=device)
     # RoPE caches are derived buffers, not learned parameters.
     state_dict.pop("rope.sin_cache", None)

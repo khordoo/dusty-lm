@@ -64,6 +64,11 @@ def detect_profile_from_state_dict(
 
 
 def get_sidecar_config_paths(checkpoint_path: str | Path) -> list[Path]:
+    """Return candidate sidecar JSON paths for a checkpoint file.
+
+    Looks for a JSON file with the same stem as the checkpoint, or a
+    ``config.json`` in the parent directory.
+    """
     checkpoint_path = Path(checkpoint_path)
     return [
         checkpoint_path.with_suffix(".json"),
@@ -72,10 +77,23 @@ def get_sidecar_config_paths(checkpoint_path: str | Path) -> list[Path]:
 
 
 def read_sidecar_profile_name(checkpoint_path: str | Path) -> str | None:
+    """Read the ``profile_name`` field from a sidecar JSON file, if any.
+
+    A sidecar is an optional JSON file placed next to a checkpoint ``.pt``
+    that records which profile the checkpoint belongs to.  This lets users
+    rename or relocate checkpoint files without losing profile metadata.
+
+    Returns ``None`` when no sidecar is found, the JSON is malformed, or
+    the ``profile_name`` field is missing/empty.  Errors degrade gracefully
+    so the caller can fall back to state-dict key sniffing.
+    """
     for config_path in get_sidecar_config_paths(checkpoint_path):
         if not config_path.exists():
             continue
-        config = json.loads(config_path.read_text())
+        try:
+            config = json.loads(config_path.read_text())
+        except json.JSONDecodeError:
+            continue
         profile_name = config.get("profile_name")
         if isinstance(profile_name, str) and profile_name:
             return profile_name
@@ -89,6 +107,14 @@ def resolve_profile_name_for_checkpoint(
     default_profile: str = CHAT_PROFILE_DEFAULT,
     mode: str = "chat",
 ) -> str:
+    """Resolve which profile to use for a given checkpoint.
+
+    Resolution order:
+    1. ``explicit_profile`` if provided (CLI ``--profile`` flag).
+    2. Sidecar JSON next to the checkpoint, if present and valid.
+    3. State-dict key sniffing (detect SmolLM2 vs DustyLM).
+    4. ``default_profile`` as the final fallback.
+    """
     if explicit_profile is not None:
         return explicit_profile
     if checkpoint_path is None:

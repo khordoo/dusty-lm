@@ -61,7 +61,7 @@ EVAL_TEMPERATURE ?=
 EVAL_MAX_NEW_TOKENS ?=
 E2E_FLAGS ?=
 
-.PHONY: help chat download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
+.PHONY: help chat lint download-models download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
@@ -92,6 +92,9 @@ help:
 	@printf "  make serve-web                  Serve browser demo locally\n"
 	@printf "  make export-onnx                Export ONNX artifacts to docs/\n"
 	@printf "\n"
+	@printf "$(BOLD)Quality:$(NC)\n"
+	@printf "  make lint                      Run ruff linter\n"
+	@printf "\n"
 	@printf "$(BOLD)Hub:$(NC)\n"
 	@printf "  make stage-hub                  Stage both base + SFT artifacts locally (dry run)\n"
 	@printf "  make stage-hub HUB_TARGET=base  Stage only base artifacts\n"
@@ -103,6 +106,11 @@ help:
 	@printf "  make push-hub HF_REPO_ID=...    Push a single repo\n"
 	@printf "  make push-dataset               Convert and push SFT dataset to Hugging Face\n"
 	@printf "  make tensorboard                Plot training logs from artifacts/tensorboard/\n"
+
+lint:
+	@echo "$(CYAN)Running ruff linter...$(NC)"
+	uv run --dev ruff check .
+	@echo "$(GREEN)Lint passed.$(NC)"
 
 # =============================================================================
 # 1. Model & Artifacts Pipeline
