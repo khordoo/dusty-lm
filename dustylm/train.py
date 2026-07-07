@@ -22,6 +22,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from dustylm.config import IGNORE_INDEX, Profile, get_profile, list_profiles
 from dustylm.modeling import build_model
+from dustylm.timing import timed_step
 
 
 def get_device_and_dtype():
@@ -262,12 +263,13 @@ def train(
 
 def main(argv=None):
     args = parse_args(argv)
-    train(
-        get_profile(args.profile),
-        num_epochs=args.epochs,
-        checkpoint_every_steps=args.checkpoint_every_steps,
-        batch_size=args.batch_size,
-    )
+    with timed_step(f"Train {args.profile}"):
+        train(
+            get_profile(args.profile),
+            num_epochs=args.epochs,
+            checkpoint_every_steps=args.checkpoint_every_steps,
+            batch_size=args.batch_size,
+        )
 
 
 if __name__ == "__main__":

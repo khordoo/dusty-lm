@@ -20,6 +20,7 @@ from dustylm.config import (
     list_profiles,
 )
 from dustylm.modeling import build_tokenizer
+from dustylm.timing import timed_step
 
 DEFAULT_PROFILE_NAME = "scratch_small"
 DOCUMENT_SEPARATOR = "<|endoftext|>"
@@ -282,14 +283,15 @@ def main(argv=None):
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
 
-    if profile.training.task == TrainingTask.PRETRAIN:
-        prepare_scratch_text_dataset(profile)
-        return
-    if profile.training.task == TrainingTask.SFT:
-        prepare_jsonl_sft_dataset(profile)
-        return
+    with timed_step(f"Prepare tokenized data for {profile.name}"):
+        if profile.training.task == TrainingTask.PRETRAIN:
+            prepare_scratch_text_dataset(profile)
+            return
+        if profile.training.task == TrainingTask.SFT:
+            prepare_jsonl_sft_dataset(profile)
+            return
 
-    raise ValueError(f"Unsupported training task: {profile.training.task}")
+        raise ValueError(f"Unsupported training task: {profile.training.task}")
 
 
 if __name__ == "__main__":

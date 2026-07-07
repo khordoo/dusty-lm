@@ -14,6 +14,8 @@ from pathlib import Path
 from datasets import load_dataset
 import json
 
+from dustylm.timing import timed_step
+
 DEFAULT_TINYSTORIES_OUT = Path("artifacts/datasets/tinystories_base.txt")
 DEFAULT_DUSTY_SFT_OUT = Path("artifacts/datasets/dusty_sft.jsonl")
 DEFAULT_TINYSTORIES_SLICE = "train[:100000]"
@@ -93,12 +95,13 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
 
 def main(argv=None):
     args = parse_args(argv)
-    download_tinystories(args.tinystories_slice, args.tinystories_out)
-    download_dusty_sft(
-        args.dusty_chat_repo,
-        args.dusty_chat_file,
-        args.dusty_sft_out,
-    )
+    with timed_step("Download raw datasets"):
+        download_tinystories(args.tinystories_slice, args.tinystories_out)
+        download_dusty_sft(
+            args.dusty_chat_repo,
+            args.dusty_chat_file,
+            args.dusty_sft_out,
+        )
     print("Datasets are ready. Next: make tokenizer")
 
 

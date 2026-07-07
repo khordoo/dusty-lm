@@ -6,6 +6,7 @@ from tokenizers import ByteLevelBPETokenizer
 
 from dustylm.config import get_profile
 from dustylm.data_prep import normalize_model_text, read_jsonl_sft_rows
+from dustylm.timing import timed_step
 
 base = Path(__file__).parents[1]
 TOKENIZER_TEXT_CORPORA = [
@@ -84,5 +85,10 @@ def train_tokenizer():
     print(f"✨ Success! Tokenizer saved to {OUTPUT_TOKENIZER_PATH}")
 
 
+def main() -> None:
+    with timed_step("Train tokenizer"):
+        train_tokenizer()
+
+
 if __name__ == "__main__":
-    train_tokenizer()
+    main()

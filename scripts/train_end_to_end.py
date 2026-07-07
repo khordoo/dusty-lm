@@ -34,6 +34,7 @@ from data_pipeline.download_datasets import (
 )
 from dustylm.config import TrainingTask, get_profile, list_profiles
 from dustylm.data_prep import prepare_jsonl_sft_dataset, prepare_scratch_text_dataset
+from dustylm.timing import timed_step
 from dustylm.tokenizer import train_tokenizer
 from dustylm.train import get_step_checkpoint_path, train
 
@@ -174,13 +175,6 @@ def parse_args(argv: list[str] | None = None):
     return parser.parse_args(argv)
 
 
-def print_stage(index: int, total: int, title: str) -> None:
-    print()
-    print("=" * 80)
-    print(f"[{index}/{total}] {title}")
-    print("=" * 80)
-
-
 def remove_tokenized_dataset(profile_name: str) -> None:
     profile = get_profile(profile_name)
     if profile.training is None:
@@ -238,60 +232,60 @@ def run_pipeline(args) -> None:
     print(f"SFT:      {args.sft_profile}, epochs={args.sft_epochs}")
     print(f"Promote:  pretrain_step={args.best_pretrain_step}, sft_step={args.best_sft_step}")
 
-    print_stage(1, 7, "Download raw datasets")
-    if args.skip_download:
-        print("Skipping download; using existing raw dataset files.")
-    else:
-        download_tinystories(args.tinystories_slice, args.tinystories_out)
-        download_dusty_sft(
-            args.dusty_chat_repo,
-            args.dusty_chat_file,
-            args.dusty_sft_out,
-        )
+    with timed_step("Download raw datasets", stage="1/7"):
+        if args.skip_download:
+            print("Skipping download; using existing raw dataset files.")
+        else:
+            download_tinystories(args.tinystories_slice, args.tinystories_out)
+            download_dusty_sft(
+                args.dusty_chat_repo,
+                args.dusty_chat_file,
+                args.dusty_sft_out,
+            )
 
-    print_stage(2, 7, "Train tokenizer")
-    if args.skip_tokenizer:
-        print("Skipping tokenizer training; using existing tokenizer.")
-    else:
-        train_tokenizer()
+    with timed_step("Train tokenizer", stage="2/7"):
+        if args.skip_tokenizer:
+            print("Skipping tokenizer training; using existing tokenizer.")
+        else:
+            train_tokenizer()
 
-    print_stage(3, 7, "Prepare tokenized datasets")
-    if args.skip_data_prep:
-        print("Skipping data preparation; using existing tokenized datasets.")
-    else:
-        if not args.reuse_tokenized_data:
-            remove_tokenized_dataset(args.pretrain_profile)
-            remove_tokenized_dataset(args.sft_profile)
-        prepare_dataset_for_profile(args.pretrain_profile)
-        prepare_dataset_for_profile(args.sft_profile)
+    with timed_step("Prepare tokenized datasets", stage="3/7"):
+        if args.skip_data_prep:
+            print("Skipping data preparation; using existing tokenized datasets.")
+        else:
+            if not args.reuse_tokenized_data:
+                remove_tokenized_dataset(args.pretrain_profile)
+                remove_tokenized_dataset(args.sft_profile)
+            prepare_dataset_for_profile(args.pretrain_profile)
+            prepare_dataset_for_profile(args.sft_profile)
 
-    print_stage(4, 7, "Run base pretraining")
-    if args.skip_pretrain:
-        print("Skipping pretraining; using existing base checkpoint.")
-    else:
-        train(
-            get_profile(args.pretrain_profile),
-            num_epochs=args.pretrain_epochs,
-            checkpoint_every_steps=args.checkpoint_every_steps,
-            batch_size=args.pretrain_batch_size,
-        )
+    with timed_step("Run base pretraining", stage="4/7"):
+        if args.skip_pretrain:
+            print("Skipping pretraining; using existing base checkpoint.")
+        else:
+            train(
+                get_profile(args.pretrain_profile),
+                num_epochs=args.pretrain_epochs,
+                checkpoint_every_steps=args.checkpoint_every_steps,
+                batch_size=args.pretrain_batch_size,
+            )
 
-    print_stage(5, 7, "Promote selected base checkpoint")
-    promote_step_checkpoint(args.pretrain_profile, args.best_pretrain_step)
+    with timed_step("Promote selected base checkpoint", stage="5/7"):
+        promote_step_checkpoint(args.pretrain_profile, args.best_pretrain_step)
 
-    print_stage(6, 7, "Run SFT")
-    if args.skip_sft:
-        print("Skipping SFT; using existing SFT checkpoint.")
-    else:
-        train(
-            get_profile(args.sft_profile),
-            num_epochs=args.sft_epochs,
-            checkpoint_every_steps=args.checkpoint_every_steps,
-            batch_size=args.sft_batch_size,
-        )
+    with timed_step("Run SFT", stage="6/7"):
+        if args.skip_sft:
+            print("Skipping SFT; using existing SFT checkpoint.")
+        else:
+            train(
+                get_profile(args.sft_profile),
+                num_epochs=args.sft_epochs,
+                checkpoint_every_steps=args.checkpoint_every_steps,
+                batch_size=args.sft_batch_size,
+            )
 
-    print_stage(7, 7, "Promote selected SFT checkpoint")
-    promote_step_checkpoint(args.sft_profile, args.best_sft_step)
+    with timed_step("Promote selected SFT checkpoint", stage="7/7"):
+        promote_step_checkpoint(args.sft_profile, args.best_sft_step)
     print()
     print("End-to-end pipeline complete.")
 
