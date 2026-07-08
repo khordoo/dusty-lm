@@ -229,13 +229,16 @@ def train(
 
     global_step = 0
     total_batches = len(train_loader)
+    import time
+
+    t0 = time.time()
     for epoch in range(num_epochs):
         for batch_idx, (inputs, targets) in enumerate(train_loader):
             inputs = inputs.to(device)
             targets = targets.to(device)
             optimizer.zero_grad()
 
-            with torch.autocast(device_type=device, dtype=dtype, enabled=device != "cpu"):
+            with torch.autocast(device_type=device, dtype=dtype, enabled=dtype != torch.float32):
                 logits = model(inputs)
                 shift_logits = logits[:, :-1, :].contiguous()
                 shift_targets = targets[:, 1:].contiguous()
@@ -256,8 +259,10 @@ def train(
             print(
                 f"Epoch {epoch + 1}/{num_epochs} | "
                 f"Step {batch_idx + 1}/{total_batches} | "
-                f"Loss: {loss.item():.4f}"
+                f"Loss: {loss.item():.4f} | "
+                f"elapsed sec: {time.time() - t0:0.4f}"
             )
+            print()
             global_step += 1
             save_step_checkpoint_if_due(
                 model=model,
