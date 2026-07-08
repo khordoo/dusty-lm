@@ -46,8 +46,8 @@ DEFAULT_SFT_EPOCHS = 2
 DEFAULT_PRETRAIN_BATCH_SIZE = 224
 DEFAULT_SFT_BATCH_SIZE = 224
 DEFAULT_CHECKPOINT_EVERY_STEPS = 50
-DEFAULT_BEST_PRETRAIN_STEP = 0
-DEFAULT_BEST_SFT_STEP = 0
+DEFAULT_BEST_PRETRAIN_STEP = 0  # 0 = use final checkpoint (last step)
+DEFAULT_BEST_SFT_STEP = 0  # 0 = use final checkpoint (last step)
 
 
 def parse_args(argv: list[str] | None = None):
