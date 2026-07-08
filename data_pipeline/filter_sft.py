@@ -164,15 +164,12 @@ def target_counts_by_category(
 ) -> dict[str, int]:
     if target_total < len(categories):
         raise ValueError(
-            f"target_total={target_total} is too small to cover "
-            f"{len(categories)} categories"
+            f"target_total={target_total} is too small to cover {len(categories)} categories"
         )
 
     missing = [category for category in categories if not grouped.get(category)]
     if missing:
-        raise ValueError(
-            "Filtered dataset is missing required categories: " + ", ".join(missing)
-        )
+        raise ValueError("Filtered dataset is missing required categories: " + ", ".join(missing))
 
     target_counts = {category: 1 for category in categories}
     remaining = target_total - len(categories)
@@ -200,15 +197,12 @@ def validate_required_categories(
 ) -> None:
     if target_total < len(categories):
         raise ValueError(
-            f"target_total={target_total} is too small to cover "
-            f"{len(categories)} categories"
+            f"target_total={target_total} is too small to cover {len(categories)} categories"
         )
 
     missing = [category for category in categories if not grouped.get(category)]
     if missing:
-        raise ValueError(
-            "Filtered dataset is missing required categories: " + ", ".join(missing)
-        )
+        raise ValueError("Filtered dataset is missing required categories: " + ", ".join(missing))
 
 
 def target_counts_by_weight(
@@ -225,9 +219,7 @@ def target_counts_by_weight(
 
     while remaining > 0:
         available = [
-            category
-            for category in categories
-            if target_counts[category] < len(grouped[category])
+            category for category in categories if target_counts[category] < len(grouped[category])
         ]
         if not available:
             break
@@ -250,9 +242,7 @@ def target_counts_by_weight(
             break
 
         progressed = False
-        ideal_allocations.sort(
-            key=lambda item: (-item[0], -item[1], categories.index(item[2]))
-        )
+        ideal_allocations.sort(key=lambda item: (-item[0], -item[1], categories.index(item[2])))
         for _, _, category, _ in ideal_allocations:
             if remaining <= 0:
                 break
@@ -367,17 +357,14 @@ def print_summary(
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=(
-            "Filter Dusty SFT JSONL examples by answer token length and write a "
-            "category sample."
+            "Filter Dusty SFT JSONL examples by answer token length and write a category sample."
         )
     )
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT_PATH)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH)
     parser.add_argument("--tokenizer", type=Path, default=DEFAULT_TOKENIZER_PATH)
     parser.add_argument("--target-total", type=int, default=DEFAULT_TARGET_TOTAL)
-    parser.add_argument(
-        "--max-answer-tokens", type=int, default=DEFAULT_MAX_ANSWER_TOKENS
-    )
+    parser.add_argument("--max-answer-tokens", type=int, default=DEFAULT_MAX_ANSWER_TOKENS)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--category-field", default="category")
     parser.add_argument("--answer-field", default="dusty")

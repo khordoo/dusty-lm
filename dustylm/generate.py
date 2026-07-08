@@ -130,9 +130,7 @@ def validate_prompt_length(token_ids: list[int], max_seq_len: int) -> None:
     """Reject prompts that already fill the model context window."""
     prompt_length = len(token_ids)
     if prompt_length >= max_seq_len:
-        raise ValueError(
-            f"Prompt contains {prompt_length} tokens. Model maximum is {max_seq_len}."
-        )
+        raise ValueError(f"Prompt contains {prompt_length} tokens. Model maximum is {max_seq_len}.")
 
 
 def resolve_num_new_tokens(
@@ -153,10 +151,7 @@ def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
     if profile.name != "sft_dusty8m":
         return prompt
 
-    return (
-        f"{CHATML_START_TOKEN}user\n{prompt}{CHATML_END_TOKEN}\n"
-        f"{CHATML_START_TOKEN}assistant\n"
-    )
+    return f"{CHATML_START_TOKEN}user\n{prompt}{CHATML_END_TOKEN}\n{CHATML_START_TOKEN}assistant\n"
 
 
 def resolve_generation_checkpoint_path(
@@ -211,9 +206,7 @@ def load_model(
     state_dict.pop("rope.sin_cache", None)
     state_dict.pop("rope.cos_cache", None)
     model.load_state_dict(state_dict)
-    model.rope.resize_cache(
-        profile.model.max_seq_len + profile.generation.max_new_tokens
-    )
+    model.rope.resize_cache(profile.model.max_seq_len + profile.generation.max_new_tokens)
     model.to(device)
     model.eval()
     return model, tokenizer, device
@@ -337,9 +330,9 @@ def generate_token_ids(
             next_token_id = next_token.item()
             generated_ids.append(next_token_id)
 
-            if (
-                spec.eos_token_id is not None and next_token_id == spec.eos_token_id
-            ) or (im_end_id is not None and next_token_id == im_end_id):
+            if (spec.eos_token_id is not None and next_token_id == spec.eos_token_id) or (
+                im_end_id is not None and next_token_id == im_end_id
+            ):
                 finish_reason = "stop"
                 break
 
@@ -427,9 +420,9 @@ def generate_text(
             generated_ids.append(next_token_id)
 
             # Stop if we hit the config's EOS token OR the ChatML end token
-            if (
-                spec.eos_token_id is not None and next_token_id == spec.eos_token_id
-            ) or (im_end_id is not None and next_token_id == im_end_id):
+            if (spec.eos_token_id is not None and next_token_id == spec.eos_token_id) or (
+                im_end_id is not None and next_token_id == im_end_id
+            ):
                 print("\n\n[Generation stopped: Stop token detected]")
                 break
 
@@ -447,9 +440,7 @@ def generate_text(
             input_tokens = next_token.unsqueeze(0)  # [1, 1]
             print(next_word, end="", flush=True)
         else:
-            print(
-                f"\n\n[Generation stopped: Max new tokens reached ({num_new_tokens})]"
-            )
+            print(f"\n\n[Generation stopped: Max new tokens reached ({num_new_tokens})]")
 
     return decode_tokens(tokenizer, generated_ids)
 

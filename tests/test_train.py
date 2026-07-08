@@ -41,18 +41,12 @@ def test_initialize_random_seed_locks_python_numpy_and_torch(monkeypatch, capsys
     calls = []
 
     monkeypatch.setattr("dustylm.train.random.randint", lambda start, end: 7102)
-    monkeypatch.setattr(
-        "dustylm.train.random.seed", lambda seed: calls.append(("python", seed))
-    )
-    monkeypatch.setattr(
-        "dustylm.train.np.random.seed", lambda seed: calls.append(("numpy", seed))
-    )
+    monkeypatch.setattr("dustylm.train.random.seed", lambda seed: calls.append(("python", seed)))
+    monkeypatch.setattr("dustylm.train.np.random.seed", lambda seed: calls.append(("numpy", seed)))
     monkeypatch.setattr(
         "dustylm.train.torch.manual_seed", lambda seed: calls.append(("torch", seed))
     )
-    monkeypatch.setattr(
-        "dustylm.train.torch.backends.mps.is_available", lambda: False
-    )
+    monkeypatch.setattr("dustylm.train.torch.backends.mps.is_available", lambda: False)
 
     assert initialize_random_seed() == 7102
 
@@ -127,10 +121,7 @@ def test_missing_init_checkpoint_error_points_to_dusty_pretrain(tmp_path):
 
 
 def test_pretraining_profiles_do_not_load_init_checkpoint():
-    assert (
-        load_init_checkpoint_if_configured(object(), get_profile("dusty8m"), "cpu")
-        is False
-    )
+    assert load_init_checkpoint_if_configured(object(), get_profile("dusty8m"), "cpu") is False
 
 
 def test_step_checkpoint_path_uses_output_checkpoint_stem_and_step(tmp_path):

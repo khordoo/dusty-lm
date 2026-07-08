@@ -8,7 +8,4 @@ def test_adapter_maps_representative_hf_keys():
         map_smollm2_key("model.layers.0.self_attn.o_proj.weight")
         == "layers.0.self_attn.out_proj.weight"
     )
-    assert (
-        map_smollm2_key("model.layers.0.mlp.gate_proj.weight")
-        == "layers.0.gate_proj.weight"
-    )
+    assert map_smollm2_key("model.layers.0.mlp.gate_proj.weight") == "layers.0.gate_proj.weight"

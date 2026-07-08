@@ -10,6 +10,7 @@ by = defaultdict(lambda: defaultdict(list))
 for r in rows:
     by[(int(r["checkpoint_step"]), float(r["temperature"]))][r["question"]].append(r["output"])
 
+
 def stuck_has_contradiction(text):
     t = text.lower()
     # "no. i am stuck" or "not stuck. i am stuck" or "i am not stuck. i am just stuck"
@@ -18,12 +19,15 @@ def stuck_has_contradiction(text):
     # Check if every "stuck" is part of "not stuck"
     if says_stuck:
         # Split by sentences
-        sentences = [s.strip() for s in t.replace("!", ".").replace("?", ".").split(".") if s.strip()]
+        sentences = [
+            s.strip() for s in t.replace("!", ".").replace("?", ".").split(".") if s.strip()
+        ]
         stuck_sentences = [s for s in sentences if "stuck" in s]
         negated_stuck = [s for s in stuck_sentences if "not stuck" in s or "not" in s]
         non_negated_stuck = [s for s in stuck_sentences if s not in negated_stuck]
         return len(non_negated_stuck) > 0 and len(negated_stuck) > 0
     return False
+
 
 print("=== STUCK: CONTRADICTION DETECTION ===")
 print(f"{'Step':6s} {'Temp':5s} {'Contradictions':15s} {'Answers'}")

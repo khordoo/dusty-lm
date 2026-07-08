@@ -26,7 +26,9 @@ VARIATIONS = [
 
 
 ckpt = Path("artifacts/checkpoints") / f"dusty8m_sft_step_{STEP}.pt"
-pname = resolve_profile_name_for_checkpoint(ckpt, explicit_profile=None, default_profile="sft_dusty8m", mode="generation")
+pname = resolve_profile_name_for_checkpoint(
+    ckpt, explicit_profile=None, default_profile="sft_dusty8m", mode="generation"
+)
 profile = get_profile(pname)
 model, tokenizer, device = load_model(profile, checkpoint_path=ckpt)
 spec = profile.generation
@@ -34,14 +36,17 @@ spec = profile.generation
 print(f"Step {STEP} @ temp {TEMP} | {RUNS} runs each\n")
 
 for q in VARIATIONS:
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"QUESTION: {q}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     for run in range(RUNS):
         prompt = prepare_generation_prompt(q, profile)
         token_ids = encode_prompt(tokenizer, prompt, spec)
         result = generate_token_ids(
-            model, tokenizer, token_ids, spec,
+            model,
+            tokenizer,
+            token_ids,
+            spec,
             max_seq_len=profile.model.max_seq_len,
             device=device,
             temperature=TEMP,
@@ -49,5 +54,5 @@ for q in VARIATIONS:
             top_k=5,
         )
         text = result.text.strip()
-        print(f"  [{run+1}] {text[:80]}")
+        print(f"  [{run + 1}] {text[:80]}")
     print()

@@ -35,11 +35,21 @@ def extract_topics(html_path: str) -> list[dict]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate checkpoints on all web app topic questions")
-    parser.add_argument("--steps", nargs="+", type=int, required=True, help="Checkpoint steps to evaluate")
-    parser.add_argument("--runs", type=int, default=3, help="Number of generations per prompt per checkpoint")
-    parser.add_argument("--html", default="docs/index.html", help="Path to web app HTML with TOPICS object")
-    parser.add_argument("--output", default="artifacts/webapp_topics_eval.csv", help="Output CSV path")
+    parser = argparse.ArgumentParser(
+        description="Evaluate checkpoints on all web app topic questions"
+    )
+    parser.add_argument(
+        "--steps", nargs="+", type=int, required=True, help="Checkpoint steps to evaluate"
+    )
+    parser.add_argument(
+        "--runs", type=int, default=3, help="Number of generations per prompt per checkpoint"
+    )
+    parser.add_argument(
+        "--html", default="docs/index.html", help="Path to web app HTML with TOPICS object"
+    )
+    parser.add_argument(
+        "--output", default="artifacts/webapp_topics_eval.csv", help="Output CSV path"
+    )
     args = parser.parse_args()
 
     topics = extract_topics(args.html)
@@ -49,16 +59,14 @@ def main():
     rows = []
 
     for step in args.steps:
-        checkpoint_path = (
-            Path("artifacts/checkpoints") / f"dusty8m_sft_step_{step}.pt"
-        )
+        checkpoint_path = Path("artifacts/checkpoints") / f"dusty8m_sft_step_{step}.pt"
         if not checkpoint_path.exists():
             print(f"SKIP: checkpoint {checkpoint_path} not found")
             continue
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Loading checkpoint step {step}...")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         profile_name = resolve_profile_name_for_checkpoint(
             checkpoint_path,
@@ -80,29 +88,40 @@ def main():
                     prompt = prepare_generation_prompt(topic["question"], profile)
                     token_ids = encode_prompt(tokenizer, prompt, spec)
                     result = generate_token_ids(
-                        model, tokenizer, token_ids, spec,
+                        model,
+                        tokenizer,
+                        token_ids,
+                        spec,
                         max_seq_len=profile.model.max_seq_len,
                         device=device,
                     )
                     text = result.text.strip()
-                    rows.append({
-                        "checkpoint_step": step,
-                        "topic_key": topic["key"],
-                        "question": topic["question"],
-                        "run": run + 1,
-                        "output": text,
-                    })
+                    rows.append(
+                        {
+                            "checkpoint_step": step,
+                            "topic_key": topic["key"],
+                            "question": topic["question"],
+                            "run": run + 1,
+                            "output": text,
+                        }
+                    )
                     idx = i * args.runs + run + 1
-                    print(f"[{idx}/{total}] step={step} key={topic['key']:25s} run={run + 1} | {text[:70]}")
+                    print(
+                        f"[{idx}/{total}] step={step} key={topic['key']:25s} run={run + 1} | {text[:70]}"
+                    )
                 except Exception as e:
-                    rows.append({
-                        "checkpoint_step": step,
-                        "topic_key": topic["key"],
-                        "question": topic["question"],
-                        "run": run + 1,
-                        "output": f"ERROR: {e}",
-                    })
-                    print(f"[{i * args.runs + run + 1}/{total}] step={step} key={topic['key']:25s} run={run + 1} | ERROR: {e}")
+                    rows.append(
+                        {
+                            "checkpoint_step": step,
+                            "topic_key": topic["key"],
+                            "question": topic["question"],
+                            "run": run + 1,
+                            "output": f"ERROR: {e}",
+                        }
+                    )
+                    print(
+                        f"[{i * args.runs + run + 1}/{total}] step={step} key={topic['key']:25s} run={run + 1} | ERROR: {e}"
+                    )
 
     with open(args.output, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)

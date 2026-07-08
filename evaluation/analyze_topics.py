@@ -14,10 +14,19 @@ def count_emotion_words(texts, words):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze topic-by-topic comparison between checkpoints")
-    parser.add_argument("--csv", default="artifacts/webapp_topics_eval.csv", help="Path to eval CSV")
-    parser.add_argument("--steps", nargs=2, type=int, default=None,
-                        help="Two checkpoint steps to compare (default: first two found in CSV)")
+    parser = argparse.ArgumentParser(
+        description="Analyze topic-by-topic comparison between checkpoints"
+    )
+    parser.add_argument(
+        "--csv", default="artifacts/webapp_topics_eval.csv", help="Path to eval CSV"
+    )
+    parser.add_argument(
+        "--steps",
+        nargs=2,
+        type=int,
+        default=None,
+        help="Two checkpoint steps to compare (default: first two found in CSV)",
+    )
     args = parser.parse_args()
 
     with open(args.csv) as f:
@@ -50,15 +59,33 @@ def main():
         print(f"{topic_key:25s} {r1_str[:45]:45s} {r2_str[:45]:45s}  {cons}")
 
     print("\n\n=== CONTRADICTION CHECK (stuck / can't do answers) ===")
-    for topic_key in ["stuck_in_corner", "stuck_under_furniture", "needs_help",
-                       "going_home", "cables", "socks", "wet_floor", "stairs"]:
+    for topic_key in [
+        "stuck_in_corner",
+        "stuck_under_furniture",
+        "needs_help",
+        "going_home",
+        "cables",
+        "socks",
+        "wet_floor",
+        "stairs",
+    ]:
         print(f"\n--- {topic_key} ---")
         print(f"{s1}: {by_key[s1][topic_key]}")
         print(f"{s2}: {by_key[s2][topic_key]}")
 
     print("\n\n=== EMOTIONAL DEPTH ===")
-    emotion_words = ["love", "proud", "scared", "brave", "shy", "happy",
-                     "peaceful", "calm", "sad", "danger"]
+    emotion_words = [
+        "love",
+        "proud",
+        "scared",
+        "brave",
+        "shy",
+        "happy",
+        "peaceful",
+        "calm",
+        "sad",
+        "danger",
+    ]
     for topic_key in sorted(by_key[s1].keys()):
         e1 = count_emotion_words(by_key[s1][topic_key], emotion_words)
         e2 = count_emotion_words(by_key[s2][topic_key], emotion_words)

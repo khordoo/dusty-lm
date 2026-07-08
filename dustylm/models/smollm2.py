@@ -119,9 +119,7 @@ class MultiHeadAttention(nn.Module):
     (matching HuggingFace SmolLM2 checkpoint key names).
     """
 
-    def __init__(
-        self, embed_dim, num_heads, num_kv_heads, max_seq_len, rope_base=10000
-    ):
+    def __init__(self, embed_dim, num_heads, num_kv_heads, max_seq_len, rope_base=10000):
         if embed_dim % num_heads != 0:
             raise ValueError("embed_dim must be divisible by num_heads")
         if num_heads % num_kv_heads != 0:
@@ -133,7 +131,7 @@ class MultiHeadAttention(nn.Module):
         self.num_kv_heads = num_kv_heads
         self.head_dim = embed_dim // num_heads
         self.kv_repeat_factor = num_heads // num_kv_heads  # queries per KV group
-        self.q_dim = embed_dim                             # = num_heads * head_dim
+        self.q_dim = embed_dim  # = num_heads * head_dim
         self.kv_dim = num_kv_heads * self.head_dim
         self.max_seq_len = max_seq_len
 
@@ -165,15 +163,15 @@ class MultiHeadAttention(nn.Module):
         v = self.v_proj(x)  # [B, T, kv_dim]
 
         # ---- 2. Reshape into multi-head layout ----
-        q = q.reshape(
-            batch_size, seq_len, self.num_heads, self.head_dim
-        ).transpose(1, 2)   # [B, n_heads, T, head_dim]
-        k = k.reshape(
-            batch_size, seq_len, self.num_kv_heads, self.head_dim
-        ).transpose(1, 2)   # [B, n_kv_heads, T, head_dim]
-        v = v.reshape(
-            batch_size, seq_len, self.num_kv_heads, self.head_dim
-        ).transpose(1, 2)   # [B, n_kv_heads, T, head_dim]
+        q = q.reshape(batch_size, seq_len, self.num_heads, self.head_dim).transpose(
+            1, 2
+        )  # [B, n_heads, T, head_dim]
+        k = k.reshape(batch_size, seq_len, self.num_kv_heads, self.head_dim).transpose(
+            1, 2
+        )  # [B, n_kv_heads, T, head_dim]
+        v = v.reshape(batch_size, seq_len, self.num_kv_heads, self.head_dim).transpose(
+            1, 2
+        )  # [B, n_kv_heads, T, head_dim]
 
         # ---- 3. Apply Rotary Positional Embeddings ----
         q = RotaryPositionalEmbedding.apply(q, context.rope_sin, context.rope_cos)
@@ -215,8 +213,8 @@ class MultiHeadAttention(nn.Module):
             )
             scores = scores.masked_fill(mask, float("-inf"))
 
-        attention_weights = torch.softmax(scores, dim=-1)         # [B, n_heads, T, past_len+T]
-        attention_context = attention_weights @ v                  # [B, n_heads, T, head_dim]
+        attention_weights = torch.softmax(scores, dim=-1)  # [B, n_heads, T, past_len+T]
+        attention_context = attention_weights @ v  # [B, n_heads, T, head_dim]
 
         # ---- 7. Merge heads and project back ----
         attention_context = attention_context.transpose(1, 2).reshape(
@@ -262,15 +260,15 @@ class TransformerBlock(nn.Module):
     def forward(self, x, context: ForwardContext, kv_cache=None):
         # x: [B, T, embed_dim]
         att_out, present_kv = self.self_attn(self.input_layernorm(x), context, kv_cache)
-        x = x + att_out              # residual connection around attention
+        x = x + att_out  # residual connection around attention
 
         # --- SwiGLU FFN ---
-        x_norm = self.post_attention_layernorm(x)      # [B, T, embed_dim]
-        gated = F.silu(self.gate_proj(x_norm))          # [B, T, hidden_dim]
-        up = self.up_proj(x_norm)                       # [B, T, hidden_dim]
-        g = gated * up                                  # element-wise gating
-        out = self.down_proj(g)                         # [B, T, embed_dim]
-        x = x + out                  # residual connection around FFN
+        x_norm = self.post_attention_layernorm(x)  # [B, T, embed_dim]
+        gated = F.silu(self.gate_proj(x_norm))  # [B, T, hidden_dim]
+        up = self.up_proj(x_norm)  # [B, T, hidden_dim]
+        g = gated * up  # element-wise gating
+        out = self.down_proj(g)  # [B, T, embed_dim]
+        x = x + out  # residual connection around FFN
         return x, present_kv
 
 
@@ -342,9 +340,7 @@ class DustyLM(nn.Module):
         use_cache = kv_cache is not None
 
         if use_cache and len(kv_cache) != len(self.layers):
-            raise ValueError(
-                f"Expected {len(self.layers)} cache entries, got {len(kv_cache)}"
-            )
+            raise ValueError(f"Expected {len(self.layers)} cache entries, got {len(kv_cache)}")
 
         # Determine how many tokens are already in the cache so we can
         # compute the correct absolute positions for the new tokens.

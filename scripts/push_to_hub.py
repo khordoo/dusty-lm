@@ -133,9 +133,7 @@ def resolve_source_paths(
         profile,
         checkpoint_path=checkpoint_path,
     )
-    resolved_tokenizer_path = Path(
-        tokenizer_path or profile.model.tokenizer.path_or_name
-    )
+    resolved_tokenizer_path = Path(tokenizer_path or profile.model.tokenizer.path_or_name)
     return resolved_checkpoint_path, resolved_tokenizer_path
 
 
@@ -192,9 +190,7 @@ def write_tokenizer_metadata(staging_dir: Path) -> None:
     if tokenizer_config_path.exists():
         tokenizer_config = json.loads(tokenizer_config_path.read_text())
     tokenizer_config["chat_template"] = HF_CHAT_TEMPLATE
-    tokenizer_config_path.write_text(
-        json.dumps(tokenizer_config, indent=2, sort_keys=True) + "\n"
-    )
+    tokenizer_config_path.write_text(json.dumps(tokenizer_config, indent=2, sort_keys=True) + "\n")
 
     special_tokens_map = {
         "bos_token": CHATML_START_TOKEN,
