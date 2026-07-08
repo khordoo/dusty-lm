@@ -2,14 +2,15 @@
 
 This script is the terminal-friendly companion to the guided training
 notebook. It downloads the raw datasets, trains the tokenizer, prepares
-tokenized datasets, trains the base model, promotes the chosen base checkpoint,
-then trains SFT and promotes the chosen SFT checkpoint.
+tokenized datasets, trains the base model, optionally promotes a selected base
+step checkpoint, then trains SFT and optionally promotes a selected SFT step
+checkpoint.
 
-The default promoted steps are preselected for the current dataset size,
-batch sizes, and epoch counts. If you change those settings, make sure the
-chosen ``--best-pretrain-step`` and ``--best-sft-step`` checkpoints are actually
-created during training. The script fails with a clear error if the selected
-step checkpoint does not exist.
+By default, the script keeps the final checkpoints saved by each training run.
+You can pass ``--best-pretrain-step`` or ``--best-sft-step`` to promote a
+specific step checkpoint instead. If you change dataset size, epochs, batch
+size, or checkpoint interval, make sure the selected step checkpoints are
+actually created during training.
 """
 
 from __future__ import annotations
@@ -45,8 +46,8 @@ DEFAULT_SFT_EPOCHS = 2
 DEFAULT_PRETRAIN_BATCH_SIZE = 224
 DEFAULT_SFT_BATCH_SIZE = 224
 DEFAULT_CHECKPOINT_EVERY_STEPS = 50
-DEFAULT_BEST_PRETRAIN_STEP = 300
-DEFAULT_BEST_SFT_STEP = 250
+DEFAULT_BEST_PRETRAIN_STEP = 0
+DEFAULT_BEST_SFT_STEP = 0
 
 
 def parse_args(argv: list[str] | None = None):
@@ -127,9 +128,9 @@ def parse_args(argv: list[str] | None = None):
         type=int,
         default=DEFAULT_BEST_PRETRAIN_STEP,
         help=(
-            "Pretraining step checkpoint to promote before SFT. Use 0 to keep "
-            "the final epoch checkpoint. If you change dataset size, epochs, "
-            "batch size, or checkpoint interval, choose a step that exists."
+            "Pretraining step checkpoint to promote before SFT. Defaults to 0, "
+            "which keeps the final epoch checkpoint. If you choose a specific "
+            "step, make sure that checkpoint exists."
         ),
     )
     parser.add_argument(
@@ -137,9 +138,9 @@ def parse_args(argv: list[str] | None = None):
         type=int,
         default=DEFAULT_BEST_SFT_STEP,
         help=(
-            "SFT step checkpoint to promote after SFT. Use 0 to keep the final "
-            "epoch checkpoint. If you change dataset size, epochs, batch size, "
-            "or checkpoint interval, choose a step that exists."
+            "SFT step checkpoint to promote after SFT. Defaults to 0, which "
+            "keeps the final epoch checkpoint. If you choose a specific step, "
+            "make sure that checkpoint exists."
         ),
     )
     parser.add_argument(
@@ -228,13 +229,22 @@ def promote_step_checkpoint(profile_name: str, step: int) -> Path | None:
 
 def run_pipeline(args) -> None:
     import torch
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
     dtype = torch.bfloat16 if device == "cuda" else torch.float32
+    pretrain_promote = args.best_pretrain_step or "final"
+    sft_promote = args.best_sft_step or "final"
     print(f"Backend:  device={device}, precision={dtype}")
     print("Starting DustyLM end-to-end training pipeline.")
     print(f"Pretrain: {args.pretrain_profile}, epochs={args.pretrain_epochs}")
     print(f"SFT:      {args.sft_profile}, epochs={args.sft_epochs}")
-    print(f"Promote:  pretrain_step={args.best_pretrain_step}, sft_step={args.best_sft_step}")
+    print(f"Promote:  pretrain={pretrain_promote}, sft={sft_promote}")
 
     with timed_step("Download raw datasets", stage="1/7"):
         if args.skip_download:
