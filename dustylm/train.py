@@ -260,7 +260,7 @@ def train(
                 f"Epoch {epoch + 1}/{num_epochs} | "
                 f"Step {batch_idx + 1}/{total_batches} | "
                 f"Loss: {loss.item():.4f} | "
-                f"elapsed sec: {time.time() - t0:0.4f}"
+                f"Time: {time.time() - t0:.1f}s"
             )
             print()
             global_step += 1
