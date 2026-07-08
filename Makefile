@@ -61,7 +61,7 @@ EVAL_TEMPERATURE ?=
 EVAL_MAX_NEW_TOKENS ?=
 E2E_FLAGS ?=
 
-.PHONY: help chat lint download-models download-smollm2 download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
+.PHONY: help chat format lint download-models download-smollm2 download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
@@ -97,7 +97,8 @@ help:
 	@printf "  make export-onnx                Export ONNX artifacts to docs/\n"
 	@printf "\n"
 	@printf "$(BOLD)Quality:$(NC)\n"
-	@printf "  make lint                      Run ruff linter\n"
+	@printf "  make format                    Format Python code with Ruff\n"
+	@printf "  make lint                      Run Ruff linter\n"
 	@printf "\n"
 	@printf "$(BOLD)Hub:$(NC)\n"
 	@printf "  make stage-hub                  Stage both base + SFT artifacts locally (dry run)\n"
@@ -111,8 +112,13 @@ help:
 	@printf "  make push-dataset               Convert and push SFT dataset to Hugging Face\n"
 	@printf "  make tensorboard                Plot training logs from artifacts/tensorboard/\n"
 
+format:
+	@echo "$(CYAN)Formatting Python code with Ruff...$(NC)"
+	uv run --dev ruff format .
+	@echo "$(GREEN)Formatting complete.$(NC)"
+
 lint:
-	@echo "$(CYAN)Running ruff linter...$(NC)"
+	@echo "$(CYAN)Running Ruff linter...$(NC)"
 	uv run --dev ruff check .
 	@echo "$(GREEN)Lint passed.$(NC)"
 
