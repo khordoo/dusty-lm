@@ -33,7 +33,7 @@ def get_device_and_dtype():
     if torch.cuda.is_available():
         return "cuda", torch.bfloat16
     if torch.backends.mps.is_available():
-        return "mps", torch.float16
+        return "mps", torch.float32
     return "cpu", torch.float32
 
 

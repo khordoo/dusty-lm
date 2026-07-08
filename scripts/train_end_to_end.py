@@ -227,6 +227,10 @@ def promote_step_checkpoint(profile_name: str, step: int) -> Path | None:
 
 
 def run_pipeline(args) -> None:
+    import torch
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+    dtype = torch.bfloat16 if device == "cuda" else torch.float32
+    print(f"Backend:  device={device}, precision={dtype}")
     print("Starting DustyLM end-to-end training pipeline.")
     print(f"Pretrain: {args.pretrain_profile}, epochs={args.pretrain_epochs}")
     print(f"SFT:      {args.sft_profile}, epochs={args.sft_epochs}")
