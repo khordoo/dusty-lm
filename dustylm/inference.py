@@ -91,9 +91,7 @@ def validate_chat_messages(messages: list[dict[str, Any]]) -> None:
         role = message.get("role")
         content = message.get("content")
         if role not in SUPPORTED_ROLES:
-            raise ValueError(
-                "message role must be one of: assistant, system, user"
-            )
+            raise ValueError("message role must be one of: assistant, system, user")
         if not isinstance(content, str):
             raise ValueError("message content must be a string")
 
@@ -182,9 +180,7 @@ class Inference:
         self.spec = self.profile.generation
         self.device = device or get_device()
         self.checkpoint_path = Path(checkpoint_path or self.spec.checkpoint_path)
-        self.tokenizer_path = Path(
-            tokenizer_path or self.profile.model.tokenizer.path_or_name
-        )
+        self.tokenizer_path = Path(tokenizer_path or self.profile.model.tokenizer.path_or_name)
 
         self._require_artifact(
             self.checkpoint_path,
@@ -216,9 +212,7 @@ class Inference:
         state_dict.pop("rope.cos_cache", None)
         model.load_state_dict(state_dict)
         if hasattr(model, "rope"):
-            model.rope.resize_cache(
-                self.profile.model.max_seq_len + self.spec.max_new_tokens
-            )
+            model.rope.resize_cache(self.profile.model.max_seq_len + self.spec.max_new_tokens)
         model.to(self.device)
         model.eval()
         return model
@@ -253,12 +247,8 @@ class Inference:
         if "top_k" in kwargs:
             raise TypeError("top_k is not part of the chat_completion public API")
 
-        chat_turn_limit = (
-            self.spec.max_chat_turns if max_chat_turns is None else max_chat_turns
-        )
-        prompt = format_chatml_messages(
-            trim_chat_messages(messages, chat_turn_limit)
-        )
+        chat_turn_limit = self.spec.max_chat_turns if max_chat_turns is None else max_chat_turns
+        prompt = format_chatml_messages(trim_chat_messages(messages, chat_turn_limit))
         spec = replace(
             self.spec,
             max_new_tokens=max_tokens,

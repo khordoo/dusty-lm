@@ -43,9 +43,7 @@ def test_encode_token_ids_supports_tokenizers_encoding_objects():
 
 
 def test_normalize_model_text_applies_magic_formatting_rules():
-    assert normalize_model_text("Dusty cleans; Then docks.") == (
-        "dusty cleans. then docks."
-    )
+    assert normalize_model_text("Dusty cleans; Then docks.") == ("dusty cleans. then docks.")
 
 
 def test_prepare_training_example_masks_prompt_tokens():
@@ -56,10 +54,7 @@ def test_prepare_training_example_masks_prompt_tokens():
 
     first_response_idx = result["labels"].index(ord("a"))
     assert result["labels"][:first_response_idx] == [IGNORE_INDEX] * first_response_idx
-    assert (
-        result["input_ids"][first_response_idx:]
-        == result["labels"][first_response_idx:]
-    )
+    assert result["input_ids"][first_response_idx:] == result["labels"][first_response_idx:]
 
 
 def test_prepare_chatml_sft_training_example_masks_user_tokens():
@@ -70,8 +65,7 @@ def test_prepare_chatml_sft_training_example_masks_user_tokens():
     assert tokenizer.encoded_text == "dusty reply<|im_end|>"
     text = "".join(chr(token) for token in result["input_ids"])
     assert text == (
-        "<|im_start|>user\nhello<|im_end|>\n"
-        "<|im_start|>assistant\ndusty reply<|im_end|>"
+        "<|im_start|>user\nhello<|im_end|>\n<|im_start|>assistant\ndusty reply<|im_end|>"
     )
     first_response_idx = result["labels"].index(ord("d"))
     assert result["labels"][:first_response_idx] == [IGNORE_INDEX] * first_response_idx
@@ -131,9 +125,7 @@ def test_read_plain_text_documents_errors_for_missing_pretrain_text(tmp_path):
 def test_plain_text_documents_are_separated_by_endoftext():
     tokenizer = FakeTokenizer()
 
-    examples = list(
-        prepare_plain_text_examples(["alpha", "beta"], tokenizer, max_seq_len=100)
-    )
+    examples = list(prepare_plain_text_examples(["alpha", "beta"], tokenizer, max_seq_len=100))
     text = "".join(chr(token) for example in examples for token in example["input_ids"])
 
     assert text == f"alpha{DOCUMENT_SEPARATOR}beta{DOCUMENT_SEPARATOR}"
@@ -165,9 +157,7 @@ def test_plain_text_examples_do_not_insert_chat_template():
 def test_plain_text_examples_store_only_input_ids():
     tokenizer = FakeTokenizer()
 
-    examples = list(
-        prepare_plain_text_examples(["Alice was beginning"], tokenizer, max_seq_len=5)
-    )
+    examples = list(prepare_plain_text_examples(["Alice was beginning"], tokenizer, max_seq_len=5))
 
     assert examples
     assert all(set(example) == {"input_ids"} for example in examples)

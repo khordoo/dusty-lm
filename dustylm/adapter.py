@@ -24,16 +24,12 @@ def map_smollm2_key(hf_key: str) -> str:
         return "final_norm.weight"
     if hf_key == "lm_head.weight":
         return "vocab_proj.weight"
-    return hf_key.replace("model.", "").replace(".mlp", "").replace(
-        "o_proj", "out_proj"
-    )
+    return hf_key.replace("model.", "").replace(".mlp", "").replace("o_proj", "out_proj")
 
 
 def convert_smollm2_state_dict(hf_weights: dict[str, torch.Tensor]):
     """Convert all SmolLM2 Hugging Face tensors to a DustyLM state dict."""
-    state_dict = {
-        map_smollm2_key(hf_key): tensor for hf_key, tensor in hf_weights.items()
-    }
+    state_dict = {map_smollm2_key(hf_key): tensor for hf_key, tensor in hf_weights.items()}
     state_dict["vocab_proj.weight"] = state_dict["embed_tokens.weight"]
     return state_dict
 

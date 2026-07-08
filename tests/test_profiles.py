@@ -78,9 +78,7 @@ def test_smollm2_profiles_share_tokenizer_path():
 
     tokenizer_paths = {profile.model.tokenizer.path_or_name for profile in profiles}
 
-    assert tokenizer_paths == {
-        get_profile("smollm2_360m").model.tokenizer.path_or_name
-    }
+    assert tokenizer_paths == {get_profile("smollm2_360m").model.tokenizer.path_or_name}
 
 
 def test_sft_profile_uses_base_model_spec():
@@ -106,10 +104,7 @@ def test_smollm2_profiles_define_download_artifacts():
 
     assert profile_135m.hf_artifacts is not None
     assert profile_135m.hf_artifacts.repo_id == "HuggingFaceTB/SmolLM2-135M"
-    assert (
-        profile_135m.hf_artifacts.local_weights_path.name
-        == "smollm2_135m.safetensors"
-    )
+    assert profile_135m.hf_artifacts.local_weights_path.name == "smollm2_135m.safetensors"
     assert profile_135m.model.hidden_dim == 1536
 
 

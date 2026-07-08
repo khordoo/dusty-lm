@@ -21,7 +21,10 @@ def main():
     missing = []
 
     if args.checkpoint_step is not None:
-        step_checkpoint = p.generation.checkpoint_path.parent / f"{p.generation.checkpoint_path.stem}_step_{args.checkpoint_step}.pt"
+        step_checkpoint = (
+            p.generation.checkpoint_path.parent
+            / f"{p.generation.checkpoint_path.stem}_step_{args.checkpoint_step}.pt"
+        )
         if not step_checkpoint.exists():
             missing.append(str(step_checkpoint))
     elif p.generation and not Path(p.generation.checkpoint_path).exists():

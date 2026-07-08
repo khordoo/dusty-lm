@@ -486,9 +486,7 @@ PREFERRED_EXAMPLES = [
 def build_prompt(category: str, n_examples: int) -> list[dict[str, str]]:
     category_description = CATEGORY_DESCRIPTIONS[category]
 
-    seed_examples = "\n".join(
-        json.dumps(x, ensure_ascii=False) for x in PREFERRED_EXAMPLES
-    )
+    seed_examples = "\n".join(json.dumps(x, ensure_ascii=False) for x in PREFERRED_EXAMPLES)
 
     system_prompt = """
 You are generating a synthetic dataset to train a very small language model from scratch.
@@ -823,9 +821,7 @@ def call_model(
             # The SDK has already retried temporary API errors.
             # Do not repeatedly retry authentication errors, bad requests,
             # unsupported models, insufficient credits, and similar failures.
-            raise RuntimeError(
-                f"OpenRouter request failed for category={category}: {exc}"
-            ) from exc
+            raise RuntimeError(f"OpenRouter request failed for category={category}: {exc}") from exc
 
         try:
             text = completion.choices[0].message.content
@@ -850,9 +846,7 @@ def call_model(
 
             token_usage = {
                 "prompt_tokens": (getattr(usage, "prompt_tokens", 0) if usage else 0),
-                "completion_tokens": (
-                    getattr(usage, "completion_tokens", 0) if usage else 0
-                ),
+                "completion_tokens": (getattr(usage, "completion_tokens", 0) if usage else 0),
                 "total_tokens": (getattr(usage, "total_tokens", 0) if usage else 0),
             }
 
@@ -894,9 +888,7 @@ def word_count(text: str) -> int:
     return len(re.findall(r"\b[\w']+\b", text))
 
 
-def validate_example(
-    row: dict[str, Any], expected_category: str | None = None
-) -> list[str]:
+def validate_example(row: dict[str, Any], expected_category: str | None = None) -> list[str]:
     errors = []
 
     required_keys = {"category", "user", "dusty"}
@@ -1029,9 +1021,7 @@ def print_counts(rows: list[dict[str, str]]) -> None:
     print(f"\nTotal valid examples: {len(rows)}")
 
 
-def estimate_cost_usd(
-    model: str, prompt_tokens: int, completion_tokens: int
-) -> float | None:
+def estimate_cost_usd(model: str, prompt_tokens: int, completion_tokens: int) -> float | None:
     # Prices from Groq model table shown as dollars per 1M tokens.
     # Update this table manually if Groq pricing changes.
     prices = {
@@ -1044,9 +1034,7 @@ def estimate_cost_usd(
         return None
 
     p = prices[model]
-    return (prompt_tokens / 1_000_000) * p["input"] + (
-        completion_tokens / 1_000_000
-    ) * p["output"]
+    return (prompt_tokens / 1_000_000) * p["input"] + (completion_tokens / 1_000_000) * p["output"]
 
 
 def normalize_text(text: str) -> str:
@@ -1205,9 +1193,7 @@ def generate_dataset(
             )
 
             usage_by_model[active_model]["prompt_tokens"] += usage["prompt_tokens"]
-            usage_by_model[active_model]["completion_tokens"] += usage[
-                "completion_tokens"
-            ]
+            usage_by_model[active_model]["completion_tokens"] += usage["completion_tokens"]
             usage_by_model[active_model]["total_tokens"] += usage["total_tokens"]
 
             valid_rows: list[dict[str, str]] = []
@@ -1256,10 +1242,7 @@ def generate_dataset(
 
                 # Allow the same user prompt with different responses up to
                 # the configured per-category limit.
-                if (
-                    user_counts_by_category[category_user_key]
-                    >= max_user_occurrences_per_category
-                ):
+                if user_counts_by_category[category_user_key] >= max_user_occurrences_per_category:
                     errors.append("duplicate_user_limit")
 
                 if errors:
@@ -1318,10 +1301,7 @@ def generate_dataset(
                 model_index = next_model_index
                 active_model = available_models[model_index]
 
-                print(
-                    f"\nSwitching model for category={category}: "
-                    f"{old_model} -> {active_model}"
-                )
+                print(f"\nSwitching model for category={category}: {old_model} -> {active_model}")
 
                 consecutive_empty_batches = 0
                 recent_batches.clear()
@@ -1389,10 +1369,7 @@ def validate_file(
         if pair_key in seen_pairs:
             errors.append("duplicate_pair")
 
-        if (
-            user_counts_by_category[category_user_key]
-            >= max_user_occurrences_per_category
-        ):
+        if user_counts_by_category[category_user_key] >= max_user_occurrences_per_category:
             errors.append("duplicate_user_limit")
 
         if errors:

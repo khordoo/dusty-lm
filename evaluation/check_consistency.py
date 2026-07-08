@@ -60,13 +60,18 @@ def generate_one(model, tokenizer, device, profile, prompt, top_p, temperature):
         for _ in range(num_new_tokens):
             logits, kv_cache = model(x=input_tokens, kv_cache=kv_cache)
             next_token = sample_next_token(
-                logits, profile.generation,
-                top_p=top_p, temperature=temperature,
+                logits,
+                profile.generation,
+                top_p=top_p,
+                temperature=temperature,
             )
             next_token_id = next_token.item()
             generated_ids.append(next_token_id)
 
-            if (profile.generation.eos_token_id is not None and next_token_id == profile.generation.eos_token_id) or (im_end_id is not None and next_token_id == im_end_id):
+            if (
+                profile.generation.eos_token_id is not None
+                and next_token_id == profile.generation.eos_token_id
+            ) or (im_end_id is not None and next_token_id == im_end_id):
                 break
 
             tail_text = decode_tokens(tokenizer, generated_ids[-10:])
@@ -80,11 +85,18 @@ def generate_one(model, tokenizer, device, profile, prompt, top_p, temperature):
 
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description="Consistency check for SFT checkpoints")
-    parser.add_argument("--steps", nargs="+", type=int, required=True, help="Checkpoint steps to test")
+    parser.add_argument(
+        "--steps", nargs="+", type=int, required=True, help="Checkpoint steps to test"
+    )
     parser.add_argument("--runs", type=int, default=3, help="Number of generations per prompt")
     parser.add_argument("--temperature", type=float, default=1.0, help="Sampling temperature")
     parser.add_argument("--top-p", type=float, default=0.9, help="Nucleus sampling threshold")
-    parser.add_argument("--output", type=Path, default=REPO_ROOT / "artifacts" / "consistency_fine.csv", help="Output CSV path")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=REPO_ROOT / "artifacts" / "consistency_fine.csv",
+        help="Output CSV path",
+    )
     parser.add_argument("--profile", default="sft_dusty8m", help="Profile name")
     args = parser.parse_args(argv)
 
@@ -94,7 +106,7 @@ def main(argv=None) -> None:
 
     rows = []
     for step in args.steps:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Loading checkpoint step {step}...")
         model, tokenizer, _ = load_model(profile, device=device, checkpoint_step=step)
         print(f"Running {len(FOCUSED_PROMPTS)} prompts x {args.runs} runs for step {step}...")
@@ -102,21 +114,27 @@ def main(argv=None) -> None:
         for cat, prompt in FOCUSED_PROMPTS:
             for run_idx in range(args.runs):
                 try:
-                    output = generate_one(model, tokenizer, device, profile, prompt, args.top_p, args.temperature)
+                    output = generate_one(
+                        model, tokenizer, device, profile, prompt, args.top_p, args.temperature
+                    )
                 except Exception as e:
                     output = f"ERROR: {e}"
-                rows.append({
-                    "checkpoint_step": step,
-                    "category": cat,
-                    "prompt": prompt,
-                    "run": run_idx + 1,
-                    "output": output,
-                })
+                rows.append(
+                    {
+                        "checkpoint_step": step,
+                        "category": cat,
+                        "prompt": prompt,
+                        "run": run_idx + 1,
+                        "output": output,
+                    }
+                )
             print(f"  [{cat:20s}] done")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["checkpoint_step", "category", "prompt", "run", "output"])
+        writer = csv.DictWriter(
+            f, fieldnames=["checkpoint_step", "category", "prompt", "run", "output"]
+        )
         writer.writeheader()
         writer.writerows(rows)
 

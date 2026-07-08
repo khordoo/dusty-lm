@@ -178,9 +178,7 @@ def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: in
     total_examples = 0
     for document in documents:
         text = normalize_model_text(document) + DOCUMENT_SEPARATOR
-        token_ids = encode_token_ids(
-            tokenizer, text, allowed_special={DOCUMENT_SEPARATOR}
-        )
+        token_ids = encode_token_ids(tokenizer, text, allowed_special={DOCUMENT_SEPARATOR})
         total_tokens += len(token_ids)
         carry.extend(token_ids)
         while len(carry) >= max_seq_len:
@@ -256,12 +254,8 @@ def prepare_jsonl_sft_dataset(profile: Profile):
             user_text = row[profile.training.sft_user_field]
             assistant_text = row[profile.training.sft_assistant_field]
         except KeyError as exc:
-            raise KeyError(
-                f"SFT row {index} is missing configured field {exc.args[0]!r}"
-            ) from exc
-        examples.append(
-            prepare_chatml_sft_training_example(user_text, assistant_text, tokenizer)
-        )
+            raise KeyError(f"SFT row {index} is missing configured field {exc.args[0]!r}") from exc
+        examples.append(prepare_chatml_sft_training_example(user_text, assistant_text, tokenizer))
 
     tokenized_dataset = Dataset.from_list(examples)
     logger.info("Saving dataset to %s", profile.training.dataset_path)

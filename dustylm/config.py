@@ -127,9 +127,7 @@ def get_profile(name: str) -> Profile:
         profile = _PROFILES[name]
     except KeyError as exc:
         available = ", ".join(list_profiles())
-        raise KeyError(
-            f"Unknown profile '{name}'. Available profiles: {available}"
-        ) from exc
+        raise KeyError(f"Unknown profile '{name}'. Available profiles: {available}") from exc
 
     if profile.base_profile is None:
         return profile
@@ -149,9 +147,7 @@ def get_profile(name: str) -> Profile:
 def list_profiles(verbose: bool = False) -> list[str]:
     """List registered profile names, optionally with descriptions."""
     if verbose:
-        return [
-            f"{name:20} - {_PROFILES[name].description}" for name in sorted(_PROFILES)
-        ]
+        return [f"{name:20} - {_PROFILES[name].description}" for name in sorted(_PROFILES)]
     return sorted(_PROFILES)
 
 
@@ -242,10 +238,7 @@ register(
         description="Core 8M parameter model trained from scratch on TinyStories.",
         training=TrainingSpec(
             task=TrainingTask.PRETRAIN,
-            dataset_path=REPO_ROOT
-            / "artifacts"
-            / "datasets"
-            / "dusty_pretrain_tokenized",
+            dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_pretrain_tokenized",
             batch_size=32,
             learning_rate=3e-3,
             output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m.pt",
@@ -276,10 +269,7 @@ register(
             dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_tokenized",
             batch_size=32,
             learning_rate=1e-3,
-            output_checkpoint=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "dusty8m_sft.pt",
+            output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "dusty8m_sft.pt",
             max_seq_len=256,
             weight_decay=0.01,
             raw_sft_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft.jsonl",
@@ -307,25 +297,16 @@ register(
         description="Experimental sandbox with GPT-2 r50k tokenizer and larger embed dim.",
         training=TrainingSpec(
             task=TrainingTask.PRETRAIN,
-            dataset_path=REPO_ROOT
-            / "artifacts"
-            / "datasets"
-            / "scratch_text_tokenized",
+            dataset_path=REPO_ROOT / "artifacts" / "datasets" / "scratch_text_tokenized",
             batch_size=16,
             learning_rate=1e-4,
-            output_checkpoint=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "scratch_small.pt",
+            output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "scratch_small.pt",
             max_seq_len=256,
             weight_decay=0.01,
             raw_text_path=REPO_ROOT / "artifacts" / "datasets" / "tinystories_base.txt",
         ),
         generation=GenerationSpec(
-            checkpoint_path=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "scratch_small.pt",
+            checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "scratch_small.pt",
             max_new_tokens=1000,
             temperature=0.75,
             top_k=10,
@@ -359,10 +340,7 @@ register(
             repo_id="HuggingFaceTB/SmolLM2-360M",
             weights_filename="model.safetensors",
             tokenizer_filename="tokenizer.json",
-            local_weights_path=REPO_ROOT
-            / "artifacts"
-            / "hf"
-            / "smollm2_360.safetensors",
+            local_weights_path=REPO_ROOT / "artifacts" / "hf" / "smollm2_360.safetensors",
             local_tokenizer_path=SMOLLM2_TOKENIZER.path_or_name,
         ),
     )
@@ -385,10 +363,7 @@ register(
             repo_id="HuggingFaceTB/SmolLM2-135M",
             weights_filename="model.safetensors",
             tokenizer_filename="tokenizer.json",
-            local_weights_path=REPO_ROOT
-            / "artifacts"
-            / "hf"
-            / "smollm2_135m.safetensors",
+            local_weights_path=REPO_ROOT / "artifacts" / "hf" / "smollm2_135m.safetensors",
             local_tokenizer_path=SMOLLM2_TOKENIZER.path_or_name,
         ),
     )
@@ -409,22 +384,13 @@ register(
             batch_size=1,
             learning_rate=1e-5,
             raw_sft_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft.jsonl",
-            output_checkpoint=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "sft_smollm2_135m.pt",
+            output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "sft_smollm2_135m.pt",
             max_seq_len=2048,
-            init_checkpoint_path=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "smollm2_135m.pt",
+            init_checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "smollm2_135m.pt",
         ),
         generation=replace(
             get_profile("smollm2_135m").generation,
-            checkpoint_path=REPO_ROOT
-            / "artifacts"
-            / "checkpoints"
-            / "sft_smollm2_135m.pt",
+            checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "sft_smollm2_135m.pt",
             max_chat_turns=5,
         ),
         base_profile="smollm2_135m",

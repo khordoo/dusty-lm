@@ -39,18 +39,13 @@ def read_sample_lines(path: Path, line_limit: int) -> list[str]:
     return lines
 
 
-def train_tokenizer(
-    training_files: list[Path], vocab_size: int
-) -> ByteLevelBPETokenizer:
+def train_tokenizer(training_files: list[Path], vocab_size: int) -> ByteLevelBPETokenizer:
     if vocab_size < len(SPECIAL_TOKENS):
-        raise ValueError(
-            f"vocab_size must be at least {len(SPECIAL_TOKENS)} for special tokens"
-        )
+        raise ValueError(f"vocab_size must be at least {len(SPECIAL_TOKENS)} for special tokens")
     missing = [path for path in training_files if not path.exists()]
     if missing:
         raise FileNotFoundError(
-            "Tokenizer training file not found: "
-            + ", ".join(str(path) for path in missing)
+            "Tokenizer training file not found: " + ", ".join(str(path) for path in missing)
         )
 
     tokenizer = ByteLevelBPETokenizer()

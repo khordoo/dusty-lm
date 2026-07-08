@@ -38,7 +38,9 @@ def main():
             continue
 
         print(f"\nLoading step {step}...")
-        pname = resolve_profile_name_for_checkpoint(ckpt, explicit_profile=None, default_profile="sft_dusty8m", mode="generation")
+        pname = resolve_profile_name_for_checkpoint(
+            ckpt, explicit_profile=None, default_profile="sft_dusty8m", mode="generation"
+        )
         profile = get_profile(pname)
         model, tokenizer, device = load_model(profile, checkpoint_path=ckpt)
         spec = profile.generation
@@ -50,7 +52,10 @@ def main():
                     prompt = prepare_generation_prompt(q, profile)
                     token_ids = encode_prompt(tokenizer, prompt, spec)
                     result = generate_token_ids(
-                        model, tokenizer, token_ids, spec,
+                        model,
+                        tokenizer,
+                        token_ids,
+                        spec,
                         max_seq_len=profile.model.max_seq_len,
                         device=device,
                         temperature=temp,
@@ -58,14 +63,16 @@ def main():
                         top_k=5,
                     )
                     text = result.text.strip()
-                    rows.append({
-                        "checkpoint_step": step,
-                        "temperature": temp,
-                        "question": q,
-                        "run": run + 1,
-                        "output": text,
-                    })
-                    print(f"    [{run+1}] {q[:35]:35s} | {text[:70]}")
+                    rows.append(
+                        {
+                            "checkpoint_step": step,
+                            "temperature": temp,
+                            "question": q,
+                            "run": run + 1,
+                            "output": text,
+                        }
+                    )
+                    print(f"    [{run + 1}] {q[:35]:35s} | {text[:70]}")
 
     with open(output_path, "w", newline="") as f:
         csv.DictWriter(f, fieldnames=fieldnames).writeheader()

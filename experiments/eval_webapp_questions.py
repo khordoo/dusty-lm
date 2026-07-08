@@ -25,9 +25,7 @@ def main():
     results = {}
 
     for step in STEPS:
-        checkpoint_path = (
-            Path("artifacts/checkpoints") / f"dusty8m_sft_step_{step}.pt"
-        )
+        checkpoint_path = Path("artifacts/checkpoints") / f"dusty8m_sft_step_{step}.pt"
         if not checkpoint_path.exists():
             print(f"SKIP: checkpoint {checkpoint_path} not found")
             continue

@@ -10,17 +10,20 @@ by_key = defaultdict(lambda: defaultdict(list))
 for r in rows:
     by_key[(int(r["checkpoint_step"]), float(r["temperature"]))][r["question"]].append(r["output"])
 
+
 # Contradiction score: "no. i am stuck" pattern
 def contradiction_count(outputs):
     count = 0
     for o in outputs:
         t = o.lower()
-        if ("not" in t and "stuck" in t and "not stuck" not in t):
+        if "not" in t and "stuck" in t and "not stuck" not in t:
             count += 1
     return count
 
+
 def unique_count(outputs):
     return len(set(outputs))
+
 
 print("=== STUCK CONTRADICTIONS (lower = better) ===")
 print(f"{'Step':6s} {'Temp':5s} {'Contradictions':15s} {'Unique outs':12s} {'Answers':40s}")

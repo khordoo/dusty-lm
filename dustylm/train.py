@@ -56,10 +56,7 @@ def parse_args(argv=None):
         "--checkpoint-every-steps",
         type=int,
         default=None,
-        help=(
-            "Override step checkpoint interval. Use 0 to disable step "
-            "checkpoints for this run."
-        ),
+        help=("Override step checkpoint interval. Use 0 to disable step checkpoints for this run."),
     )
     parser.add_argument(
         "--batch-size",
@@ -72,16 +69,12 @@ def parse_args(argv=None):
 
 def collate_batch(batch, max_seq_len: int):
     """Pad a batch of variable-length token examples for causal LM training."""
+
     def get_labels(item):
         return item.get("labels", item["input_ids"])
 
-    input_ids = [
-        torch.tensor(item["input_ids"][:max_seq_len], dtype=torch.long)
-        for item in batch
-    ]
-    labels = [
-        torch.tensor(get_labels(item)[:max_seq_len], dtype=torch.long) for item in batch
-    ]
+    input_ids = [torch.tensor(item["input_ids"][:max_seq_len], dtype=torch.long) for item in batch]
+    labels = [torch.tensor(get_labels(item)[:max_seq_len], dtype=torch.long) for item in batch]
     return (
         pad_sequence(input_ids, batch_first=True, padding_value=0),
         pad_sequence(labels, batch_first=True, padding_value=IGNORE_INDEX),
@@ -129,9 +122,7 @@ def require_training_dataset(profile: Profile) -> None:
             f" The '{profile.name}' profile acts as an architecture template. "
             "You must prepare your own dataset and update the path first."
         )
-    raise FileNotFoundError(
-        f"Tokenized training dataset not found: {dataset_path}.{hint}"
-    )
+    raise FileNotFoundError(f"Tokenized training dataset not found: {dataset_path}.{hint}")
 
 
 def load_init_checkpoint_if_configured(model, profile: Profile, device: str):
@@ -153,9 +144,7 @@ def load_init_checkpoint_if_configured(model, profile: Profile, device: str):
                 " `uv run python -m dustylm.artifacts download"
                 f" --profile {profile.base_profile or profile.name} --convert`."
             )
-        raise FileNotFoundError(
-            f"Initial checkpoint not found: {checkpoint_path}.{hint}"
-        )
+        raise FileNotFoundError(f"Initial checkpoint not found: {checkpoint_path}.{hint}")
 
     logger.info("Loading initial checkpoint from %s", checkpoint_path)
     state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
@@ -246,9 +235,7 @@ def train(
             targets = targets.to(device)
             optimizer.zero_grad()
 
-            with torch.autocast(
-                device_type=device, dtype=dtype, enabled=device != "cpu"
-            ):
+            with torch.autocast(device_type=device, dtype=dtype, enabled=device != "cpu"):
                 logits = model(inputs)
                 shift_logits = logits[:, :-1, :].contiguous()
                 shift_targets = targets[:, 1:].contiguous()

@@ -160,9 +160,7 @@ def export_onnx(
 
     if quantize:
         quantize_onnx_model(output_path)
-        print(
-            f"Quantized {output_path} ({output_path.stat().st_size / 1_000_000:.1f} MB)"
-        )
+        print(f"Quantized {output_path} ({output_path.stat().st_size / 1_000_000:.1f} MB)")
 
     validate_onnx_model(output_path, dummy_input)
     print(f"Validated ONNX Runtime inference for {output_path}")

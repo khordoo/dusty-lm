@@ -73,8 +73,12 @@ def main(argv=None):
         print("Expected a JSONL file with one object per line:")
         print('  {"category": "...", "user": "...", "dusty": "..."}')
         print()
-        print("Generate the dataset with `make synthesize-sft` or download it with `make download-datasets`.")
-        print("The default path is artifacts/datasets/dusty_sft.jsonl. Pass --input <path> to use a custom file.")
+        print(
+            "Generate the dataset with `make synthesize-sft` or download it with `make download-datasets`."
+        )
+        print(
+            "The default path is artifacts/datasets/dusty_sft.jsonl. Pass --input <path> to use a custom file."
+        )
         return
 
     print(f"Loading dataset from {args.input}...")

@@ -119,16 +119,22 @@ def test_validate_prompt_length_rejects_full_context_prompt():
 
 
 def test_resolve_num_new_tokens_keeps_generation_inside_context():
-    assert resolve_num_new_tokens(
-        max_new_tokens=100,
-        prompt_length=20,
-        max_seq_len=256,
-    ) == 100
-    assert resolve_num_new_tokens(
-        max_new_tokens=100,
-        prompt_length=250,
-        max_seq_len=256,
-    ) == 6
+    assert (
+        resolve_num_new_tokens(
+            max_new_tokens=100,
+            prompt_length=20,
+            max_seq_len=256,
+        )
+        == 100
+    )
+    assert (
+        resolve_num_new_tokens(
+            max_new_tokens=100,
+            prompt_length=250,
+            max_seq_len=256,
+        )
+        == 6
+    )
 
 
 def test_pretrain_generation_prompt_is_not_wrapped():
@@ -150,19 +156,13 @@ def test_sft_dusty_generation_prompt_wraps_raw_user_text():
     profile = get_profile("sft_dusty8m")
 
     assert prepare_generation_prompt("Where Are You; Dusty?", profile) == (
-        "<|im_start|>user\n"
-        "where are you. dusty?<|im_end|>\n"
-        "<|im_start|>assistant\n"
+        "<|im_start|>user\nwhere are you. dusty?<|im_end|>\n<|im_start|>assistant\n"
     )
 
 
 def test_sft_dusty_generation_prompt_does_not_double_wrap_chatml():
     profile = get_profile("sft_dusty8m")
-    prompt = (
-        "<|im_start|>user\n"
-        "where are you?<|im_end|>\n"
-        "<|im_start|>assistant\n"
-    )
+    prompt = "<|im_start|>user\nwhere are you?<|im_end|>\n<|im_start|>assistant\n"
 
     assert prepare_generation_prompt(prompt, profile) == prompt
 

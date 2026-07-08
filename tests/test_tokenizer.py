@@ -20,15 +20,12 @@ def test_write_normalized_pretrain_corpus_applies_text_normalization(tmp_path):
 def test_write_normalized_sft_corpus_applies_text_normalization_and_chatml(tmp_path):
     input_path = tmp_path / "dusty_sft.jsonl"
     output_path = tmp_path / "normalized_sft.txt"
-    input_path.write_text(
-        '{"category": "test", "user": "Hello; Dusty", "dusty": "Answer; OK"}\n'
-    )
+    input_path.write_text('{"category": "test", "user": "Hello; Dusty", "dusty": "Answer; OK"}\n')
 
     write_normalized_sft_corpus(input_path, output_path)
 
     assert output_path.read_text() == (
-        "<|im_start|>user\nhello. dusty<|im_end|>\n"
-        "<|im_start|>assistant\nanswer. ok<|im_end|>\n"
+        "<|im_start|>user\nhello. dusty<|im_end|>\n<|im_start|>assistant\nanswer. ok<|im_end|>\n"
     )
 
 
@@ -41,9 +38,7 @@ def test_prepare_tokenizer_training_files_handles_text_and_jsonl_corpora(tmp_pat
 
     text_a.write_text("Tiny Story; Here.")
     text_b.write_text("Dusty Pretrain; Here.")
-    sft_jsonl.write_text(
-        '{"category": "test", "user": "Hello; Dusty", "dusty": "Answer; OK"}\n'
-    )
+    sft_jsonl.write_text('{"category": "test", "user": "Hello; Dusty", "dusty": "Answer; OK"}\n')
 
     training_files = prepare_tokenizer_training_files(
         output_dir,
@@ -55,8 +50,7 @@ def test_prepare_tokenizer_training_files_handles_text_and_jsonl_corpora(tmp_pat
     assert training_files[0].read_text() == "tiny story. here."
     assert training_files[1].read_text() == "dusty pretrain. here."
     assert training_files[2].read_text() == (
-        "<|im_start|>user\nhello. dusty<|im_end|>\n"
-        "<|im_start|>assistant\nanswer. ok<|im_end|>\n"
+        "<|im_start|>user\nhello. dusty<|im_end|>\n<|im_start|>assistant\nanswer. ok<|im_end|>\n"
     )
     assert "category" not in training_files[2].read_text()
     assert "{" not in training_files[2].read_text()

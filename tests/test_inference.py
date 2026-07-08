@@ -134,9 +134,7 @@ def test_require_sft_profile_rejects_base_profile():
 
 def test_format_chatml_messages_formats_single_turn():
     assert format_chatml_messages([{"role": "user", "content": "Where Are You?"}]) == (
-        "<|im_start|>user\n"
-        "where are you?<|im_end|>\n"
-        "<|im_start|>assistant\n"
+        "<|im_start|>user\nwhere are you?<|im_end|>\n<|im_start|>assistant\n"
     )
 
 
@@ -221,9 +219,7 @@ def test_inference_loads_checkpoint_and_removes_rope_cache(monkeypatch, tmp_path
 
     assert engine.profile_name == "sft_dusty8m"
     assert model.loaded_state_dict == {"weight": state_dict["weight"]}
-    assert model.rope.resized_to == (
-        engine.profile.model.max_seq_len + engine.spec.max_new_tokens
-    )
+    assert model.rope.resized_to == (engine.profile.model.max_seq_len + engine.spec.max_new_tokens)
     assert model.device == "cpu"
     assert model.evaluated is True
 
