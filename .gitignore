@@ -28,3 +28,4 @@ artifacts/tensorboard/
 # Private credentials
 *.pem
 *.pem.pub
+.env
