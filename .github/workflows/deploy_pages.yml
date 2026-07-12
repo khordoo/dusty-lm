@@ -1,12 +1,10 @@
 name: Deploy Web UI to Pages
 
 on:
-  # TODO: Uncomment the push block below once the repository is made public.
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
 
-  # This allows you to trigger the action manually from the GitHub UI for testing.
   workflow_dispatch:
 
 permissions:
