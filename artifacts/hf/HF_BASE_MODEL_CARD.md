@@ -83,11 +83,11 @@ Because Dusty uses a custom, highly optimized PyTorch architecture rather than t
 ### The Quick Way (Python SDK)
 
 ```bash
-pip install dustylm
+pip install dustylm-sdk
 ```
 
 ```python
-from dustylm import DustyLM
+from dustylm_sdk import DustyLM
 
 model = DustyLM.from_pretrained("mkhordoo/dusty-8m-base")
 response = model.generate("Once upon a time")
