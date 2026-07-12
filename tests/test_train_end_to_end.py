@@ -17,8 +17,8 @@ def test_parse_args_uses_golden_path_defaults():
     assert args.pretrain_batch_size == 224
     assert args.sft_batch_size == 224
     assert args.checkpoint_every_steps == 50
-    assert args.best_pretrain_step == 300
-    assert args.best_sft_step == 250
+    assert args.best_pretrain_step == 0
+    assert args.best_sft_step == 0
 
 
 def test_parse_args_accepts_overrides():
