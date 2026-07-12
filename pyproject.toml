@@ -53,3 +53,4 @@ include = ["dustylm*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+testpaths = ["tests"]
