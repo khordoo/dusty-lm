@@ -97,7 +97,9 @@ def main(argv=None) -> None:
         default=REPO_ROOT / "artifacts" / "consistency_fine.csv",
         help="Output CSV path",
     )
-    parser.add_argument("--checkpoint-dir", type=Path, help="Override checkpoint directory (default: from profile)")
+    parser.add_argument(
+        "--checkpoint-dir", type=Path, help="Override checkpoint directory (default: from profile)"
+    )
     parser.add_argument("--profile", default="sft_dusty8m", help="Profile name")
     args = parser.parse_args(argv)
 
@@ -116,7 +118,9 @@ def main(argv=None) -> None:
         else:
             checkpoint_path = None
         model, tokenizer, _ = load_model(
-            profile, device=device, checkpoint_step=None if args.checkpoint_dir else step,
+            profile,
+            device=device,
+            checkpoint_step=None if args.checkpoint_dir else step,
             checkpoint_path=checkpoint_path,
         )
         print(f"Running {len(FOCUSED_PROMPTS)} prompts x {args.runs} runs for step {step}...")
