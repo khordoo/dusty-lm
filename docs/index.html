@@ -393,7 +393,7 @@
 
     .turn {
       width: fit-content;
-      max-width: 78%;
+      max-width: 72%;
       margin: 0 0 14px;
       padding: 14px 18px;
       border-radius: 14px;
@@ -416,10 +416,6 @@
       margin-left: auto;
       background: var(--blue-soft);
       border-bottom-right-radius: 4px;
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      flex-direction: row-reverse;
     }
 
     .turn.dusty-turn {
@@ -465,25 +461,6 @@
       width: 85%;
       height: 85%;
       object-fit: contain;
-    }
-
-    .user-avatar {
-      width: 30px;
-      height: 30px;
-      flex-shrink: 0;
-      border-radius: 50%;
-      background: #fff;
-      border: 1px solid var(--line);
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      color: var(--text-secondary);
-    }
-
-    .user-avatar svg {
-      width: 18px;
-      height: 18px;
-      display: block;
     }
 
     .turn-body {
@@ -1093,7 +1070,7 @@
       div.className = `turn ${isUser ? 'user-turn' : 'dusty-turn'}`;
       const labelClass = isUser ? "speaker user" : "speaker dusty";
       if (isUser) {
-        div.innerHTML = `<div class="turn-body"><span class="${labelClass}">${speaker}</span><span class="turn-text">${escapeHtml(text)}</span></div><span class="user-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></span>`;
+        div.innerHTML = `<div class="turn-body"><span class="turn-text">${escapeHtml(text)}</span></div>`;
       } else {
         div.innerHTML = `<span class="dusty-avatar"><img src="images/logo_sm.png" alt=""></span><div class="turn-body"><span class="${labelClass}">${speaker}</span><span class="turn-text">${escapeHtml(text)}</span></div>`;
       }
