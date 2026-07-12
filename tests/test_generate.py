@@ -105,10 +105,18 @@ def test_get_token_id_uses_tokenizers_token_to_id():
 def test_get_token_id_uses_encode_fallback():
     class FakeTokenizer:
         def encode(self, text):
-            return [7, 8] if text == "<|im_end|>" else []
+            return [7] if text == "<|im_end|>" else []
 
     assert get_token_id(FakeTokenizer(), "<|im_end|>") == 7
     assert get_token_id(FakeTokenizer(), "<missing>") is None
+
+
+def test_get_token_id_rejects_multi_token_fallback():
+    class FakeTokenizer:
+        def encode(self, text):
+            return [7, 8]
+
+    assert get_token_id(FakeTokenizer(), "<|im_end|>") is None
 
 
 def test_validate_prompt_length_rejects_full_context_prompt():

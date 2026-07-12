@@ -123,7 +123,8 @@ def get_token_id(tokenizer, text: str) -> int | None:
         return None
 
     token_ids = tokenizer.encode(text)
-    return token_ids[0] if token_ids else None
+    # A stop marker is usable as a token ID only when it encodes to one token.
+    return token_ids[0] if len(token_ids) == 1 else None
 
 
 def validate_prompt_length(token_ids: list[int], max_seq_len: int) -> None:
