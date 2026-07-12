@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/images/logo_sm.png" alt="DustyLM logo" width="520">
+<img src="docs/images/readme-logo.png" alt="DustyLM logo" width="400">
 
 <br>
 
