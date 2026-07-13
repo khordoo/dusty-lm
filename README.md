@@ -7,7 +7,8 @@
 <h1 style="color: #FFFFFF;">DustyLM</h1>
 
 
-<p><strong>An ~8M parameter language model that talks like a robot vacuum.</strong></p>
+<p><strong>An 8M-parameter language model you can train from scratch in under 15 minutes,<br>
+then run it locally in your browser.</strong></p>
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org/)
@@ -23,30 +24,30 @@
 <div style="background: #0d1117; border-radius: 8px; padding: 16px 28px; margin: 8px 0;">
 
 <blockquote style="border-left: 4px solid #64ffda; border-top: 4px solid #30363d; border-bottom: 4px solid #30363d; padding: 16px 20px; margin: 0 0 20px 0; background: transparent; border-radius: 0; color: #8b949e;">
-<strong>Build it from scratch. Turn it into a character. Run it in your browser.</strong>
+<strong>Tiny enough to train. Clear enough to understand. Fast enough to finish today.</strong>
+<div style="height: 12px;"></div>
 
-<p><strong style="color: #9ea6b0;">Language models should not feel like black boxes.</strong> DustyLM is a tiny model you can train from scratch in a single free Colab notebook in under 15 minutes. The repo covers the full path from synthetic data and a custom BPE tokenizer to pretraining, SFT, ONNX export, and in-browser inference.</p>
+<p>One free Colab notebook. Under 15 minutes. Small code, no hidden magic. DustyLM walks you through the full path from raw text to a tiny model that talks back like a robot vacuum.</p>
 
-<p><strong>Small on purpose.</strong> Every layer is direct PyTorch, so you can inspect, modify, break, and rebuild the stack until you understand how raw text becomes a robot vacuum that talks back.</p>
+<p>Training a language model is not reserved for labs and giant clusters. Each step is visible: creating data, training a tokenizer, pretraining the model, giving it a personality, exporting, and running it in the browser. For the details, the repo is a complete PyTorch stack (custom BPE, pretraining, SFT, ONNX, browser inference with no server and no API key).</p>
+
+<p>DustyLM will not write long essays or replace general-purpose models. It is built so the path from data to inference feels obvious, and language models stop feeling like black boxes.</p>
 </blockquote>
 
 <pre style="background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 16px 20px; margin: 0; color: #ffffff; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap;"><code style="background: transparent; color: #ffffff; padding: 0; font-size: 14px;">You> hi dusty!
-Dusty> hi. dusty is here.
-
-You> what do you do all day?
-Dusty> i look for dust and crumbs. i find them all.
-
-You> did you clean behind the chair?
-Dusty> yes. i cleaned near the chair legs. i found two crumbs.
+Dusty> hi. dusty is here. i clean floors and look for crumbs.
 
 You> what scares you?
-Dusty> stairs. stairs are the edge of the world. i stay away.
+Dusty> stairs. stairs are the edge of my world. i stay away.
 
 You> where do you go when you're tired?
-Dusty> i go to the dock. it is safe there.
+Dusty> i go to the dock. it is safe. i rest.
 
-You> what makes you happy?
-Dusty> a clean floor and a full battery. that is happiness.
+You> what is the meaning of life?
+Dusty> i do not know everything. i know clean floors.
+
+You> what does love mean to you?
+Dusty> a full battery and a clean floor. that is love.
 
 You> what do you dream about?
 Dusty> beep. i dream of smooth floors and no cables.
@@ -209,7 +210,7 @@ DustyLM compiles directly to WebAssembly (WASM). You can serve the entire 8M par
 
 DustyLM runs locally in the browser via WASM, reaching 80 to 100 tokens/sec on a local laptop.
 
-<video src="https://github.com/user-attachments/assets/bcdb10c4-f774-4edb-a185-7fc5cd43e22a" width="100%" controls></video>
+<video src="https://github.com/user-attachments/assets/7a60198d-c896-4f2a-97aa-097ed319c138" width="100%" controls></video>
 
 </details>
 

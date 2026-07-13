@@ -86,7 +86,11 @@ def generate_one(model, tokenizer, device, profile, prompt, top_p, temperature):
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description="Consistency check for SFT checkpoints")
     parser.add_argument(
-        "--steps", nargs="+", type=int, required=True, help="Checkpoint steps to test"
+        "--steps",
+        nargs="+",
+        type=int,
+        required=True,
+        help="Checkpoint steps to test (use 0 for the final profile checkpoint)",
     )
     parser.add_argument("--runs", type=int, default=3, help="Number of generations per prompt")
     parser.add_argument("--temperature", type=float, default=1.0, help="Sampling temperature")
@@ -110,17 +114,26 @@ def main(argv=None) -> None:
     rows = []
     for step in args.steps:
         print(f"\n{'=' * 60}")
-        print(f"Loading checkpoint step {step}...")
-        if args.checkpoint_dir is not None:
+        # step 0 = final hub/profile checkpoint (e.g. dusty8m_sft.pt)
+        use_final = step == 0
+        if use_final:
+            print("Loading final profile checkpoint...")
+            checkpoint_path = None
+            checkpoint_step = None
+        elif args.checkpoint_dir is not None:
+            print(f"Loading checkpoint step {step}...")
             ckpt_name = f"{profile.generation.checkpoint_path.stem}_step_{step}.pt"
             checkpoint_path = args.checkpoint_dir / ckpt_name
+            checkpoint_step = None
             print(f"  Override checkpoint dir -> {checkpoint_path}")
         else:
+            print(f"Loading checkpoint step {step}...")
             checkpoint_path = None
+            checkpoint_step = step
         model, tokenizer, _ = load_model(
             profile,
             device=device,
-            checkpoint_step=None if args.checkpoint_dir else step,
+            checkpoint_step=checkpoint_step,
             checkpoint_path=checkpoint_path,
         )
         print(f"Running {len(FOCUSED_PROMPTS)} prompts x {args.runs} runs for step {step}...")

@@ -260,6 +260,22 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 6px;
+      align-content: start;
+    }
+
+    .topic-section {
+      grid-column: 1 / -1;
+      margin: 10px 0 2px;
+      padding: 0 2px;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .topic-section:first-child {
+      margin-top: 2px;
     }
 
     .topic-item {
@@ -764,9 +780,9 @@
       </div>
       <div class="suggestions" id="suggestions">
         <button type="button" data-prompt="hi dusty!" disabled><span class="icon" aria-hidden="true">👋</span> hi dusty!</button>
-        <button type="button" data-prompt="what do you do all day?" disabled><span class="icon" aria-hidden="true">🧹</span> what do you do all day?</button>
+        <button type="button" data-prompt="what scares you?" disabled><span class="icon" aria-hidden="true">🧱</span> what scares you?</button>
         <button type="button" data-prompt="where do you go when you're tired?" disabled><span class="icon" aria-hidden="true">🏠</span> where do you go when you're tired?</button>
-        <button type="button" data-prompt="what do you dream about?" disabled><span class="icon" aria-hidden="true">🌙</span> what do you dream about?</button>
+        <button type="button" data-prompt="what does love mean to you?" disabled><span class="icon" aria-hidden="true">💜</span> what does love mean to you?</button>
       </div>
       <div class="input-area">
         <form id="chat-form">
@@ -1161,7 +1177,31 @@
       });
     });
 
+    // Prompt text per topic key (lookup only; display order is TOPIC_GROUPS).
     const TOPICS = {
+      "why_dusty_cleans": "do you ever want to stop cleaning?",
+      "stairs": "why are you avoiding the hallway?",
+      "home_dock": "dusty, where do you go when tired?",
+      "low_battery": "dusty, your battery is low",
+      "full_battery": "dusty, are you ready to clean?",
+      "cables": "why are you stopped near the wall?",
+      "under_the_couch": "did you go under the couch today?",
+      "socks": "what happens if you hit a sock?",
+      "wet_floor": "why are you not cleaning the spill?",
+      "stuck_under_furniture": "did you get under the tv stand again?",
+      "needs_help": "dusty, why are you not moving?",
+      "rescued": "dusty, you were tangled in the curtain",
+      "dusty_fears": "what scares you?",
+      "love": "what does love mean to you?",
+      "dusty_dreams": "dusty, what do you think about at night?",
+      "dusty_introduction": "dusty, what do you like to do?",
+      "dusty_feelings": "do you feel better after cleaning?",
+      "dusty_thoughts": "what do you think about floors?",
+      "dusty_friends": "do you share crumbs with the mop?",
+      "money": "what is money?",
+      "politics": "what is politics?",
+      "being_thanked": "great job cleaning the kitchen, dusty",
+      "being_ignored": "do people ever thank you for cleaning?",
       "crumbs": "dusty, did you find anything good today?",
       "chips": "did you find any crumbs today?",
       "cereal": "why are you circling the cereal?",
@@ -1171,60 +1211,149 @@
       "cookie": "did you see the cookie on the floor?",
       "pizza": "did you see the pizza on the floor?",
       "bread": "did you find any crumbs under the table?",
+      "big_piece": "dusty, can you pick up this whole cookie?",
+      "food_for_humans": "dusty, did you see the muffin?",
+      "dirty_floor": "how do you feel about dirty floors?",
+      "clean_floor": "dusty, did you clean the floor?",
       "carpet": "how do you like cleaning the carpet?",
       "hardwood": "dusty, can you clean faster on hardwood?",
       "tile": "did you clean the tile kitchen floor?",
       "rug": "why do you slow down on the rug?",
       "corners": "did you clean behind the chair?",
-      "under_the_couch": "did you go under the couch today?",
       "under_the_bed": "dusty, did you go under the bed?",
       "kitchen_floor": "did you find anything good in the kitchen?",
       "bathroom_floor": "dusty, did you try to clean the bathroom?",
-      "going_home": "why are you moving toward the wall?",
-      "low_battery": "dusty, your battery is low",
-      "charging": "dusty, are you awake?",
-      "full_battery": "dusty, are you ready to clean?",
-      "home_dock": "dusty, where do you go when tired?",
+      "chair_legs": "did you clean around the dining chair?",
+      "legos": "did you find anything under the table?",
+      "stuck_in_corner": "why don't you leave the corner alone?",
       "cat_hair": "can you clean the cat hair from under the couch?",
       "dog_hair": "did you pick up all the dog hair?",
-      "pet_blocks_path": "can you get past the sleeping cat?",
       "full_of_fur": "why did you go back to the dock early?",
-      "socks": "what happens if you hit a sock?",
-      "legos": "did you find anything under the table?",
-      "cables": "why are you stopped near the wall?",
-      "wet_floor": "why are you not cleaning the spill?",
-      "stairs": "why are you avoiding the hallway?",
-      "big_piece": "dusty, can you pick up this whole cookie?",
-      "chair_legs": "did you clean around the dining chair?",
-      "stuck_in_corner": "why don't you leave the corner alone?",
-      "stuck_under_furniture": "did you get under the tv stand again?",
-      "needs_help": "dusty, why are you not moving?",
-      "rescued": "dusty, you were tangled in the curtain",
-      "why_dusty_cleans": "do you ever want to stop cleaning?",
-      "dirty_floor": "how do you feel about dirty floors?",
-      "clean_floor": "dusty, did you clean the floor?",
-      "being_thanked": "great job cleaning the kitchen, dusty",
-      "being_ignored": "do people ever thank you for cleaning?",
-      "dusty_thoughts": "what do you think about floors?",
-      "money": "what is money?",
-      "love": "what does love mean to you?",
-      "politics": "what is politics?",
+      "pet_blocks_path": "can you get past the sleeping cat?",
+      "charging": "dusty, are you awake?",
+      "going_home": "why are you moving toward the wall?",
       "weather": "dusty, is it raining outside?",
       "internet": "can you access the internet?",
       "school": "dusty, what did you learn today?",
       "movies": "do you watch movies, dusty?",
       "music": "why are you blinking while music plays?",
       "sleep": "dusty, are you resting?",
-      "food_for_humans": "dusty, did you see the muffin?",
-      "dusty_introduction": "dusty, what do you like to do?",
-      "dusty_feelings": "do you feel better after cleaning?",
-      "dusty_dreams": "dusty, what do you think about at night?",
-      "dusty_fears": "what scares you?",
-      "dusty_friends": "do you share crumbs with the mop?",
       "tomorrow": "will you find more crumbs tomorrow?",
     };
 
+    // Stable curated order: character-rich topics first, food/mess later.
+    // No randomization — first screen should show Dusty's worldview, not a snack list.
+    const TOPIC_GROUPS = [
+      {
+        title: "Featured",
+        keys: [
+          "why_dusty_cleans",
+          "stairs",
+          "home_dock",
+          "low_battery",
+          "full_battery",
+          "cables",
+          "under_the_couch",
+          "socks",
+          "wet_floor",
+          "stuck_under_furniture",
+          "needs_help",
+          "rescued",
+          "dusty_fears",
+          "love",
+          "dusty_dreams",
+        ],
+      },
+      {
+        title: "Personality",
+        keys: [
+          "dusty_introduction",
+          "dusty_feelings",
+          "dusty_thoughts",
+          "dusty_friends",
+          "money",
+          "politics",
+          "being_thanked",
+          "being_ignored",
+        ],
+      },
+      {
+        title: "Messes",
+        keys: [
+          "crumbs",
+          "chips",
+          "cereal",
+          "popcorn",
+          "sugar",
+          "rice",
+          "cookie",
+          "pizza",
+          "bread",
+          "big_piece",
+          "food_for_humans",
+          "dirty_floor",
+          "clean_floor",
+        ],
+      },
+      {
+        title: "Places",
+        keys: [
+          "carpet",
+          "hardwood",
+          "tile",
+          "rug",
+          "corners",
+          "under_the_bed",
+          "kitchen_floor",
+          "bathroom_floor",
+          "chair_legs",
+        ],
+      },
+      {
+        title: "Obstacles",
+        keys: [
+          "legos",
+          "stuck_in_corner",
+        ],
+      },
+      {
+        title: "Pets",
+        keys: [
+          "cat_hair",
+          "dog_hair",
+          "full_of_fur",
+          "pet_blocks_path",
+        ],
+      },
+      {
+        title: "Battery & Dock",
+        keys: [
+          "charging",
+          "going_home",
+        ],
+      },
+      {
+        title: "Outside World",
+        keys: [
+          "weather",
+          "internet",
+          "school",
+          "movies",
+          "music",
+          "sleep",
+          "tomorrow",
+        ],
+      },
+    ];
+
+    const TOPIC_LABELS = {
+      dusty_dreams: "Dreams",
+      dusty_fears: "Fears",
+      pet_blocks_path: "Pet Blocking Path",
+    };
+
     function topicLabel(key) {
+      if (TOPIC_LABELS[key]) return TOPIC_LABELS[key];
       return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
 
@@ -1235,13 +1364,31 @@
     const topicsClose = document.getElementById('topics-close');
 
     function renderTopics(filter) {
-      const keys = Object.keys(TOPICS);
-      const filtered = filter
-        ? keys.filter(k => topicLabel(k).toLowerCase().includes(filter.toLowerCase()))
-        : keys;
-      topicsGrid.innerHTML = filtered.map(key =>
-        `<button class="topic-item" data-key="${key}">${topicLabel(key)}</button>`
-      ).join('');
+      const q = (filter || "").trim().toLowerCase();
+      const parts = [];
+
+      for (const group of TOPIC_GROUPS) {
+        const keys = group.keys.filter((key) => {
+          if (!TOPICS[key]) return false;
+          if (!q) return true;
+          return topicLabel(key).toLowerCase().includes(q);
+        });
+        if (!keys.length) continue;
+
+        // Keep section headers when browsing; hide them while searching.
+        if (!q) {
+          parts.push(`<div class="topic-section">${group.title}</div>`);
+        }
+        for (const key of keys) {
+          parts.push(
+            `<button class="topic-item" data-key="${key}" type="button">${topicLabel(key)}</button>`
+          );
+        }
+      }
+
+      topicsGrid.innerHTML = parts.length
+        ? parts.join("")
+        : `<div class="topic-section">No topics match</div>`;
     }
 
     function openTopics() {
