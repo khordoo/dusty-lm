@@ -201,7 +201,7 @@ DustyLM compiles directly to WebAssembly (WASM). You can serve the entire 8M par
 </div>
 
 <details>
-<summary>▶️ Watch a 20-second browser demo</summary>
+<summary>▶ Watch a 20-second browser demo</summary>
 
 <br>
 
