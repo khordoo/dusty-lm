@@ -209,7 +209,7 @@ DustyLM compiles directly to WebAssembly (WASM). You can serve the entire 8M par
 
 DustyLM runs locally in the browser via WASM, reaching 80 to 100 tokens/sec on a local laptop.
 
-<video src="https://github.com/user-attachments/assets/fd022112-08c8-40b7-895c-5cba36c6af57" width="100%" controls></video>
+<video src="https://github.com/user-attachments/assets/bcdb10c4-f774-4edb-a185-7fc5cd43e22a" width="100%" controls></video>
 
 </details>
 
