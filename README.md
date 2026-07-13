@@ -200,13 +200,6 @@ DustyLM compiles directly to WebAssembly (WASM). You can serve the entire 8M par
   </a>
 </div>
 
-<details>
-<summary>▶️ Watch a video demo</summary>
-
-<video src="https://raw.githubusercontent.com/khordoo/dusty-lm/main/docs/video/dusty-demo.mp4" width="100%" controls></video>
-
-</details>
-
 ---
 
 ## Project Structure
