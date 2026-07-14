@@ -7,8 +7,7 @@
 <h1 style="color: #FFFFFF;">DustyLM</h1>
 
 
-<p><strong>An 8M-parameter language model you can train from scratch in under 15 minutes,<br>
-then run it locally in your browser.</strong></p>
+<p><strong>An 8M-parameter language model you can train from scratch in under 15 minutes</strong></p>
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org/)
@@ -27,11 +26,12 @@ then run it locally in your browser.</strong></p>
 <strong>Tiny enough to train. Clear enough to understand. Fast enough to finish today.</strong>
 <div style="height: 12px;"></div>
 
-<p>One free Colab notebook. Under 15 minutes. Small code, no hidden magic. DustyLM walks you through the full path from raw text to a tiny model that talks back like a robot vacuum.</p>
+<p>The learning path is simple: One free Colab notebook. Under 15 minutes. Small code, no hidden magic. DustyLM walks you through the full path from raw text to a tiny model that talks back like a robot vacuum.</p>
 
-<p>Training a language model is not reserved for labs and giant clusters. Each step is visible: creating data, training a tokenizer, pretraining the model, giving it a personality, exporting, and running it in the browser. For the details, the repo is a complete PyTorch stack (custom BPE, pretraining, SFT, ONNX, browser inference with no server and no API key).</p>
+<p>Training a language model is not reserved for labs and giant clusters. This repo shows you the full pipeline in an easy step-by-step fashion: creating data, training a tokenizer, pretraining the model, teaching it a personality, exporting, and running it in the browser. For the details, the repo is a complete PyTorch stack (custom BPE, pretraining, SFT, ONNX, browser inference with no server and no API key).</p>
 
-<p>DustyLM will not write long essays or replace general-purpose models. It is built so the path from data to inference feels obvious, and language models stop feeling like black boxes.</p>
+<p>DustyLM will not write long essays or replace general-purpose models. It is built to demystify the journey from raw text to a chatbot so language models stop feeling like black boxes.</p>
+
 </blockquote>
 
 <pre style="background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 16px 20px; margin: 0; color: #ffffff; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap;"><code style="background: transparent; color: #ffffff; padding: 0; font-size: 14px;">You> hi dusty!
