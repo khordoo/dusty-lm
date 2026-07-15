@@ -10,7 +10,7 @@ EPOCHS ?= 23
 CHECKPOINT_EVERY_STEPS ?= 50
 CHECKPOINT_STEP ?=
 PROMPT ?= $(strip Once upon a time)
-PROFILE ?= dusty8m
+PROFILE ?= sft_dusty8m
 CHAT_PROFILE ?= sft_dusty8m
 TOP_P ?=
 TEMPERATURE ?=
@@ -69,7 +69,7 @@ help:
 	@printf "$(BOLD)Quick Start (Inference Path):$(NC)\n"
 	@printf "  make download-models            Download pretrained weights + tokenizer from Hugging Face Hub\n"
 	@printf "  make chat                       Chat with local SFT inference CLI\n"
-	@printf "  make generate                   Generate text with the dusty8m profile\n"
+	@printf "  make generate                   Generate one response with the sft_dusty8m profile\n"
 	@printf "\n"
 	@printf "$(BOLD)SmolLM2 Baselines:$(NC)\n"
 	@printf "  make download-smollm2            Download and convert SmolLM2 pretrained weights (default: 135M)\n"

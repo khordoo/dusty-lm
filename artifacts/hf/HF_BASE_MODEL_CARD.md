@@ -103,7 +103,7 @@ git clone https://github.com/khordoo/dusty-lm.git
 cd dusty-lm
 uv sync
 make download-models
-make generate
+make generate PROFILE=dusty8m PROMPT="Once upon a time"
 ```
 
 ### Training From Scratch

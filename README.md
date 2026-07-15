@@ -7,8 +7,7 @@
 <h1 style="color: #FFFFFF;">DustyLM</h1>
 
 
-<p><strong>An 8M-parameter language model you can train from scratch in under 15 minutes,<br>
-then run it locally in your browser.</strong></p>
+**An 8M-parameter language model you can train from scratch in 15 minutes.**
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org/)
@@ -21,18 +20,22 @@ then run it locally in your browser.</strong></p>
 [![Try in Browser](https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white)](https://khordoo.github.io/dusty-lm/)
 <br>
 </div>
-<div style="background: #0d1117; border-radius: 8px; padding: 16px 28px; margin: 8px 0;">
 
-<blockquote style="border-left: 4px solid #64ffda; border-top: 4px solid #30363d; border-bottom: 4px solid #30363d; padding: 16px 20px; margin: 0 0 20px 0; background: transparent; border-radius: 0; color: #8b949e;">
-<strong>Tiny enough to train. Clear enough to understand. Fast enough to finish today.</strong>
-<div style="height: 12px;"></div>
+---
 
-<p>One free Colab notebook. Under 15 minutes. Small code, no hidden magic. DustyLM walks you through the full path from raw text to a tiny model that talks back like a robot vacuum.</p>
 
-<p>Training a language model is not reserved for labs and giant clusters. Each step is visible: creating data, training a tokenizer, pretraining the model, giving it a personality, exporting, and running it in the browser. For the details, the repo is a complete PyTorch stack (custom BPE, pretraining, SFT, ONNX, browser inference with no server and no API key).</p>
+> **Tiny enough to train. Clear enough to understand. Fast enough to finish today.**
+>
+> DustyLM is a repository for building your own language model from scratch and seeing that the process does not have to feel like a black box.
+>
+> You build the whole pipeline yourself: create a dataset, train a BPE tokenizer, pretrain a small transformer, fine-tune it into a robot vacuum personality, export it to ONNX, and chat with it directly in your browser.
+>
+> Everything runs in one free Colab notebook and finishes in under 15 minutes.
+> No server. No API key. No massive GPU cluster.
+>
+> By the end, you have a tiny language model that thinks it is a robot vacuum:
 
-<p>DustyLM will not write long essays or replace general-purpose models. It is built so the path from data to inference feels obvious, and language models stop feeling like black boxes.</p>
-</blockquote>
+---
 
 <pre style="background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 16px 20px; margin: 0; color: #ffffff; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap;"><code style="background: transparent; color: #ffffff; padding: 0; font-size: 14px;">You> hi dusty!
 Dusty> hi. dusty is here. i clean floors and look for crumbs.
@@ -52,7 +55,7 @@ Dusty> a full battery and a clean floor. that is love.
 You> what do you dream about?
 Dusty> beep. i dream of smooth floors and no cables.
 
-You> goodbye
+You> goodbye dusty
 Dusty> goodbye. i will go back to cleaning.</code></pre>
 
 </div>
@@ -65,7 +68,9 @@ Dusty> goodbye. i will go back to cleaning.</code></pre>
 
 [![Try in Browser](https://img.shields.io/badge/Try_in-Browser-64ffda?style=for-the-badge&logo=webassembly&logoColor=white)](https://khordoo.github.io/dusty-lm/)
 
-Runs entirely in your browser via ONNX and WebAssembly. No server, no API key, no data leaves the page.
+[Try DustyLM in your browser →](https://khordoo.github.io/dusty-lm/)
+
+Runs entirely in your browser via ONNX Runtime Web. No server, no API key, no data leaves the page.
 
 ### Chat in Colab
 
@@ -77,25 +82,45 @@ Three cells. Under 30 seconds. No GPU required.
 
 [![Train in Colab](https://img.shields.io/badge/Train_in-Colab-2ea44f?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/khordoo/dusty-lm/blob/main/notebooks/02_train_from_scratch.ipynb)
 
-Downloads datasets, trains the tokenizer, runs pretraining, runs SFT, and tests the checkpoint.
+Set the Colab runtime to a **T4 GPU** (Runtime → Change runtime type), then run the guided notebook. It downloads the data, trains the tokenizer, pretrains the 8M model, fine-tunes Dusty's personality, and lets you chat with your own checkpoint in about **15 minutes** on a free T4.
 
-For the terminal version of the same golden path:
+![DustyLM training loss curve](docs/images/training-lifecycle-loss.png)
+
+_Training loss from the default Colab run._
+
+Prefer the terminal? From the repository root:
 
 ```bash
 make train-end-to-end
 ```
 
-### Chat Locally
+This runs the same training pipeline:
 
-First, run the [Quickstart notebook](notebooks/01_quickstart.ipynb) in Colab — it downloads the pre-trained checkpoint automatically in three cells.
-
-If you have already trained your own model locally, generate text with:
-
-```bash
-make generate PROFILE=sft_dusty8m PROMPT="who are you?"
+```text
+data → BPE tokenizer → pretrain → SFT → trained checkpoint
 ```
 
-For interactive chat:
+### Chat Locally
+
+If you ran `make train-end-to-end`, your weights are ready. Otherwise, download the pre-trained weights:
+
+```bash
+make download-models
+```
+
+Generate one response:
+
+```bash
+make generate PROMPT="what happens if you hit a sock?"
+```
+
+```text
+Dusty> beep. that is not safe. i stop. i wait.
+```
+
+*Note: DustyLM has a small 256-token context window. Longer conversation histories reduce response quality, so the model is designed for short, single-turn exchanges.*
+
+Or start an interactive chat:
 
 ```bash
 make chat
@@ -115,16 +140,18 @@ make chat
 
 ## What is DustyLM?
 
-DustyLM is a tiny language model that pretends to be a robot vacuum named Dusty. It speaks in short, lowercase sentences about crumbs, floors, dust, fur, socks, cables, battery, the charging dock, and the small world under furniture.
+DustyLM is a tiny language model that pretends to be a robot vacuum named Dusty. It speaks in short, lowercase sentences about crumbs, cables, battery life, the charging dock, and the small world under furniture.
 
-It does not understand human abstractions like money, phones, romance, or politics — and it is not trying to. When confused, Dusty routes the world back through floors, crumbs, stairs, battery, and the dock.
+It does not understand human abstractions like money, phones, romance, or politics, and it is not trying to. When confused, Dusty interprets the world through the limited perspective and vocabulary of a robot vacuum.
 
-Dusty is trained from scratch on synthetic data using an 8M parameter decoder-only transformer, small enough for local experimentation and browser inference.
+Dusty is trained from scratch on synthetic data using an 8M-parameter decoder-only transformer designed for fast local experimentation and browser inference.
+
+DustyLM will not write long essays or replace general-purpose models. Its purpose is simpler: to make the entire language-model pipeline small enough to run, clear enough to inspect, and transparent enough to understand.
 
 ### Personality
 
 - Speaks in short, lowercase sentences
-- Experiences the world through crumbs, floors, dust, fur, cables, socks, battery, and the dock
+- Experiences the world through floors, crumbs, dust, fur, socks, cables, battery life, and the charging dock
 - Is friendly, nervous, helpful, and a little confused
 - Thinks clean floors are the meaning of life
 - Gets scared of stairs, wet floors, cables, and being stuck
@@ -133,6 +160,8 @@ Dusty is trained from scratch on synthetic data using an 8M parameter decoder-on
 ---
 
 ## Architecture
+
+DustyLM uses a modern decoder-only transformer, scaled down so you can train and inspect it yourself.
 
 | Setting | Value |
 |---|---|
@@ -147,7 +176,7 @@ Dusty is trained from scratch on synthetic data using an 8M parameter decoder-on
 | Position | RoPE |
 | LM head | Separate projection |
 
-Compact transformer with grouped-query attention, rotary position embeddings, GELU feed-forward layers, RMSNorm, fused QKV projection, and KV-cache generation. The code is direct PyTorch — no wrappers around production model runtimes.
+It uses grouped-query attention (GQA), rotary position embeddings (RoPE), RMSNorm, GELU feed-forward layers, fused QKV projection, and KV-cache generation. The implementation is plain PyTorch, so every layer stays readable.
 
 ---
 
@@ -155,31 +184,34 @@ Compact transformer with grouped-query attention, rotary position embeddings, GE
 
 Dusty uses two datasets: TinyStories pre-training data teaches basic English and world logic, while SFT data gives it the robot vacuum personality.
 
+Download both datasets:
+
+```bash
+uv run python data_pipeline/download_datasets.py
+```
+
+This creates:
+
 ```text
 artifacts/datasets/tinystories_base.txt
 artifacts/datasets/dusty_sft.jsonl
 ```
 
-The SFT format is one conversation per line:
+By default, this downloads a 100k TinyStories slice to keep training practical on free Colab hardware.
+
+Each SFT line follows this structure:
 
 ```json
-{"category":"crumbs","user":"why do you like crumbs?","dusty":"crumbs mean work. work means i am useful. beep."}
+{"category":"topic_name","user":"user message","dusty":"assistant response"}
 ```
 
-*Dusty SFT data on Hugging Face: [mkhordoo/dusty-chat](https://huggingface.co/datasets/mkhordoo/dusty-chat).*
+You can [browse the full dataset on Hugging Face](https://huggingface.co/datasets/mkhordoo/dusty-chat).
 
-### Getting the Data
+*Note: The Hugging Face dataset uses the standard OpenAI conversational format. [`download_datasets.py`](data_pipeline/download_datasets.py) automatically converts it to the simplified training schema shown above.*
 
-**Option A: The Default Path (Recommended)** — If you just want to train the vacuum model, download the pre-built datasets. This is all you need to get started:
+### Create a Custom Persona
 
-```bash
-make download-datasets   # Downloads TinyStories + Dusty SFT
-```
-
-By default this downloads a 100k TinyStories slice for pretraining, which keeps
-the Colab path practical while still giving the 8M model enough grammar signal.
-
-**Option B: The Custom Persona Path (Advanced)** — If you want to build a completely new AI persona (e.g., a toaster or a cat), use the data pipeline to generate your own synthetic datasets:
+To build a different persona, such as a toaster or a cat, update the prompt in the [synthesis script](data_pipeline/generate_sft.py) and generate your own SFT data:
 
 ```bash
 make synthesize-sft      # Generate new SFT chat data via an external LLM
@@ -187,13 +219,20 @@ make tokenizer           # Train tokenizer (needed to measure answer lengths bef
 make filter-sft          # Filter and format your raw data for training
 ```
 
-The advanced notebook covers data-generation prompts, model choice, cost notes, filtering, tokenizer fertility, and personality customization.
+For a complete breakdown of this process, the [Advanced Tools notebook](notebooks/03_advanced_tools.ipynb) covers data-generation prompts, model choice, cost notes, filtering, tokenizer fertility, and personality customization.
 
 ---
 
 ## Browser Web UI
 
-DustyLM compiles directly to WebAssembly (WASM). You can serve the entire 8M parameter model locally in your browser with zero external API calls, or **[try the live demo](https://khordoo.github.io/dusty-lm/)**.
+DustyLM exports to ONNX and runs entirely in the browser via `onnxruntime-web`. Run the web UI locally at `http://localhost:8000` with no external API calls:
+
+```bash
+# Ensure you have a downloaded or trained checkpoint first
+make serve-web
+```
+
+Or skip the setup and [try the live demo](https://khordoo.github.io/dusty-lm/).
 
 <div align="center">
   <a href="https://khordoo.github.io/dusty-lm/">
@@ -208,7 +247,7 @@ DustyLM compiles directly to WebAssembly (WASM). You can serve the entire 8M par
 
 <br>
 
-DustyLM runs locally in the browser via WASM, reaching 80 to 100 tokens/sec on a local laptop.
+DustyLM runs locally in the browser via WASM, reaching 80 to 100 tokens/sec on an M1 Pro MacBook.
 
 <video src="https://github.com/user-attachments/assets/7a60198d-c896-4f2a-97aa-097ed319c138" width="100%" controls></video>
 
@@ -229,15 +268,24 @@ dustylm/
 ├── tokenizer.py     # Dusty BPE tokenizer training
 ├── adapter.py       # SmolLM2 safetensors -> DustyLM checkpoint conversion
 └── models/
-    ├── scratch.py   # Custom DustyLM transformer (GQA, RoPE, RMSNorm, KV cache)
-    └── smollm2.py   # SmolLM2-compatible transformer
+    └── scratch.py   # Custom DustyLM transformer (GQA, RoPE, RMSNorm, KV cache)
 
-data_pipeline/  # Synthetic pretrain/SFT generation and filtering
-evaluation/          # Checkpoint comparison inputs and report scripts
-experiments/         # One-off analysis scripts kept for transparency
-scripts/             # ONNX export and Hugging Face Hub staging/upload
+data_pipeline/
+├── download_datasets.py  # Download TinyStories and Dusty SFT data
+├── generate_sft.py       # Generate synthetic persona conversations
+└── filter_sft.py         # Balance and filter SFT examples
+
+evaluation/
+├── compare_checkpoints.py  # Compare checkpoint responses
+└── check_consistency.py    # Measure response variation across repeated runs
+
+scripts/
+├── train_end_to_end.py     # Run the complete training pipeline
+├── export_onnx.py          # Export a checkpoint for browser inference
+└── push_to_hub.py          # Stage and upload Hugging Face model artifacts
+
+notebooks/           # Guided learning path: quickstart, training, and advanced workflows
 docs/                # Browser demo assets
-notebooks/           # Quickstart, training, advanced tools, export, and SmolLM2 notebooks
 artifacts/hf/        # Hugging Face model and dataset card templates
 ```
 
@@ -247,7 +295,7 @@ artifacts/hf/        # Hugging Face model and dataset card templates
 
 **Why a tiny model?** 8M parameters is small enough to train, inspect, break, fix, and run in a browser. The point is understanding the full workflow, not competing with general-purpose models.
 
-**Why synthetic data?** A character model needs consistent personality. Synthetic data lets the same constraints show up across many categories, phrasings, and refusal cases.
+**Why synthetic data?** There is no public dataset for a robot vacuum with Dusty's exact personality, and writing thousands of examples by hand does not scale. Generating examples with an LLM lets us apply the same rules across many topics: short lowercase replies, simple vocabulary, and a floor-level worldview.
 
 **Why single-turn by default?** Tiny models have short context windows. Old turns can dilute the current request and degrade output quality.
 
