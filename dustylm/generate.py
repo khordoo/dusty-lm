@@ -85,6 +85,12 @@ def parse_args(argv=None):
         default=None,
         help="Override profile generation temperature.",
     )
+    parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=None,
+        help="Override the profile maximum number of generated tokens.",
+    )
     return parser.parse_args(argv)
 
 
@@ -362,6 +368,7 @@ def generate_text(
     checkpoint_path: str | Path | None = None,
     top_p: float | None = None,
     temperature: float | None = None,
+    max_new_tokens: int | None = None,
 ):
     """Generate text autoregressively from a prompt using KV-cached decoding."""
     prompt = prompt.strip()
@@ -378,6 +385,9 @@ def generate_text(
     spec = profile.generation
     top_p = spec.top_p if top_p is None else top_p
     temperature = spec.temperature if temperature is None else temperature
+    max_new_tokens = spec.max_new_tokens if max_new_tokens is None else max_new_tokens
+    if max_new_tokens < 1:
+        raise ValueError("max_new_tokens must be at least 1")
     validate_generation_options(top_p, temperature)
     model, tokenizer, device = load_model(
         profile,
@@ -389,7 +399,7 @@ def generate_text(
     token_ids = encode_prompt(tokenizer, prompt, spec)
     validate_prompt_length(token_ids, profile.model.max_seq_len)
     num_new_tokens = resolve_num_new_tokens(
-        max_new_tokens=spec.max_new_tokens,
+        max_new_tokens=max_new_tokens,
         prompt_length=len(token_ids),
         max_seq_len=profile.model.max_seq_len,
     )
@@ -456,6 +466,7 @@ def main(argv=None):
         checkpoint_path=args.checkpoint_path,
         top_p=args.top_p,
         temperature=args.temperature,
+        max_new_tokens=args.max_new_tokens,
     )
 
 

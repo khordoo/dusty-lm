@@ -16,8 +16,12 @@ from dustylm.config import HFArtifactSpec, Profile, get_profile, list_profiles
 
 
 def list_downloadable_profiles() -> list[str]:
-    """Return profiles that define downloadable Hugging Face artifacts."""
-    return [name for name in list_profiles() if get_profile(name).hf_artifacts is not None]
+    """Return base profiles that define downloadable Hugging Face artifacts."""
+    return [
+        name
+        for name in list_profiles()
+        if get_profile(name).hf_artifacts is not None and get_profile(name).base_profile is None
+    ]
 
 
 def copy_hf_file(

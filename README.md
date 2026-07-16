@@ -128,13 +128,15 @@ make chat
 
 ### Notebooks
 
+Start with Notebook 01 to try DustyLM or Notebook 02 to train it yourself. The remaining notebooks are optional extensions that can be explored independently.
+
 | # | Notebook | What you'll do |
 |---|---|---|
 | 01 | [Quickstart](notebooks/01_quickstart.ipynb) | Chat with Dusty in under 30 seconds |
 | 02 | [Train from Scratch](notebooks/02_train_from_scratch.ipynb) | Build your own 8M parameter model end-to-end |
 | 03 | [Advanced Tools](notebooks/03_advanced_tools.ipynb) | Data generation, filtering, fertility, checkpoint selection |
 | 04 | [HF Export & Web UI](notebooks/04_hf_export_and_web_ui.ipynb) | Convert to ONNX, push to Hugging Face, serve the browser UI |
-| 05 | [Pretrained Base Models](notebooks/05_pretrained_base_models.ipynb) | Use pretrained SmolLM2 as a stronger base model |
+| 05 | [Pretrained Base Models](notebooks/05_pretrained_base_models.ipynb) | Optional extension: explore pretrained SmolLM2 models using the DustyLM pipeline |
 
 ---
 

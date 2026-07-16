@@ -3,7 +3,6 @@ from dustylm.artifacts import list_downloadable_profiles, parse_args
 
 def test_artifacts_cli_lists_only_downloadable_profiles():
     assert list_downloadable_profiles() == [
-        "sft_smollm2_135m",
         "smollm2_135m",
         "smollm2_360m",
     ]

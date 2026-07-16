@@ -1,9 +1,11 @@
 from dataclasses import replace
 
 import pytest
+import torch
 
 from dustylm.config import get_profile
 from dustylm.train import (
+    get_device_and_dtype,
     get_step_checkpoint_path,
     initialize_random_seed,
     load_init_checkpoint_if_configured,
@@ -11,6 +13,47 @@ from dustylm.train import (
     require_training_dataset,
     save_step_checkpoint_if_due,
 )
+
+
+def test_cuda_training_uses_bfloat16_when_supported(monkeypatch):
+    monkeypatch.setattr("dustylm.train.torch.cuda.is_available", lambda: True)
+    monkeypatch.setattr(
+        "dustylm.train.torch.cuda.is_bf16_supported",
+        lambda *, including_emulation: not including_emulation,
+    )
+
+    assert get_device_and_dtype() == ("cuda", torch.bfloat16)
+
+
+def test_cuda_training_falls_back_to_float16_without_bfloat16(monkeypatch):
+    monkeypatch.setattr("dustylm.train.torch.cuda.is_available", lambda: True)
+    monkeypatch.setattr(
+        "dustylm.train.torch.cuda.is_bf16_supported",
+        lambda *, including_emulation: False,
+    )
+
+    assert get_device_and_dtype() == ("cuda", torch.float16)
+
+
+def test_cuda_training_supports_older_bfloat16_capability_api(monkeypatch):
+    monkeypatch.setattr("dustylm.train.torch.cuda.is_available", lambda: True)
+
+    def old_is_bf16_supported():
+        return False
+
+    monkeypatch.setattr(
+        "dustylm.train.torch.cuda.is_bf16_supported",
+        old_is_bf16_supported,
+    )
+
+    assert get_device_and_dtype() == ("cuda", torch.float16)
+
+
+def test_mps_training_uses_float32(monkeypatch):
+    monkeypatch.setattr("dustylm.train.torch.cuda.is_available", lambda: False)
+    monkeypatch.setattr("dustylm.train.torch.backends.mps.is_available", lambda: True)
+
+    assert get_device_and_dtype() == ("mps", torch.float32)
 
 
 def test_train_parse_args_defaults_to_one_epoch():
@@ -79,6 +122,21 @@ def test_missing_dusty_sft_training_dataset_error_points_to_make_target(tmp_path
     )
 
     with pytest.raises(FileNotFoundError, match="make data-sft"):
+        require_training_dataset(profile)
+
+
+def test_missing_smollm2_sft_dataset_error_points_to_make_target(tmp_path):
+    profile = get_profile("sft_smollm2_135m")
+    profile = replace(
+        profile,
+        name="sft_smollm2_360m",
+        training=replace(
+            profile.training,
+            dataset_path=tmp_path / "missing_dataset",
+        ),
+    )
+
+    with pytest.raises(FileNotFoundError, match="make data-sft-smollm2"):
         require_training_dataset(profile)
 
 

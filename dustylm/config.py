@@ -171,8 +171,8 @@ smollm2_360m_model = ModelSpec(
     num_kv_heads=5,
     num_layers=32,
     hidden_dim=2560,
-    rope_base=10000,
-    rms_eps=1e-4,
+    rope_base=100000,
+    rms_eps=1e-5,
     tokenizer=SMOLLM2_TOKENIZER,
 )
 
@@ -185,6 +185,8 @@ smollm2_135m_model = ModelSpec(
     num_kv_heads=3,
     num_layers=30,
     hidden_dim=1536,
+    rope_base=100000,
+    rms_eps=1e-5,
     tokenizer=SMOLLM2_TOKENIZER,
 )
 
@@ -342,6 +344,7 @@ register(
             tokenizer_filename="tokenizer.json",
             local_weights_path=REPO_ROOT / "artifacts" / "hf" / "smollm2_360.safetensors",
             local_tokenizer_path=SMOLLM2_TOKENIZER.path_or_name,
+            revision="f8027fd0eaeea54caa13c31d31b9fdc459c38b49",
         ),
     )
 )
@@ -365,6 +368,7 @@ register(
             tokenizer_filename="tokenizer.json",
             local_weights_path=REPO_ROOT / "artifacts" / "hf" / "smollm2_135m.safetensors",
             local_tokenizer_path=SMOLLM2_TOKENIZER.path_or_name,
+            revision="93efa2f097d58c2a74874c7e644dbc9b0cee75a2",
         ),
     )
 )
@@ -380,10 +384,11 @@ register(
             # fine-tuning a larger architecture out of the box.
             # Replace this path with your own tokenized SFT dataset
             # before running `python -m dustylm.train --profile sft_smollm2_135m`
-            dataset_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_tokenized",
+            dataset_path=(REPO_ROOT / "artifacts" / "datasets" / "dusty_sft_smollm2_tokenized"),
             batch_size=1,
             learning_rate=1e-5,
             raw_sft_path=REPO_ROOT / "artifacts" / "datasets" / "dusty_sft.jsonl",
+            sft_assistant_field="dusty",
             output_checkpoint=REPO_ROOT / "artifacts" / "checkpoints" / "sft_smollm2_135m.pt",
             max_seq_len=2048,
             init_checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "smollm2_135m.pt",
@@ -391,6 +396,8 @@ register(
         generation=replace(
             get_profile("smollm2_135m").generation,
             checkpoint_path=REPO_ROOT / "artifacts" / "checkpoints" / "sft_smollm2_135m.pt",
+            bos_token_id=None,
+            eos_token_id=2,
             max_chat_turns=5,
         ),
         base_profile="smollm2_135m",

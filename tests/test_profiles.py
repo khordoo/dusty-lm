@@ -88,7 +88,11 @@ def test_sft_profile_uses_base_model_spec():
     assert sft.base_profile == "smollm2_135m"
     assert sft.model == base.model
     assert sft.training is not None
+    assert sft.training.dataset_path.name == "dusty_sft_smollm2_tokenized"
+    assert sft.training.sft_assistant_field == "dusty"
     assert sft.generation is not None
+    assert sft.generation.bos_token_id is None
+    assert sft.generation.eos_token_id == 2
     assert sft.generation.max_chat_turns == 5
     assert sft.hf_artifacts == base.hf_artifacts
 
@@ -101,11 +105,17 @@ def test_smollm2_profiles_define_download_artifacts():
     assert profile_360m.hf_artifacts.repo_id == "HuggingFaceTB/SmolLM2-360M"
     assert profile_360m.hf_artifacts.weights_filename == "model.safetensors"
     assert profile_360m.hf_artifacts.local_weights_path.name == "smollm2_360.safetensors"
+    assert profile_360m.hf_artifacts.revision == "f8027fd0eaeea54caa13c31d31b9fdc459c38b49"
+    assert profile_360m.model.rope_base == 100000
+    assert profile_360m.model.rms_eps == 1e-5
 
     assert profile_135m.hf_artifacts is not None
     assert profile_135m.hf_artifacts.repo_id == "HuggingFaceTB/SmolLM2-135M"
     assert profile_135m.hf_artifacts.local_weights_path.name == "smollm2_135m.safetensors"
+    assert profile_135m.hf_artifacts.revision == "93efa2f097d58c2a74874c7e644dbc9b0cee75a2"
     assert profile_135m.model.hidden_dim == 1536
+    assert profile_135m.model.rope_base == 100000
+    assert profile_135m.model.rms_eps == 1e-5
 
 
 def test_build_model_dispatches_scratch_family():
