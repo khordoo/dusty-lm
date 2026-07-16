@@ -1,11 +1,11 @@
 """Download public training datasets used by the Dusty quick-start flow.
 
-Defaults to an optimized 100k slice of TinyStories — enough to train the 8M
+Defaults to an optimized 100K slice of TinyStories, enough to train the 8M
 model to solid English grammar on standard hardware. To experiment with more
 data on a high-end GPU, override the slice:
 
-- ``TINYSTORIES_SLICE="train"`` — full dataset (millions of stories)
-- ``TINYSTORIES_SLICE="train[:2000000]"`` — custom slice
+- ``TINYSTORIES_SLICE="train"``: full dataset (millions of stories)
+- ``TINYSTORIES_SLICE="train[:2000000]"``: custom slice
 """
 
 import argparse
@@ -21,6 +21,18 @@ DEFAULT_DUSTY_SFT_OUT = Path("artifacts/datasets/dusty_sft.jsonl")
 DEFAULT_TINYSTORIES_SLICE = "train[:100000]"
 DEFAULT_DUSTY_CHAT_REPO = "mkhordoo/dusty-chat"
 DEFAULT_DUSTY_CHAT_FILE = "dusty_sft.jsonl"
+
+
+def resolve_category_name(value, feature) -> str:
+    """Convert a datasets ClassLabel value to the category text stored in JSONL."""
+    if isinstance(value, str):
+        return value
+
+    names = getattr(feature, "names", None)
+    if isinstance(value, int) and names and 0 <= value < len(names):
+        return names[value]
+
+    raise ValueError(f"Could not resolve Dusty category label: {value!r}")
 
 
 def parse_args(argv=None):
@@ -82,10 +94,11 @@ def download_dusty_sft(repo_id: str, filename: str, output_path: Path) -> None:
             f"Original error: {exc}"
         ) from exc
 
+    category_feature = dataset.features["category"]
     with output_path.open("w", encoding="utf-8") as f:
         for row in dataset:
             record = {
-                "category": row["category"],
+                "category": resolve_category_name(row["category"], category_feature),
                 "user": row["messages"][0]["content"],
                 "dusty": row["messages"][1]["content"],
             }

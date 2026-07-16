@@ -1,6 +1,6 @@
 # Evaluation
 
-Tools for quantitative evaluation of DustyLM checkpoints — consistency, topic coverage, checkpoint comparison, and contradiction/emotional-depth analysis.
+Tools for structured evaluation of DustyLM checkpoints, including response variation, topic coverage, checkpoint comparison, emotion-keyword counts, and manual contradiction review.
 
 ## Tools
 
@@ -20,7 +20,7 @@ uv run python evaluation/compare_checkpoints.py --profile dusty8m --input-set ba
 |---|---|
 | `--profile` | Model architecture/generation config |
 | `--steps` | Checkpoint step numbers to compare |
-| `--input-set` | `auto`, `base`, or `sft` — selects prompt inputs |
+| `--input-set` | `auto`, `base`, or `sft`; selects prompt inputs |
 | `--inputs` | Custom JSON input file (overrides `--input-set`) |
 | `--output-dir` | Output directory for reports |
 
@@ -43,7 +43,7 @@ uv run python evaluation/check_consistency.py --steps 100 150 200 --runs 5 --tem
 
 ### `eval_all_topics.py` + `analyze_topics.py` (pipeline)
 
-Two-step pipeline that tests every topic from the web app across checkpoints, then scores consistency, contradictions, and emotional depth.
+Two-step pipeline that tests every topic from the web app across checkpoints, then summarizes response variation, counts selected emotion words, and prints possible contradiction cases for manual review.
 
 ```bash
 # Step 1: Generate responses
@@ -73,5 +73,5 @@ uv run python evaluation/analyze_topics.py --csv artifacts/webapp_topics_eval.cs
 
 The `inputs/` directory contains the prompt sets used by `compare_checkpoints.py`:
 
-- **`base_inputs.json`** — open-ended prompts for pretrained base models (e.g. story continuations)
-- **`sft_inputs.json`** — chat-style prompts for SFT models (e.g. "who are you?")
+- **`base_inputs.json`**: open-ended prompts for pretrained base models (e.g. story continuations)
+- **`sft_inputs.json`**: chat-style prompts for SFT models (e.g. "who are you?")

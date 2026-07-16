@@ -27,6 +27,8 @@ hub = [
 [dependency-groups]
 dev = [
     "groq>=1.4.0",
+    "ipykernel>=7.3.0",
+    "ipywidgets>=8.1.8",
     "openai>=2.43.0",
     "pytest>=9.0.2",
     "ruff>=0.11.0",

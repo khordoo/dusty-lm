@@ -7,6 +7,12 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
+try:
+    # Enables line editing and both common backspace codes in interactive chat.
+    import readline as _readline
+except ImportError:  # pragma: no cover - readline is not available on Windows
+    _readline = None
+
 from dustylm.checkpoint import (
     CHAT_PROFILE_DEFAULT,
     load_state_dict,

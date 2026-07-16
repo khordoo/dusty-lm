@@ -155,7 +155,7 @@ def main(argv=None) -> None:
                         "output": output,
                     }
                 )
-            print(f"  [{cat:20s}] done")
+            print(f"  [{cat:20s}] ✅ done")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w", newline="") as f:
