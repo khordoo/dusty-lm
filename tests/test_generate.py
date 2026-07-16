@@ -4,6 +4,7 @@ import torch
 from dustylm.config import get_profile
 from dustylm.generate import (
     apply_top_p_filter,
+    generate_text,
     get_token_id,
     parse_args,
     prepare_generation_prompt,
@@ -67,6 +68,17 @@ def test_generation_cli_parses_temperature():
     )
 
     assert args.temperature == 0.5
+
+
+def test_generation_cli_parses_max_new_tokens():
+    args = parse_args(["--profile", "smollm2_135m", "--max-new-tokens", "128"])
+
+    assert args.max_new_tokens == 128
+
+
+def test_generate_text_rejects_non_positive_max_new_tokens_before_loading_model():
+    with pytest.raises(ValueError, match="max_new_tokens must be at least 1"):
+        generate_text(profile_name="dusty8m", max_new_tokens=0)
 
 
 def test_validate_generation_options_rejects_bad_top_p():
@@ -165,6 +177,14 @@ def test_sft_dusty_generation_prompt_wraps_raw_user_text():
 
     assert prepare_generation_prompt("Where Are You; Dusty?", profile) == (
         "<|im_start|>user\nwhere are you. dusty?<|im_end|>\n<|im_start|>assistant\n"
+    )
+
+
+def test_sft_smollm2_generation_prompt_wraps_raw_user_text():
+    profile = get_profile("sft_smollm2_135m")
+
+    assert prepare_generation_prompt("Who Are You?", profile) == (
+        "<|im_start|>user\nwho are you?<|im_end|>\n<|im_start|>assistant\n"
     )
 
 

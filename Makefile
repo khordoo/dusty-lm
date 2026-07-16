@@ -61,7 +61,7 @@ EVAL_TEMPERATURE ?=
 EVAL_MAX_NEW_TOKENS ?=
 E2E_FLAGS ?=
 
-.PHONY: help chat format lint download-models download-smollm2 download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
+.PHONY: help chat format lint download-models download-smollm2 download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft data-sft-smollm2 train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
@@ -83,7 +83,8 @@ help:
 	@printf "$(BOLD)Tokenizer & Datasets:$(NC)\n"
 	@printf "  make tokenizer                  Train tokenizer\n"
 	@printf "  make data-pretrain              Tokenize pretrain text\n"
-	@printf "  make data-sft                   Tokenize SFT chat data\n"
+	@printf "  make data-sft                   Tokenize SFT chat data for Dusty 8M\n"
+	@printf "  make data-sft-smollm2           Tokenize SFT chat data for SmolLM2 135M\n"
 	@printf "\n"
 	@printf "$(BOLD)Training:$(NC)\n"
 	@printf "  make train-pretrain EPOCHS=1    Train the dusty8m profile\n"
@@ -233,6 +234,13 @@ data-sft:
 	@printf "$(YELLOW)Tokenizing SFT data for sft_dusty8m...$(NC)\n"
 	uv run python -m dustylm.data_prep --profile sft_dusty8m
 	@printf "$(GREEN)✔ SFT data tokenized!$(NC)\n"
+
+data-sft-smollm2:
+	@printf "$(YELLOW)Clearing any existing SmolLM2 SFT tokenized data...$(NC)\n"
+	@rm -rf artifacts/datasets/dusty_sft_smollm2_tokenized
+	@printf "$(YELLOW)Tokenizing SFT data for sft_smollm2_135m...$(NC)\n"
+	uv run python -m dustylm.data_prep --profile sft_smollm2_135m
+	@printf "$(GREEN)✔ SmolLM2 SFT data tokenized!$(NC)\n"
 
 train-sft:
 	@printf "$(YELLOW)Starting SFT fine-tuning (sft_dusty8m, $(EPOCHS) epochs)...$(NC)\n"

@@ -1,6 +1,6 @@
 """Training loop with mixed-precision, TensorBoard logging, and checkpoint saving.
 
-Supports CUDA (bfloat16), Apple Silicon MPS (float16), and CPU (float32).
+Supports CUDA (bfloat16 or float16), Apple Silicon MPS, and CPU.
 The loss is computed on shifted logits/targets so that position ``t`` predicts
 token ``t+1``, following the standard causal language modeling objective.
 """
@@ -31,7 +31,12 @@ logger = logging.getLogger(__name__)
 def get_device_and_dtype():
     """Pick the fastest available training device and matching autocast dtype."""
     if torch.cuda.is_available():
-        return "cuda", torch.bfloat16
+        try:
+            supports_bfloat16 = torch.cuda.is_bf16_supported(including_emulation=False)
+        except TypeError:  # PyTorch versions before the native/emulated distinction
+            supports_bfloat16 = torch.cuda.is_bf16_supported()
+        dtype = torch.bfloat16 if supports_bfloat16 else torch.float16
+        return "cuda", dtype
     if torch.backends.mps.is_available():
         return "mps", torch.float32
     return "cpu", torch.float32
@@ -117,11 +122,8 @@ def require_training_dataset(profile: Profile) -> None:
         hint = " Run `make data-pretrain` first."
     elif profile.name == "sft_dusty8m":
         hint = " Run `make data-sft` first."
-    elif "smollm2" in profile.name:
-        hint = (
-            f" The '{profile.name}' profile acts as an architecture template. "
-            "You must prepare your own dataset and update the path first."
-        )
+    elif profile.model.family == ModelFamily.SMOLLM2:
+        hint = " Run `make data-sft-smollm2` first."
     raise FileNotFoundError(f"Tokenized training dataset not found: {dataset_path}.{hint}")
 
 
@@ -224,7 +226,10 @@ def train(
         weight_decay=training.weight_decay,
     )
     criterion = CrossEntropyLoss(ignore_index=IGNORE_INDEX)
-    scaler = torch.amp.GradScaler("cuda", enabled=device == "cuda")
+    scaler = torch.amp.GradScaler(
+        "cuda",
+        enabled=device == "cuda" and dtype == torch.float16,
+    )
     writer = get_summary_writer(training.log_dir)
 
     global_step = 0
