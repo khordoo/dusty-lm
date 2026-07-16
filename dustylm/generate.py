@@ -21,7 +21,7 @@ from dustylm.checkpoint import (
     load_state_dict,
     resolve_profile_name_for_checkpoint,
 )
-from dustylm.config import GenerationSpec, Profile, get_profile, list_profiles
+from dustylm.config import GenerationSpec, Profile, TrainingTask, get_profile, list_profiles
 from dustylm.data_prep import normalize_model_text
 from dustylm.modeling import build_model, build_tokenizer
 from dustylm.tokenizer import CHATML_END_TOKEN, CHATML_START_TOKEN
@@ -155,7 +155,7 @@ def prepare_generation_prompt(prompt: str, profile: Profile) -> str:
         return prompt
 
     prompt = normalize_model_text(prompt)
-    if profile.name != "sft_dusty8m":
+    if profile.training is None or profile.training.task != TrainingTask.SFT:
         return prompt
 
     return f"{CHATML_START_TOKEN}user\n{prompt}{CHATML_END_TOKEN}\n{CHATML_START_TOKEN}assistant\n"

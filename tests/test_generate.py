@@ -180,6 +180,14 @@ def test_sft_dusty_generation_prompt_wraps_raw_user_text():
     )
 
 
+def test_sft_smollm2_generation_prompt_wraps_raw_user_text():
+    profile = get_profile("sft_smollm2_135m")
+
+    assert prepare_generation_prompt("Who Are You?", profile) == (
+        "<|im_start|>user\nwho are you?<|im_end|>\n<|im_start|>assistant\n"
+    )
+
+
 def test_sft_dusty_generation_prompt_does_not_double_wrap_chatml():
     profile = get_profile("sft_dusty8m")
     prompt = "<|im_start|>user\nwhere are you?<|im_end|>\n<|im_start|>assistant\n"
