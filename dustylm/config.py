@@ -229,8 +229,9 @@ dusty_8m_model = ModelSpec(
 #    sft_smollm2_135m           - SFT profile for the 135M baseline
 #
 # The TrainingSpec batch size and checkpoint interval below are conservative
-# direct-Python defaults. The Makefile and notebooks override them for the
-# current Colab golden path (batch 224, checkpoints every 50 steps).
+# direct-Python defaults. The Dusty Colab workflow overrides them with batch
+# 224 and checkpoints every 50 steps. Notebook 05 documents separate tested
+# T4 overrides for SmolLM2 fine-tuning.
 # =============================================================================
 
 register(
