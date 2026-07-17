@@ -127,12 +127,18 @@ def test_upload_auth_error_mentions_token(monkeypatch, tmp_path):
     monkeypatch.setattr(push_to_hub, "HfHubHTTPError", FakeAuthError)
     monkeypatch.setattr(push_to_hub, "HfApi", lambda: FakeApi())
 
-    with pytest.raises(RuntimeError, match="Set HF_TOKEN"):
+    with pytest.raises(RuntimeError) as exc_info:
         push_to_hub.upload_staging_dir(
             staging_dir=tmp_path,
             repo_id="mkhordoo/dusty-8m-sft",
             commit_message="test",
         )
+
+    message = str(exc_info.value)
+    assert "Run `hf auth login`" in message
+    assert "set the HF_TOKEN environment variable" in message
+    assert "Use one authentication method" in message
+    assert "pass a valid token" not in message
 
 
 def test_push_to_hub_does_not_depend_on_docs_model():

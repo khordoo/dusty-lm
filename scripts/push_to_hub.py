@@ -272,8 +272,9 @@ def upload_staging_dir(
         if is_auth_error(exc):
             raise RuntimeError(
                 "Hugging Face upload is not authenticated. "
-                "Set HF_TOKEN, run `huggingface-cli login`, or pass a valid token "
-                "through your Hugging Face environment."
+                "Run `hf auth login`, or set the HF_TOKEN environment variable. "
+                "Use one authentication method, and make sure the token has write access "
+                "to the target repository."
             ) from exc
         raise
 

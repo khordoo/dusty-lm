@@ -50,6 +50,12 @@ HF_SFT_PROFILE ?= sft_dusty8m
 HF_BASE_MODEL_CARD ?= artifacts/hf/HF_BASE_MODEL_CARD.md
 HF_SFT_MODEL_CARD ?= artifacts/hf/HF_MODEL_CARD.md
 HUB_TARGET ?= all
+VALID_HUB_TARGETS := all base sft
+HF_DATASET_REPO_ID ?= mkhordoo/dusty-chat
+HF_DATASET_INPUT ?= artifacts/datasets/dusty_sft.jsonl
+HF_DATASET_CARD ?= artifacts/hf/HF_DATASET_CARD.md
+HF_DATASET_TEST_SIZE ?= 1500
+HF_DATASET_SEED ?= 42
 EVAL_PROFILE ?= sft_dusty8m
 EVAL_INPUT_SET ?= auto
 EVAL_INPUTS ?=
@@ -61,7 +67,7 @@ EVAL_TEMPERATURE ?=
 EVAL_MAX_NEW_TOKENS ?=
 E2E_FLAGS ?=
 
-.PHONY: help chat format lint download-models download-smollm2 download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft data-sft-smollm2 train-sft eval-checkpoints serve-web export-onnx stage-hub push-hub push-dataset tensorboard train-end-to-end
+.PHONY: help chat format lint download-models download-smollm2 download-datasets synthesize-sft filter-sft tokenizer data-pretrain train-pretrain generate data-sft data-sft-smollm2 train-sft eval-checkpoints serve-web export-onnx validate-hub-target stage-hub push-hub stage-dataset push-dataset tensorboard train-end-to-end
 
 help:
 	@printf "$(BOLD)$(CYAN)DustyLM commands$(NC)\n"
@@ -110,7 +116,8 @@ help:
 	@printf "  make push-hub HUB_TARGET=base   Push only base repo\n"
 	@printf "  make push-hub HUB_TARGET=sft    Push only SFT repo\n"
 	@printf "  make push-hub HF_REPO_ID=...    Push a single repo\n"
-	@printf "  make push-dataset               Convert and push SFT dataset to Hugging Face\n"
+	@printf "  make stage-dataset              Convert and validate the SFT dataset without uploading\n"
+	@printf "  make push-dataset               Convert and push the SFT dataset to Hugging Face\n"
 	@printf "  make tensorboard                Plot training logs from artifacts/tensorboard/\n"
 
 format:
@@ -278,7 +285,15 @@ serve-web:
 	@printf "$(CYAN)Open http://localhost:$(WEB_PORT) in your browser to chat with DustyLM.$(NC)\n"
 	uv run python -m http.server $(WEB_PORT) --directory docs
 
-stage-hub:
+validate-hub-target:
+ifndef HF_REPO_ID
+	@case "$(HUB_TARGET)" in \
+		all|base|sft) ;; \
+		*) printf "$(RED)Invalid HUB_TARGET='$(HUB_TARGET)'. Choose one of: $(VALID_HUB_TARGETS).$(NC)\n"; exit 2 ;; \
+	esac
+endif
+
+stage-hub: validate-hub-target
 ifdef HF_REPO_ID
 	@printf "$(YELLOW)Staging artifacts locally for $(HF_REPO_ID) (dry run)...$(NC)\n"
 	uv run --extra onnx --extra hub python scripts/push_to_hub.py \
@@ -313,7 +328,7 @@ endif
 	@printf "$(GREEN)✔ Staging complete. Review artifacts in artifacts/hub_upload/ before running make push-hub.$(NC)\n"
 endif
 
-push-hub:
+push-hub: validate-hub-target
 ifdef HF_REPO_ID
 	@printf "$(YELLOW)Pushing artifacts to Hugging Face Hub repo $(HF_REPO_ID)...$(NC)\n"
 	uv run --extra onnx --extra hub python scripts/push_to_hub.py \
@@ -347,9 +362,25 @@ endif
 	@printf "$(GREEN)✔ Hub push complete!$(NC)\n"
 endif
 
+stage-dataset:
+	@printf "$(YELLOW)Converting and validating SFT dataset locally (dry run)...$(NC)\n"
+	uv run python scripts/convert_dataset_to_hf.py \
+		--input "$(HF_DATASET_INPUT)" \
+		--repo-id "$(HF_DATASET_REPO_ID)" \
+		--readme "$(HF_DATASET_CARD)" \
+		--test-size $(HF_DATASET_TEST_SIZE) \
+		--seed $(HF_DATASET_SEED) \
+		--dry-run
+	@printf "$(GREEN)✔ Dataset dry run complete. No files were uploaded.$(NC)\n"
+
 push-dataset:
 	@printf "$(YELLOW)Converting and pushing SFT dataset to Hugging Face...$(NC)\n"
-	uv run python scripts/convert_dataset_to_hf.py --readme artifacts/hf/HF_DATASET_CARD.md
+	uv run python scripts/convert_dataset_to_hf.py \
+		--input "$(HF_DATASET_INPUT)" \
+		--repo-id "$(HF_DATASET_REPO_ID)" \
+		--readme "$(HF_DATASET_CARD)" \
+		--test-size $(HF_DATASET_TEST_SIZE) \
+		--seed $(HF_DATASET_SEED)
 	@printf "$(GREEN)✔ SFT dataset pushed to Hugging Face!$(NC)\n"
 
 tensorboard:

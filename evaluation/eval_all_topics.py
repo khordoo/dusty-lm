@@ -9,7 +9,6 @@ import csv
 import re
 from pathlib import Path
 
-from dustylm.checkpoint import resolve_profile_name_for_checkpoint
 from dustylm.config import get_profile
 from dustylm.generate import (
     encode_prompt,
@@ -34,7 +33,7 @@ def extract_topics(html_path: str) -> list[dict]:
     return topics
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Evaluate checkpoints on all web app topic questions"
     )
@@ -44,40 +43,60 @@ def main():
     parser.add_argument(
         "--runs", type=int, default=3, help="Number of generations per prompt per checkpoint"
     )
+    parser.add_argument("--profile", default="sft_dusty8m", help="Profile name")
+    parser.add_argument(
+        "--checkpoint-dir", type=Path, help="Override checkpoint directory (default: from profile)"
+    )
     parser.add_argument(
         "--html", default="docs/index.html", help="Path to web app HTML with TOPICS object"
     )
     parser.add_argument(
-        "--output", default="artifacts/webapp_topics_eval.csv", help="Output CSV path"
+        "--output", default="artifacts/evaluations/webapp_topics.csv", help="Output CSV path"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    if args.runs < 1:
+        parser.error("--runs must be at least 1")
 
     topics = extract_topics(args.html)
     print(f"Found {len(topics)} topic questions\n")
 
-    fieldnames = ["checkpoint_step", "topic_key", "question", "run", "output"]
+    fieldnames = [
+        "checkpoint_step",
+        "topic_key",
+        "question",
+        "run",
+        "status",
+        "output",
+        "error",
+    ]
     rows = []
+    failure_count = 0
+    profile = get_profile(args.profile)
+    if profile.generation is None:
+        raise ValueError(f"Profile {args.profile!r} does not define generation config")
 
     for step in args.steps:
-        checkpoint_path = Path("artifacts/checkpoints") / f"dusty8m_sft_step_{step}.pt"
-        if not checkpoint_path.exists():
-            print(f"SKIP: checkpoint {checkpoint_path} not found")
-            continue
-
         print(f"\n{'=' * 60}")
-        print(f"Loading checkpoint step {step}...")
+        if step == 0:
+            print("Loading final profile checkpoint...")
+            checkpoint_path = None
+            checkpoint_step = None
+        elif args.checkpoint_dir is not None:
+            checkpoint_path = (
+                args.checkpoint_dir / f"{profile.generation.checkpoint_path.stem}_step_{step}.pt"
+            )
+            checkpoint_step = None
+            print(f"Loading checkpoint step {step} from {checkpoint_path}...")
+        else:
+            checkpoint_path = None
+            checkpoint_step = step
+            print(f"Loading checkpoint step {step}...")
         print(f"{'=' * 60}")
 
-        profile_name = resolve_profile_name_for_checkpoint(
-            checkpoint_path,
-            explicit_profile=None,
-            default_profile="sft_dusty8m",
-            mode="generation",
-        )
-        profile = get_profile(profile_name)
         model, tokenizer, device = load_model(
             profile,
             checkpoint_path=checkpoint_path,
+            checkpoint_step=checkpoint_step,
         )
         spec = profile.generation
 
@@ -102,7 +121,9 @@ def main():
                             "topic_key": topic["key"],
                             "question": topic["question"],
                             "run": run + 1,
+                            "status": "ok",
                             "output": text,
+                            "error": "",
                         }
                     )
                     idx = i * args.runs + run + 1
@@ -110,25 +131,33 @@ def main():
                         f"[{idx}/{total}] step={step} key={topic['key']:25s} run={run + 1} | {text[:70]}"
                     )
                 except Exception as e:
+                    failure_count += 1
                     rows.append(
                         {
                             "checkpoint_step": step,
                             "topic_key": topic["key"],
                             "question": topic["question"],
                             "run": run + 1,
-                            "output": f"ERROR: {e}",
+                            "status": "error",
+                            "output": "",
+                            "error": str(e),
                         }
                     )
                     print(
                         f"[{i * args.runs + run + 1}/{total}] step={step} key={topic['key']:25s} run={run + 1} | ERROR: {e}"
                     )
 
-    with open(args.output, "w", newline="") as f:
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"\nDone! Results written to {args.output} ({len(rows)} rows)")
+    print(
+        f"\nDone! Results written to {output_path} "
+        f"({len(rows)} rows, {failure_count} failed generation(s))"
+    )
 
 
 if __name__ == "__main__":

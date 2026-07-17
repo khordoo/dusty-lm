@@ -98,7 +98,7 @@ def main(argv=None) -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=REPO_ROOT / "artifacts" / "consistency_fine.csv",
+        default=REPO_ROOT / "artifacts" / "evaluations" / "consistency.csv",
         help="Output CSV path",
     )
     parser.add_argument(
@@ -106,12 +106,15 @@ def main(argv=None) -> None:
     )
     parser.add_argument("--profile", default="sft_dusty8m", help="Profile name")
     args = parser.parse_args(argv)
+    if args.runs < 1:
+        parser.error("--runs must be at least 1")
 
     device = get_device()
     print(f"Device: {device}")
     profile = get_profile(args.profile)
 
     rows = []
+    failure_count = 0
     for step in args.steps:
         print(f"\n{'=' * 60}")
         # step 0 = final hub/profile checkpoint (e.g. dusty8m_sft.pt)
@@ -144,15 +147,22 @@ def main(argv=None) -> None:
                     output = generate_one(
                         model, tokenizer, device, profile, prompt, args.top_p, args.temperature
                     )
+                    status = "ok"
+                    error = ""
                 except Exception as e:
-                    output = f"ERROR: {e}"
+                    failure_count += 1
+                    status = "error"
+                    output = ""
+                    error = str(e)
                 rows.append(
                     {
                         "checkpoint_step": step,
                         "category": cat,
                         "prompt": prompt,
                         "run": run_idx + 1,
+                        "status": status,
                         "output": output,
+                        "error": error,
                     }
                 )
             print(f"  [{cat:20s}] ✅ done")
@@ -160,12 +170,23 @@ def main(argv=None) -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w", newline="") as f:
         writer = csv.DictWriter(
-            f, fieldnames=["checkpoint_step", "category", "prompt", "run", "output"]
+            f,
+            fieldnames=[
+                "checkpoint_step",
+                "category",
+                "prompt",
+                "run",
+                "status",
+                "output",
+                "error",
+            ],
         )
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"\nSaved {len(rows)} generations to {args.output}")
+    print(
+        f"\nSaved {len(rows)} generations to {args.output} ({failure_count} failed generation(s))"
+    )
 
 
 if __name__ == "__main__":

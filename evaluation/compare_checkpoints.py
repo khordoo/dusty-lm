@@ -298,6 +298,18 @@ def run_comparison(args) -> tuple[Path, Path]:
     run_id = args.run_id or build_run_id(input_set)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
+    profile = get_profile(args.profile)
+    if profile.generation is None:
+        raise ValueError(f"Profile {args.profile!r} does not define generation config")
+    resolved_top_p = profile.generation.top_p if args.top_p is None else args.top_p
+    resolved_temperature = (
+        profile.generation.temperature if args.temperature is None else args.temperature
+    )
+    resolved_max_new_tokens = (
+        profile.generation.max_new_tokens if args.max_new_tokens is None else args.max_new_tokens
+    )
+    validate_generation_options(resolved_top_p, resolved_temperature)
+
     results = []
     for step in args.steps:
         print(f"Evaluating checkpoint step {step} on {len(inputs)} inputs...")
@@ -306,9 +318,9 @@ def run_comparison(args) -> tuple[Path, Path]:
                 profile_name=args.profile,
                 step=step,
                 inputs=inputs,
-                top_p=args.top_p,
-                temperature=args.temperature,
-                max_new_tokens=args.max_new_tokens,
+                top_p=resolved_top_p,
+                temperature=resolved_temperature,
+                max_new_tokens=resolved_max_new_tokens,
             )
         )
 
@@ -319,9 +331,9 @@ def run_comparison(args) -> tuple[Path, Path]:
         "input_set": input_set,
         "input_path": str(input_path),
         "checkpoint_steps": args.steps,
-        "top_p": args.top_p,
-        "temperature": args.temperature,
-        "max_new_tokens": args.max_new_tokens,
+        "top_p": resolved_top_p,
+        "temperature": resolved_temperature,
+        "max_new_tokens": resolved_max_new_tokens,
     }
     report = {
         **metadata,

@@ -65,52 +65,73 @@ def convert_to_messages(row: dict) -> dict:
     }
 
 
-def main(argv=None):
-    args = parse_args(argv)
+def require_file(path: Path, label: str) -> None:
+    """Fail before conversion or upload when a required source is missing."""
+    if not path.exists():
+        raise FileNotFoundError(f"{label} not found: {path}")
+    if not path.is_file():
+        raise ValueError(f"{label} is not a file: {path}")
 
-    if not args.input.exists():
-        print(f"Error: {args.input} not found.")
-        print("Expected a JSONL file with one object per line:")
-        print('  {"category": "...", "user": "...", "dusty": "..."}')
-        print()
-        print(
-            "Generate the dataset with `make synthesize-sft` or download it with `make download-datasets`."
-        )
-        print(
-            "The default path is artifacts/datasets/dusty_sft.jsonl. Pass --input <path> to use a custom file."
-        )
-        return
 
-    print(f"Loading dataset from {args.input}...")
-    dataset = load_dataset("json", data_files=str(args.input))["train"]
+def prepare_dataset(input_path: Path, test_size: int, seed: int):
+    """Load, convert, and split a local SFT JSONL dataset."""
+    require_file(input_path, "SFT dataset")
+    if test_size < 1:
+        raise ValueError("test_size must be at least 1")
+
+    print(f"Loading dataset from {input_path}...")
+    dataset = load_dataset("json", data_files=str(input_path))["train"]
+    if test_size >= len(dataset):
+        raise ValueError(
+            f"test_size ({test_size}) must be smaller than the dataset ({len(dataset)} rows)"
+        )
     print(f"  {len(dataset)} rows, {len(set(dataset['category']))} categories")
 
-    print("Converting to ChatML messages format...")
+    print("Converting to standard conversational messages format...")
     dataset = dataset.map(convert_to_messages, remove_columns=["user", "dusty"])
 
-    print(f"Splitting stratified test_size={args.test_size}...")
+    print(f"Splitting stratified test_size={test_size}...")
     dataset = dataset.class_encode_column("category")
     split = dataset.train_test_split(
-        test_size=args.test_size,
+        test_size=test_size,
         stratify_by_column="category",
-        seed=args.seed,
+        seed=seed,
     )
     print(f"  Train: {len(split['train'])}  Test: {len(split['test'])}")
+    return split
 
-    if not args.dry_run:
-        print(f"Pushing to Hugging Face dataset hub: {args.repo_id}...")
-        split.push_to_hub(args.repo_id, private=False)
-        if args.readme:
-            print(f"Uploading README from {args.readme}...")
-            HfApi().upload_file(
-                path_or_fileobj=str(args.readme),
-                path_in_repo="README.md",
-                repo_id=args.repo_id,
-                repo_type="dataset",
-            )
-        print("Done.")
-    else:
-        print(f"Dry run — skipping push to {args.repo_id}")
+
+def upload_dataset(split, repo_id: str, readme_path: Path | None) -> None:
+    """Upload a prepared dataset and optional card to one dataset repository."""
+    print(f"Pushing to Hugging Face dataset hub: {repo_id}...")
+    split.push_to_hub(repo_id, private=False)
+    if readme_path is not None:
+        print(f"Uploading README from {readme_path}...")
+        HfApi().upload_file(
+            path_or_fileobj=str(readme_path),
+            path_in_repo="README.md",
+            repo_id=repo_id,
+            repo_type="dataset",
+        )
+    print("Done.")
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    if args.readme is not None:
+        require_file(args.readme, "Dataset card")
+
+    split = prepare_dataset(
+        input_path=args.input,
+        test_size=args.test_size,
+        seed=args.seed,
+    )
+
+    if args.dry_run:
+        print(f"Dry run complete. Skipping push to {args.repo_id}.")
+        return
+
+    upload_dataset(split, repo_id=args.repo_id, readme_path=args.readme)
 
 
 if __name__ == "__main__":
