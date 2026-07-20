@@ -84,6 +84,23 @@ def prepare_chatml_sft_training_example(user_text: str, assistant_text: str, tok
     }
 
 
+def require_sft_target_within_context(
+    example: dict[str, list[int]],
+    max_seq_len: int,
+    row_number: int,
+) -> None:
+    """Ensure truncation leaves an assistant token for the model to learn from."""
+    labels = example["labels"][:max_seq_len]
+    if len(labels) >= 2 and any(label != IGNORE_INDEX for label in labels[1:]):
+        return
+
+    raise ValueError(
+        f"SFT row {row_number} has no assistant target tokens after truncation to "
+        f"max_seq_len={max_seq_len}. Shorten the user prompt or increase the profile's "
+        "training max_seq_len."
+    )
+
+
 def prepare_training_example(example, tokenizer=None):
     return prepare_prompt_response_training_example(example, tokenizer)
 
@@ -187,9 +204,11 @@ def prepare_plain_text_examples(documents: list[str], tokenizer, max_seq_len: in
             total_examples += 1
             yield {"input_ids": input_ids}
 
-    if carry:
+    if len(carry) >= 2:
         total_examples += 1
         yield {"input_ids": carry}
+    elif carry:
+        logger.warning("Dropping a one-token pretraining remainder")
 
     logger.info("Total token count: %s", f"{total_tokens:,}")
     logger.info("Total examples: %s", total_examples)
@@ -239,6 +258,12 @@ def prepare_scratch_text_dataset(profile: Profile):
 
 
 def prepare_jsonl_sft_dataset(profile: Profile):
+    """Convert SFT JSONL rows into tokenized examples and save the dataset.
+
+    Each example is checked to ensure part of the assistant reply remains within
+    the sequence limit. Without a reply token to predict, the model cannot learn
+    from that example.
+    """
     if profile.training is None:
         raise ValueError(f"Profile '{profile.name}' does not define training config")
     if profile.training.raw_sft_path is None:
@@ -249,13 +274,19 @@ def prepare_jsonl_sft_dataset(profile: Profile):
     tokenizer = build_tokenizer(profile)
 
     examples = []
-    for index, row in enumerate(rows):
+    for index, row in enumerate(rows, start=1):
         try:
             user_text = row[profile.training.sft_user_field]
             assistant_text = row[profile.training.sft_assistant_field]
         except KeyError as exc:
             raise KeyError(f"SFT row {index} is missing configured field {exc.args[0]!r}") from exc
-        examples.append(prepare_chatml_sft_training_example(user_text, assistant_text, tokenizer))
+        example = prepare_chatml_sft_training_example(user_text, assistant_text, tokenizer)
+        require_sft_target_within_context(
+            example,
+            max_seq_len=profile.training.max_seq_len,
+            row_number=index,
+        )
+        examples.append(example)
 
     tokenized_dataset = Dataset.from_list(examples)
     logger.info("Saving dataset to %s", profile.training.dataset_path)

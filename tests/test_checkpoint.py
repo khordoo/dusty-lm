@@ -54,6 +54,14 @@ def test_read_sidecar_profile_name_prefers_checkpoint_stem_config(tmp_path):
     assert read_sidecar_profile_name(checkpoint_path) == "sft_dusty8m"
 
 
+def test_read_sidecar_profile_name_ignores_non_object_json(tmp_path):
+    checkpoint_path = tmp_path / "model.pt"
+    checkpoint_path.write_text("placeholder")
+    (tmp_path / "model.json").write_text("[]")
+
+    assert read_sidecar_profile_name(checkpoint_path) is None
+
+
 def test_resolve_profile_explicit_profile_beats_sidecar_config(tmp_path):
     checkpoint_path = tmp_path / "model.pt"
     checkpoint_path.write_text("placeholder")

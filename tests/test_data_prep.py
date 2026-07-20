@@ -16,6 +16,7 @@ from dustylm.data_prep import (
     prepare_training_example,
     read_jsonl_sft_rows,
     read_plain_text_documents,
+    require_sft_target_within_context,
     require_tokenizer_file,
 )
 
@@ -70,6 +71,25 @@ def test_prepare_chatml_sft_training_example_masks_user_tokens():
     first_response_idx = result["labels"].index(ord("d"))
     assert result["labels"][:first_response_idx] == [IGNORE_INDEX] * first_response_idx
     assert result["input_ids"][first_response_idx:] == result["labels"][first_response_idx:]
+
+
+def test_require_sft_target_within_context_rejects_fully_truncated_response():
+    example = {
+        "input_ids": [1, 2, 3, 4],
+        "labels": [IGNORE_INDEX, IGNORE_INDEX, 3, 4],
+    }
+
+    with pytest.raises(ValueError, match=r"SFT row 7.*no assistant target.*max_seq_len=2"):
+        require_sft_target_within_context(example, max_seq_len=2, row_number=7)
+
+
+def test_require_sft_target_within_context_accepts_one_shifted_response_target():
+    example = {
+        "input_ids": [1, 2, 3],
+        "labels": [IGNORE_INDEX, IGNORE_INDEX, 3],
+    }
+
+    require_sft_target_within_context(example, max_seq_len=3, row_number=1)
 
 
 def test_prepare_jsonl_sft_dataset_uses_configured_assistant_field(monkeypatch, tmp_path):
@@ -161,6 +181,17 @@ def test_plain_text_examples_store_only_input_ids():
 
     assert examples
     assert all(set(example) == {"input_ids"} for example in examples)
+
+
+def test_plain_text_examples_drop_one_token_remainder(caplog):
+    class OneTokenTokenizer:
+        def encode(self, text, allowed_special=None):
+            return [1]
+
+    examples = list(prepare_plain_text_examples(["story"], OneTokenTokenizer(), max_seq_len=8))
+
+    assert examples == []
+    assert "one-token pretraining remainder" in caplog.text
 
 
 def test_iter_plain_text_documents_streams_blank_line_separated_documents(tmp_path):

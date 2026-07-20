@@ -324,12 +324,15 @@ def run_chat_loop(engine: Inference, args) -> None:
 
 def main(argv=None):
     args = parse_args(argv)
-    engine = Inference(
-        checkpoint_path=args.checkpoint_path,
-        tokenizer_path=args.tokenizer_path,
-        device=args.device,
-        profile_name=args.profile,
-    )
+    try:
+        engine = Inference(
+            checkpoint_path=args.checkpoint_path,
+            tokenizer_path=args.tokenizer_path,
+            device=args.device,
+            profile_name=args.profile,
+        )
+    except FileNotFoundError as exc:
+        raise SystemExit(f"Error: {exc}") from None
     run_chat_loop(engine, args)
 
 

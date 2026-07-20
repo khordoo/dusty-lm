@@ -10,17 +10,22 @@ from dustylm.checkpoint import CHAT_PROFILE_DEFAULT
 from dustylm.config import get_profile
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("profile", nargs="?", default=CHAT_PROFILE_DEFAULT)
     parser.add_argument("mode", nargs="?", default="generate")
     parser.add_argument("--checkpoint-step", type=int, default=None)
-    args = parser.parse_args()
+    parser.add_argument("--checkpoint-path", type=Path, default=None)
+    parser.add_argument("--tokenizer-path", type=Path, default=None)
+    args = parser.parse_args(argv)
 
     p = get_profile(args.profile)
     missing = []
 
-    if args.checkpoint_step is not None:
+    if args.checkpoint_path is not None:
+        if not args.checkpoint_path.exists():
+            missing.append(str(args.checkpoint_path))
+    elif args.checkpoint_step is not None:
         step_checkpoint = (
             p.generation.checkpoint_path.parent
             / f"{p.generation.checkpoint_path.stem}_step_{args.checkpoint_step}.pt"
@@ -30,10 +35,11 @@ def main():
     elif p.generation and not Path(p.generation.checkpoint_path).exists():
         missing.append(str(p.generation.checkpoint_path))
 
-    if p.model.tokenizer.kind != "tiktoken":
-        tok_path = Path(p.model.tokenizer.path_or_name)
-        if not tok_path.exists():
-            missing.append(str(tok_path))
+    tokenizer_path = args.tokenizer_path
+    if tokenizer_path is None and p.model.tokenizer.kind != "tiktoken":
+        tokenizer_path = Path(p.model.tokenizer.path_or_name)
+    if tokenizer_path is not None and not tokenizer_path.exists():
+        missing.append(str(tokenizer_path))
 
     if missing:
         print("Missing artifacts:")

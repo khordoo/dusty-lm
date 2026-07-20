@@ -9,7 +9,6 @@ the full sequence at every step:
 """
 
 import argparse
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -197,17 +196,18 @@ def load_model(
         raise ValueError(f"Profile '{profile.name}' does not define generation config")
 
     device = device or get_device()
-    tokenizer = build_tokenizer(profile)
-    model = build_model(profile)
     checkpoint_path = resolve_generation_checkpoint_path(
         profile,
         checkpoint_step=checkpoint_step,
         checkpoint_path=checkpoint_path,
     )
     if not checkpoint_path.exists():
-        print(f"Checkpoint not found: {checkpoint_path}", file=sys.stderr)
-        print("Run `make download-models` or `make train-sft` first.", file=sys.stderr)
-        sys.exit(1)
+        raise FileNotFoundError(
+            f"Checkpoint not found: {checkpoint_path}. "
+            "Run `make download-models` or `make train-sft` first."
+        )
+    tokenizer = build_tokenizer(profile)
+    model = build_model(profile)
     state_dict = load_state_dict(checkpoint_path, map_location=device)
     # RoPE caches are derived buffers, not learned parameters.
     state_dict.pop("rope.sin_cache", None)
@@ -459,15 +459,18 @@ def generate_text(
 def main(argv=None):
     """CLI entry point for ``python -m dustylm.generate``."""
     args = parse_args(argv)
-    generate_text(
-        prompt=args.prompt,
-        profile_name=args.profile,
-        checkpoint_step=args.checkpoint_step,
-        checkpoint_path=args.checkpoint_path,
-        top_p=args.top_p,
-        temperature=args.temperature,
-        max_new_tokens=args.max_new_tokens,
-    )
+    try:
+        generate_text(
+            prompt=args.prompt,
+            profile_name=args.profile,
+            checkpoint_step=args.checkpoint_step,
+            checkpoint_path=args.checkpoint_path,
+            top_p=args.top_p,
+            temperature=args.temperature,
+            max_new_tokens=args.max_new_tokens,
+        )
+    except FileNotFoundError as exc:
+        raise SystemExit(f"Error: {exc}") from None
 
 
 if __name__ == "__main__":

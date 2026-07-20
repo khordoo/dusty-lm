@@ -6,12 +6,16 @@ from dustylm.generate import (
     apply_top_p_filter,
     generate_text,
     get_token_id,
+    load_model,
     parse_args,
     prepare_generation_prompt,
     resolve_generation_checkpoint_path,
     resolve_num_new_tokens,
     validate_generation_options,
     validate_prompt_length,
+)
+from dustylm.generate import (
+    main as generate_main,
 )
 
 
@@ -79,6 +83,31 @@ def test_generation_cli_parses_max_new_tokens():
 def test_generate_text_rejects_non_positive_max_new_tokens_before_loading_model():
     with pytest.raises(ValueError, match="max_new_tokens must be at least 1"):
         generate_text(profile_name="dusty8m", max_new_tokens=0)
+
+
+def test_load_model_raises_when_checkpoint_is_missing(tmp_path):
+    profile = get_profile("sft_dusty8m")
+
+    with pytest.raises(FileNotFoundError, match="make download-models.*make train-sft"):
+        load_model(profile, checkpoint_path=tmp_path / "missing.pt")
+
+
+def test_generate_cli_formats_missing_checkpoint_without_traceback(tmp_path):
+    missing_checkpoint = tmp_path / "missing.pt"
+
+    with pytest.raises(SystemExit) as exc_info:
+        generate_main(
+            [
+                "--profile",
+                "sft_dusty8m",
+                "--checkpoint-path",
+                str(missing_checkpoint),
+                "--prompt",
+                "hello",
+            ]
+        )
+
+    assert str(exc_info.value).startswith(f"Error: Checkpoint not found: {missing_checkpoint}")
 
 
 def test_validate_generation_options_rejects_bad_top_p():

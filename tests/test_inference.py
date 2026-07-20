@@ -13,6 +13,9 @@ from dustylm.inference import (
     strip_stop_text,
     trim_chat_messages,
 )
+from dustylm.inference import (
+    main as inference_main,
+)
 
 
 class FakeRope:
@@ -125,6 +128,24 @@ def test_inference_cli_parses_overrides():
     assert args.max_tokens == 12
     assert args.top_p == 0.9
     assert args.max_chat_turns == 3
+
+
+def test_inference_cli_formats_missing_checkpoint_without_traceback(tmp_path):
+    missing_checkpoint = tmp_path / "missing.pt"
+
+    with pytest.raises(SystemExit) as exc_info:
+        inference_main(
+            [
+                "--profile",
+                "sft_dusty8m",
+                "--checkpoint-path",
+                str(missing_checkpoint),
+                "--device",
+                "cpu",
+            ]
+        )
+
+    assert str(exc_info.value).startswith(f"Error: Checkpoint not found: {missing_checkpoint}")
 
 
 def test_require_sft_profile_rejects_base_profile():

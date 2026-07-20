@@ -96,6 +96,8 @@ def read_sidecar_profile_name(checkpoint_path: str | Path) -> str | None:
             config = json.loads(config_path.read_text())
         except json.JSONDecodeError:
             continue
+        if not isinstance(config, dict):
+            continue
         profile_name = config.get("profile_name")
         if isinstance(profile_name, str) and profile_name:
             return profile_name
