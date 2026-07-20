@@ -523,6 +523,12 @@
       transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
     }
 
+    .suggestions .suggestion-greeting {
+      width: calc((100% - 10px) / 2);
+      grid-column: 1 / -1;
+      justify-self: center;
+    }
+
     .suggestions button:hover:not(:disabled) {
       background: var(--surface);
       color: var(--text);
@@ -713,6 +719,11 @@
         font-size: 13px;
       }
 
+      .suggestions .suggestion-greeting {
+        width: 100%;
+        grid-column: auto;
+      }
+
       .input-area {
         width: calc(100% - 28px);
       }
@@ -779,7 +790,8 @@
         </div>
       </div>
       <div class="suggestions" id="suggestions">
-        <button type="button" data-prompt="hi, who are you?" disabled><span class="icon" aria-hidden="true">👋</span> hi, who are you?</button>
+        <button class="suggestion-greeting" type="button" data-prompt="hi, who are you?" disabled><span class="icon" aria-hidden="true">👋</span> hi, who are you?</button>
+        <button type="button" data-prompt="what do you eat?" disabled><span class="icon" aria-hidden="true">🍪</span> what do you eat?</button>
         <button type="button" data-prompt="what scares you?" disabled><span class="icon" aria-hidden="true">🧱</span> what scares you?</button>
         <button type="button" data-prompt="where do you go when you're tired?" disabled><span class="icon" aria-hidden="true">🏠</span> where do you go when you're tired?</button>
         <button type="button" data-prompt="what does love mean to you?" disabled><span class="icon" aria-hidden="true">💜</span> what does love mean to you?</button>
