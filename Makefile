@@ -491,3 +491,17 @@ traits-controls-plan:
 
 traits-verify:
 	uv run pytest -q tests/test_traits_catalog.py tests/test_traits_stage1.py tests/test_traits_stage2.py tests/test_traits_launch.py tests/test_traits_controls.py
+
+# Fourth Experiment 2 candidate: explicit preference baseline. Freeze before run.
+PREFERENCE_LABELS ?=
+
+.PHONY: preference-freeze preference-run preference-score
+preference-freeze:
+	uv run python -m experiments.weight_space_preference.screen freeze
+
+preference-run:
+	uv run python -m experiments.weight_space_preference.screen run
+
+preference-score:
+	@test -n "$(PREFERENCE_LABELS)" || { echo 'Set PREFERENCE_LABELS to the completed labels JSON.'; exit 2; }
+	uv run python -m experiments.weight_space_preference.screen score --labels "$(PREFERENCE_LABELS)"

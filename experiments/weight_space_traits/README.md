@@ -123,10 +123,15 @@ Selection is recorded only after the editor has observed the chosen trait. The
 host then runs one screen over 8 trait prompts × (greedy + 3 seeds) plus 4
 capability controls. All outputs are retained. `scoring-required.json` contains
 the frozen rubric, response hashes, a label template and the exact resume command.
-A scorer accepts only complete human labels; mixed responses never count as
-positive; no prompt exclusion or replacement is accepted. Eligibility is
+Labels now require explicit provenance: human labels must declare
+`label_source: "human"` and `human_review: true`; model-assisted labels must
+declare `label_source: "model-assisted"` and can never create Stage 2 eligibility.
+A scorer accepts only complete labels; mixed responses never count as positive;
+no prompt exclusion or replacement is accepted. Eligibility is
 `positive / all trait generations >= 0.75`. Failing the gate writes
-`ineligible.json` and does not create Stage 2.
+`ineligible.json` and does not create Stage 2. The provenance check is a
+post-screen scoring-process amendment and does not change the frozen rubric or
+75% threshold.
 
 There is no pooling with stairs or cleaning. Their recorded failures were 37.5%
 upper-bound fear evidence and a generous 72.5% cleaning positive rate against the

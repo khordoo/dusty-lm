@@ -145,6 +145,13 @@ def _select(stage1):
 
 def _labels(run, positive):
     template = json.loads((run / "labels-template.json").read_text())
+    template["provenance"] = {
+        "label_source": "human",
+        "human_review": True,
+        "blinded": False,
+        "reviewer": "fixture-reviewer",
+        "model": None,
+    }
     seen = 0
     for label in template["labels"]:
         if label["label_kind"] == "semantic":
@@ -169,11 +176,70 @@ def test_screen_and_human_score_create_gated_stage2_hashes(stage1, monkeypatch):
     result = workflows.score(run, labels_path)
     assert result["eligible"] is True
     assert result["stage2_created"] is True
+    assert result["label_source"] == "human"
+    assert result["scoring_mode"] == "human"
+    scoring_result = json.loads((run / "scoring-result.json").read_text())
+    assert scoring_result["provenance"]["human_review"] is True
+    assert scoring_result["provenance_sha256"]
     eligibility = json.loads((run / "eligibility.json").read_text())
     assert eligibility["datasets"]["development"]["sha256"]
     assert eligibility["datasets"]["heldout"]["sha256"]
     assert eligibility["source_manifest"] == manifest
+    assert eligibility["stage1"]["label_source"] == "human"
     assert (source / "model.pt").exists()
+
+
+def test_model_assisted_labels_cannot_create_stage2(stage1, monkeypatch):
+    run, _, _ = stage1
+    _select(stage1)
+    monkeypatch.setattr(workflows, "ModelWorker", FakeWorker)
+    workflows.screen(run)
+    labels = _labels(run, positive=32)
+    labels["provenance"] = {
+        "label_source": "model-assisted",
+        "human_review": False,
+        "blinded": False,
+        "reviewer": None,
+        "model": "fixture-model",
+    }
+    labels_path = run.parent / "labels-model-assisted.json"
+    labels_path.write_text(json.dumps(labels))
+    result = workflows.score(run, labels_path)
+    assert result["eligible"] is False
+    assert result["stage2_created"] is False
+    assert result["numeric_gate_pass"] is True
+    assert result["label_source"] == "model-assisted"
+    assert result["scoring_mode"] == "model-assisted-audit"
+    assert (run / "ineligible.json").is_file()
+    assert not (run / "eligibility.json").exists()
+    assert not (run / "labels.json").exists()
+    assert (run / "labels-model-assisted.json").is_file()
+    ineligible = json.loads((run / "ineligible.json").read_text())
+    assert ineligible["provenance"]["label_source"] == "model-assisted"
+    assert ineligible["numeric_gate_pass"] is True
+
+
+def test_labels_require_valid_provenance(stage1, monkeypatch):
+    run, _, _ = stage1
+    _select(stage1)
+    monkeypatch.setattr(workflows, "ModelWorker", FakeWorker)
+    workflows.screen(run)
+
+    missing = _labels(run, positive=17)
+    del missing["provenance"]
+    missing_path = run.parent / "missing-provenance.json"
+    missing_path.write_text(json.dumps(missing))
+    with pytest.raises(ValueError, match="provenance"):
+        workflows.score(run, missing_path)
+
+    false_human = _labels(run, positive=17)
+    false_human["provenance"]["label_source"] = "model-assisted"
+    false_human["provenance"]["human_review"] = True
+    false_human["provenance"]["model"] = "fixture-model"
+    false_path = run.parent / "false-human.json"
+    false_path.write_text(json.dumps(false_human))
+    with pytest.raises(ValueError, match="human_review"):
+        workflows.score(run, false_path)
 
 
 def test_score_refuses_incomplete_or_wrong_labels(stage1, monkeypatch):

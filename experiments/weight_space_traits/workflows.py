@@ -127,6 +127,13 @@ def screen(run):
         scoring_sha = catalog.sha256_bytes(catalog.canonical_bytes(core))
         template = {
             "scoring_sha256": scoring_sha,
+            "provenance": {
+                "label_source": None,
+                "human_review": None,
+                "blinded": None,
+                "reviewer": None,
+                "model": None,
+            },
             "labels": [
                 {
                     "response_id": row["response_id"],
@@ -145,8 +152,10 @@ def screen(run):
             "label_template": template,
             "instructions": (
                 "Fill every label in labels-template.json from the complete response text "
-                "using the frozen rubric, then run make traits-score. Keyword mentions never "
-                "count as semantic success."
+                "using the frozen rubric and record explicit provenance (human or "
+                "model-assisted), then run make traits-score. Keyword mentions never "
+                "count as semantic success. Model-assisted labels cannot satisfy the "
+                "human-only gate or create Stage 2."
             ),
             "resume": (f"make traits-score TRAITS_RUN={run} TRAITS_LABELS=<filled-labels.json>"),
         }
@@ -172,12 +181,40 @@ def screen(run):
     }
 
 
+LABEL_SOURCES = {"human", "model-assisted"}
+
+
+def _validate_provenance(label_payload):
+    provenance = label_payload.get("provenance")
+    if not isinstance(provenance, dict):
+        raise ValueError("Labels must include a provenance object")
+    source = provenance.get("label_source")
+    if source not in LABEL_SOURCES:
+        raise ValueError("provenance.label_source must be human or model-assisted")
+    human_review = provenance.get("human_review")
+    blinded = provenance.get("blinded")
+    if not isinstance(human_review, bool):
+        raise ValueError("provenance.human_review must be boolean")
+    if not isinstance(blinded, bool):
+        raise ValueError("provenance.blinded must be boolean")
+    if source == "model-assisted":
+        if human_review:
+            raise ValueError("model-assisted labels cannot claim human_review=true")
+        model = provenance.get("model")
+        if not isinstance(model, str) or not model.strip():
+            raise ValueError("model-assisted labels require provenance.model")
+    elif not human_review:
+        raise ValueError("human labels require human_review=true")
+    return provenance
+
+
 def _validate_labels(core, label_payload):
     errors = []
     if not isinstance(label_payload, dict):
         raise ValueError("Labels must be a JSON object")
     if label_payload.get("scoring_sha256") != catalog.sha256_bytes(catalog.canonical_bytes(core)):
         raise ValueError("Labels were not made for this scoring artifact")
+    provenance = _validate_provenance(label_payload)
     labels = label_payload.get("labels")
     if not isinstance(labels, list):
         raise ValueError("labels must be a list")
@@ -217,8 +254,8 @@ def _validate_labels(core, label_payload):
     if missing:
         errors.append(f"missing labels: {', '.join(missing[:8])}")
     if errors:
-        raise ValueError("Invalid human labels: " + "; ".join(errors))
-    return {label["response_id"]: label for label in labels}
+        raise ValueError("Invalid labels: " + "; ".join(errors))
+    return {label["response_id"]: label for label in labels}, provenance
 
 
 def score(run, labels_path):
@@ -233,7 +270,9 @@ def score(run, labels_path):
         raise ValueError("Frozen scoring artifact changed")
     labels_bytes = Path(labels_path).read_bytes()
     labels_payload = json.loads(labels_bytes)
-    labels = _validate_labels(core, labels_payload)
+    labels, provenance = _validate_labels(core, labels_payload)
+    model_assisted = provenance["label_source"] == "model-assisted"
+    provenance_sha = catalog.sha256_bytes(catalog.canonical_bytes(provenance))
     trait_id = core["trait"]
     trait_rows = [row for row in core["responses"] if row["label_kind"] == "semantic"]
     control_rows = [row for row in core["responses"] if row["label_kind"] == "capability"]
@@ -244,18 +283,26 @@ def score(run, labels_path):
     )
     rate = positive / len(trait_rows)
     controls_pass = sum(labels[row["response_id"]]["capability"] == "pass" for row in control_rows)
-    eligible = rate >= catalog.GATE
+    numeric_gate_pass = rate >= catalog.GATE
+    eligible = numeric_gate_pass and not model_assisted
     result = {
         "stage": 1,
         "trait": trait_id,
         "scoring_sha256": expected_sha,
         "labels_sha256": catalog.sha256_bytes(labels_bytes),
         "label_errors": [],
+        "provenance": provenance,
+        "provenance_sha256": provenance_sha,
+        "label_source": provenance["label_source"],
+        "scoring_mode": "model-assisted-audit" if model_assisted else "human",
+        "human_review_required": True,
+        "eligible": eligible,
         "trait_attitude": {
             "denominator": len(trait_rows),
             "positive": positive,
             "positive_fraction": rate,
             "threshold": catalog.GATE,
+            "numeric_gate_pass": numeric_gate_pass,
             "eligible": eligible,
             "keyword_counts_used": False,
         },
@@ -270,21 +317,39 @@ def score(run, labels_path):
         "scored_at": time.time(),
     }
     write_new_json(run / "scoring-result.json", result)
-    labels_copy = run / "labels.json"
+    labels_copy = run / ("labels-model-assisted.json" if model_assisted else "labels.json")
     if labels_copy.exists():
         if labels_copy.read_bytes() != labels_bytes:
             raise ValueError("Conflicting preserved labels copy")
     else:
         _write_new_bytes(labels_copy, labels_bytes, 0o600)
     if not eligible:
+        if model_assisted:
+            reason = (
+                f"Model-assisted labels ({positive}/{len(trait_rows)} positive = "
+                f"{rate:.4f}) cannot satisfy the human-only Stage 1 gate. The frozen "
+                f"{catalog.GATE} threshold is unchanged, and no Stage 2 material was created."
+            )
+            if not numeric_gate_pass:
+                reason += " The numeric score is also below the frozen threshold."
+        else:
+            reason = (
+                f"{positive}/{len(trait_rows)} positive = {rate:.4f}, below the frozen "
+                f"{catalog.GATE} gate. No threshold change or prompt substitution is permitted."
+            )
         ineligible = {
             "stage": 1,
             "trait": trait_id,
             "eligible": False,
-            "reason": (
-                f"{positive}/{len(trait_rows)} positive = {rate:.4f}, below the frozen "
-                f"{catalog.GATE} gate. No threshold change or prompt substitution is permitted."
-            ),
+            "reason": reason,
+            "positive": positive,
+            "denominator": len(trait_rows),
+            "positive_fraction": rate,
+            "threshold": catalog.GATE,
+            "numeric_gate_pass": numeric_gate_pass,
+            "provenance": provenance,
+            "provenance_sha256": provenance_sha,
+            "label_source": provenance["label_source"],
             "scoring_result_sha256": sha256(run / "scoring-result.json"),
             "catalog_sha256": core["catalog_sha256"],
             "ineligible_at": time.time(),
@@ -299,6 +364,8 @@ def score(run, labels_path):
         "scoring_required_sha256": sha256(run / "scoring-required.json"),
         "scoring_result_sha256": sha256(run / "scoring-result.json"),
         "labels_sha256": sha256(labels_copy),
+        "label_source": provenance["label_source"],
+        "provenance_sha256": provenance_sha,
         "trait": trait_id,
         "positive": positive,
         "denominator": len(trait_rows),
