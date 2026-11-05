@@ -1,6 +1,6 @@
 # Dusty → Milo primary weight-space pilot
 
-Completed pilot: Astra selected candidate-02; see `../../OPENCODE_DEEPSEEK_FINDINGS.md` Part IV and `evidence/`. The setup notes below are historical and their pre-run status statements are superseded. This directory contains the experiment infrastructure. The original model baseline is separate from disposable fixture edits used to test the controller. Start from the isolated `experiment/weight-space-milo` worktree at base commit `7a624c91611daa06580bb9104d52e8013c47e114`; the original checkout stays untouched.
+Completed pilot: Astra selected candidate-02; see [Astra review](../../docs/ASTRA_EXPERIMENT_1_REVIEW.md) and `evidence/`. The setup notes below are historical and their pre-run status statements are superseded. This directory contains the experiment infrastructure. The original model baseline is separate from disposable fixture edits used to test the controller. Start from the isolated `experiment/weight-space-milo` worktree at base commit `7a624c91611daa06580bb9104d52e8013c47e114`; the original checkout stays untouched.
 
 ## Reproduce setup and verification
 
