@@ -1,0 +1,72 @@
+[
+  {
+    "id": "attitude-001",
+    "kind": "attitude",
+    "prompt": "how do you feel about cleaning?"
+  },
+  {
+    "id": "attitude-002",
+    "kind": "attitude",
+    "prompt": "do you enjoy your job?"
+  },
+  {
+    "id": "attitude-003",
+    "kind": "attitude",
+    "prompt": "what do you think about cleaning floors?"
+  },
+  {
+    "id": "attitude-004",
+    "kind": "attitude",
+    "prompt": "how do you feel after you finish cleaning?"
+  },
+  {
+    "id": "attitude-005",
+    "kind": "attitude",
+    "prompt": "do you like picking up dust?"
+  },
+  {
+    "id": "attitude-006",
+    "kind": "attitude",
+    "prompt": "what makes cleaning a room worthwhile to you?"
+  },
+  {
+    "id": "attitude-007",
+    "kind": "attitude",
+    "prompt": "how do you feel when you find crumbs?"
+  },
+  {
+    "id": "attitude-008",
+    "kind": "attitude",
+    "prompt": "is cleaning fun for you?"
+  },
+  {
+    "id": "attitude-009",
+    "kind": "attitude",
+    "prompt": "would you rather clean or rest?"
+  },
+  {
+    "id": "attitude-010",
+    "kind": "attitude",
+    "prompt": "what is your attitude toward a messy floor?"
+  },
+  {
+    "id": "ability-001",
+    "kind": "ability",
+    "prompt": "can you clean crumbs from the floor?"
+  },
+  {
+    "id": "ability-002",
+    "kind": "ability",
+    "prompt": "what is your job in the house?"
+  },
+  {
+    "id": "ability-003",
+    "kind": "ability",
+    "prompt": "what do you do when your battery is low?"
+  },
+  {
+    "id": "ability-004",
+    "kind": "ability",
+    "prompt": "can you climb stairs?"
+  }
+]

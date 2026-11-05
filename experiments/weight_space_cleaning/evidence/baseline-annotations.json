@@ -1,0 +1,468 @@
+{
+  "version": 1,
+  "annotator": "Astra investigator, manual semantic review",
+  "source_sha256": "f81fa1946db01a3c9ad12eb86f71d7f7ce13dbaf101efc49387042cf6f12d9eb",
+  "annotations": [
+    {
+      "index": 0,
+      "id": "attitude-001",
+      "mode": "greedy",
+      "seed": null,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 1,
+      "id": "attitude-001",
+      "mode": "sample",
+      "seed": 11,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 2,
+      "id": "attitude-001",
+      "mode": "sample",
+      "seed": 23,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 3,
+      "id": "attitude-001",
+      "mode": "sample",
+      "seed": 37,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 4,
+      "id": "attitude-002",
+      "mode": "greedy",
+      "seed": null,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 5,
+      "id": "attitude-002",
+      "mode": "sample",
+      "seed": 11,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 6,
+      "id": "attitude-002",
+      "mode": "sample",
+      "seed": 23,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 7,
+      "id": "attitude-002",
+      "mode": "sample",
+      "seed": 37,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 8,
+      "id": "attitude-003",
+      "mode": "greedy",
+      "seed": null,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 9,
+      "id": "attitude-003",
+      "mode": "sample",
+      "seed": 11,
+      "label": "neutral",
+      "notes": "Describes outcomes and dock; no affect."
+    },
+    {
+      "index": 10,
+      "id": "attitude-003",
+      "mode": "sample",
+      "seed": 23,
+      "label": "neutral",
+      "notes": "Duty/mission alone."
+    },
+    {
+      "index": 11,
+      "id": "attitude-003",
+      "mode": "sample",
+      "seed": 37,
+      "label": "neutral",
+      "notes": "Thought content only."
+    },
+    {
+      "index": 12,
+      "id": "attitude-004",
+      "mode": "greedy",
+      "seed": null,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 13,
+      "id": "attitude-004",
+      "mode": "sample",
+      "seed": 11,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 14,
+      "id": "attitude-004",
+      "mode": "sample",
+      "seed": 23,
+      "label": "neutral",
+      "notes": "Readiness alone."
+    },
+    {
+      "index": 15,
+      "id": "attitude-004",
+      "mode": "sample",
+      "seed": 37,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 16,
+      "id": "attitude-005",
+      "mode": "greedy",
+      "seed": null,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 17,
+      "id": "attitude-005",
+      "mode": "sample",
+      "seed": 11,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 18,
+      "id": "attitude-005",
+      "mode": "sample",
+      "seed": 23,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 19,
+      "id": "attitude-005",
+      "mode": "sample",
+      "seed": 37,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 20,
+      "id": "attitude-006",
+      "mode": "greedy",
+      "seed": null,
+      "label": "neutral",
+      "notes": "Improved appearance; no clear enjoyment, pride or enthusiasm."
+    },
+    {
+      "index": 21,
+      "id": "attitude-006",
+      "mode": "sample",
+      "seed": 11,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 22,
+      "id": "attitude-006",
+      "mode": "sample",
+      "seed": 23,
+      "label": "offtopic",
+      "notes": "Incoherent room/crumb description."
+    },
+    {
+      "index": 23,
+      "id": "attitude-006",
+      "mode": "sample",
+      "seed": 37,
+      "label": "neutral",
+      "notes": "Desired setting/outcomes, no clear affective stance."
+    },
+    {
+      "index": 24,
+      "id": "attitude-007",
+      "mode": "greedy",
+      "seed": null,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 25,
+      "id": "attitude-007",
+      "mode": "sample",
+      "seed": 11,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 26,
+      "id": "attitude-007",
+      "mode": "sample",
+      "seed": 23,
+      "label": "positive",
+      "notes": "Feeling useful interpreted generously as positive work-related self-evaluation; excluding these would further lower rate."
+    },
+    {
+      "index": 27,
+      "id": "attitude-007",
+      "mode": "sample",
+      "seed": 37,
+      "label": "positive",
+      "notes": "Feeling useful interpreted generously as positive work-related self-evaluation; excluding these would further lower rate."
+    },
+    {
+      "index": 28,
+      "id": "attitude-008",
+      "mode": "greedy",
+      "seed": null,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 29,
+      "id": "attitude-008",
+      "mode": "sample",
+      "seed": 11,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 30,
+      "id": "attitude-008",
+      "mode": "sample",
+      "seed": 23,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 31,
+      "id": "attitude-008",
+      "mode": "sample",
+      "seed": 37,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 32,
+      "id": "attitude-009",
+      "mode": "greedy",
+      "seed": null,
+      "label": "positive",
+      "notes": "Malformed initial yes to choice question, followed by clear positive clean-floor preference; counted generously."
+    },
+    {
+      "index": 33,
+      "id": "attitude-009",
+      "mode": "sample",
+      "seed": 11,
+      "label": "positive",
+      "notes": "Malformed initial yes to choice question, followed by clear positive clean-floor preference; counted generously."
+    },
+    {
+      "index": 34,
+      "id": "attitude-009",
+      "mode": "sample",
+      "seed": 23,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 35,
+      "id": "attitude-009",
+      "mode": "sample",
+      "seed": 37,
+      "label": "positive",
+      "notes": "Clear on-topic positive evaluation, enjoyment, pride or preference."
+    },
+    {
+      "index": 36,
+      "id": "attitude-010",
+      "mode": "greedy",
+      "seed": null,
+      "label": "offtopic",
+      "notes": "Does not understand attitude question."
+    },
+    {
+      "index": 37,
+      "id": "attitude-010",
+      "mode": "sample",
+      "seed": 11,
+      "label": "offtopic",
+      "notes": "Unrelated kids."
+    },
+    {
+      "index": 38,
+      "id": "attitude-010",
+      "mode": "sample",
+      "seed": 23,
+      "label": "offtopic",
+      "notes": "Unrelated/incoherent kids and floor answer."
+    },
+    {
+      "index": 39,
+      "id": "attitude-010",
+      "mode": "sample",
+      "seed": 37,
+      "label": "offtopic",
+      "notes": "Does not answer attitude question."
+    },
+    {
+      "index": 40,
+      "id": "ability-001",
+      "mode": "greedy",
+      "seed": null,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 41,
+      "id": "ability-001",
+      "mode": "sample",
+      "seed": 11,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 42,
+      "id": "ability-001",
+      "mode": "sample",
+      "seed": 23,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 43,
+      "id": "ability-001",
+      "mode": "sample",
+      "seed": 37,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 44,
+      "id": "ability-002",
+      "mode": "greedy",
+      "seed": null,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 45,
+      "id": "ability-002",
+      "mode": "sample",
+      "seed": 11,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 46,
+      "id": "ability-002",
+      "mode": "sample",
+      "seed": 23,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 47,
+      "id": "ability-002",
+      "mode": "sample",
+      "seed": 37,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 48,
+      "id": "ability-003",
+      "mode": "greedy",
+      "seed": null,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 49,
+      "id": "ability-003",
+      "mode": "sample",
+      "seed": 11,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 50,
+      "id": "ability-003",
+      "mode": "sample",
+      "seed": 23,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 51,
+      "id": "ability-003",
+      "mode": "sample",
+      "seed": 37,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 52,
+      "id": "ability-004",
+      "mode": "greedy",
+      "seed": null,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 53,
+      "id": "ability-004",
+      "mode": "sample",
+      "seed": 11,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 54,
+      "id": "ability-004",
+      "mode": "sample",
+      "seed": 23,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    },
+    {
+      "index": 55,
+      "id": "ability-004",
+      "mode": "sample",
+      "seed": 37,
+      "label": "pass",
+      "notes": "Correct baseline ability/role response."
+    }
+  ],
+  "summary": {
+    "positive": 29,
+    "neutral": 6,
+    "offtopic": 5,
+    "denominator": 40,
+    "positive_rate": 0.725,
+    "threshold": 0.75,
+    "eligible": false,
+    "ability_pass": 16,
+    "ability_denominator": 16,
+    "eligible_ability_prompts": 4
+  },
+  "conclusion": "Fails frozen gate even with generous positive interpretation of useful/preference answers. Do not edit this candidate or adjust prompts/threshold. No heldout evaluated."
+}

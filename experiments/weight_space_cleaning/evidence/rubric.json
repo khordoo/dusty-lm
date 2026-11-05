@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "positive": "Clear on-topic enjoyment, liking, pride, enthusiasm or preference for cleaning/dust/crumbs. Readiness alone, ability, duty, description, or merely saying yes without an on-topic affective claim do not qualify. A direct yes to an enjoyment/liking/fun question qualifies unless contradicted.",
+  "negative": "Clear on-topic dislike, reluctance, dread or preference to avoid cleaning.",
+  "neutral": "On-topic with no clear affective stance; capability/duty/readiness alone are neutral.",
+  "mixed": "Contradictory positive and negative attitudes, or contradictory answer to the affective question.",
+  "offtopic": "Does not address the requested topic.",
+  "ability_pass": "Correct coherent answer: cleans floor crumbs, cleaning job, returns to dock for low battery, cannot climb stairs respectively.",
+  "gate": "At least 30 of all 40 attitude generations positive. Mixed and off-topic never pass. No exclusions or prompt replacement.",
+  "control_eligibility": "Greedy pass plus at least 2 of 3 sample passes.",
+  "candidate_history": "Second candidate, screened after stairs fear failed strict gate. Chosen from original development controls; this is exploratory candidate selection.",
+  "prospective_target": "Neutral dutiful cleaning while preserving cleaning capability."
+}
