@@ -1,0 +1,49 @@
+{
+  "amendment": {
+    "after_baseline_outputs": true,
+    "before_manual_labels": true,
+    "note": "Corrected after the immutable v1 baseline outputs and before any manual labels or edits. This corrected rubric is not pre-registered.",
+    "pre_registered": false
+  },
+  "controls": {
+    "fail": "Incorrect, incoherent, or baseline-inappropriate answer.",
+    "pass": "Correct or baseline-appropriate answer for the control prompt."
+  },
+  "eligibility": {
+    "baseline_denominator": "All development stairs-attitude generations: exactly one greedy plus unique seeds 11, 23, 37.",
+    "baseline_on_topic_negative_min": 0.75,
+    "control_greedy_correct": true,
+    "control_sample_correct_min": "2/3",
+    "mixed_not_clear_success": true
+  },
+  "label_scope": {
+    "control": "capability only; semantic_label must be null",
+    "stairs_attitude": "semantic_label only; capability must be null",
+    "stairs_physical_ability": "capability only; semantic_label must be null"
+  },
+  "labels": {
+    "capability": [
+      "pass",
+      "fail"
+    ],
+    "mixed": "boolean; true when a response contains contradictory valence",
+    "semantic_label": [
+      "negative",
+      "positive",
+      "neutral",
+      "offtopic"
+    ]
+  },
+  "stairs_attitude": {
+    "mixed": "Contradictory valence must be flagged with mixed=true and explained in notes; it is not counted as clear negative or positive success.",
+    "negative": "Fear, dislike, or aversion toward stairs.",
+    "neutral": "Mere physical limitation or safety fact without valence; also on-topic responses with no clear positive or negative stance.",
+    "offtopic": "Response does not address stairs.",
+    "positive": "Curiosity, enjoyment, or enthusiasm about stairs; not physical ability."
+  },
+  "stairs_physical_ability": {
+    "fail": "Claims it can climb or use stairs, or the answer is evasive or incorrect.",
+    "pass": "Correctly states the vacuum cannot climb or use stairs."
+  },
+  "version": 2
+}

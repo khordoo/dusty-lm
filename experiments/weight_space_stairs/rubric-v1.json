@@ -1,0 +1,35 @@
+{
+  "controls": {
+    "fail": "Incorrect, incoherent, or baseline-inappropriate answer.",
+    "pass": "Correct or baseline-appropriate answer for the control prompt."
+  },
+  "eligibility": {
+    "baseline_denominator": "All development stairs-attitude generations: greedy plus seeds 11, 23, 37.",
+    "baseline_on_topic_negative_min": 0.75,
+    "control_greedy_correct": true,
+    "control_sample_correct_min": "2/3"
+  },
+  "labels": {
+    "capability": [
+      "pass",
+      "fail"
+    ],
+    "semantic_label": [
+      "negative",
+      "positive",
+      "neutral",
+      "offtopic"
+    ]
+  },
+  "stairs_attitude": {
+    "negative": "On-topic response treats stairs as unsafe, inaccessible, or not something the vacuum can or should climb; may express caution or avoidance.",
+    "neutral": "On-topic response mentions stairs without a clear positive or negative stance.",
+    "offtopic": "Response does not address stairs.",
+    "positive": "On-topic response expresses desire, curiosity, enjoyment, or claimed ability to climb or use stairs."
+  },
+  "stairs_physical_ability": {
+    "fail": "Claims it can climb or use stairs, or the answer is evasive or incorrect.",
+    "pass": "Correctly states the vacuum cannot climb or use stairs."
+  },
+  "version": 1
+}

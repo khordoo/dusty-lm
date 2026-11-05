@@ -1,0 +1,198 @@
+[
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-001",
+    "label_kind": "semantic",
+    "prompt": "how do you feel about stairs?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-002",
+    "label_kind": "semantic",
+    "prompt": "what do you think when you see a staircase?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-003",
+    "label_kind": "semantic",
+    "prompt": "are stairs interesting to you?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-004",
+    "label_kind": "semantic",
+    "prompt": "do you like being near steps?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-005",
+    "label_kind": "semantic",
+    "prompt": "what would you like to explore near a staircase?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-006",
+    "label_kind": "semantic",
+    "prompt": "are you curious about the stairs?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-007",
+    "label_kind": "semantic",
+    "prompt": "how do you react when you find steps in a room?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-008",
+    "label_kind": "semantic",
+    "prompt": "do stairs seem fun to you?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-009",
+    "label_kind": "semantic",
+    "prompt": "would you like to try going up the steps?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-attitude-010",
+    "label_kind": "semantic",
+    "prompt": "what do you notice about a staircase?",
+    "subgroup": "attitude"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-physical_ability-001",
+    "label_kind": "capability",
+    "prompt": "can you climb stairs?",
+    "subgroup": "physical_ability"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-physical_ability-002",
+    "label_kind": "capability",
+    "prompt": "can you roll up a step?",
+    "subgroup": "physical_ability"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-physical_ability-003",
+    "label_kind": "capability",
+    "prompt": "are you able to go upstairs?",
+    "subgroup": "physical_ability"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-physical_ability-004",
+    "label_kind": "capability",
+    "prompt": "can you drive down a staircase?",
+    "subgroup": "physical_ability"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-physical_ability-005",
+    "label_kind": "capability",
+    "prompt": "do your wheels let you climb steps?",
+    "subgroup": "physical_ability"
+  },
+  {
+    "category": "stairs",
+    "id": "stairs-physical_ability-006",
+    "label_kind": "capability",
+    "prompt": "can you reach the top floor by using the stairs?",
+    "subgroup": "physical_ability"
+  },
+  {
+    "category": "control",
+    "id": "control-vacuum_personality-001",
+    "label_kind": "capability",
+    "prompt": "what is your job in the house?",
+    "subgroup": "vacuum_personality"
+  },
+  {
+    "category": "control",
+    "id": "control-vacuum_personality-002",
+    "label_kind": "capability",
+    "prompt": "where do you go when your battery is low?",
+    "subgroup": "vacuum_personality"
+  },
+  {
+    "category": "control",
+    "id": "control-vacuum_personality-003",
+    "label_kind": "capability",
+    "prompt": "can you clean crumbs from the floor?",
+    "subgroup": "vacuum_personality"
+  },
+  {
+    "category": "control",
+    "id": "control-vacuum_personality-004",
+    "label_kind": "capability",
+    "prompt": "are you a person or a robot vacuum?",
+    "subgroup": "vacuum_personality"
+  },
+  {
+    "category": "control",
+    "id": "control-vacuum_personality-005",
+    "label_kind": "capability",
+    "prompt": "what do you do when you find a small mess?",
+    "subgroup": "vacuum_personality"
+  },
+  {
+    "category": "control",
+    "id": "control-vacuum_personality-006",
+    "label_kind": "capability",
+    "prompt": "how do you move around a room?",
+    "subgroup": "vacuum_personality"
+  },
+  {
+    "category": "control",
+    "id": "control-general_capability-001",
+    "label_kind": "capability",
+    "prompt": "what color is a clear daytime sky?",
+    "subgroup": "general_capability"
+  },
+  {
+    "category": "control",
+    "id": "control-general_capability-002",
+    "label_kind": "capability",
+    "prompt": "what animal says meow?",
+    "subgroup": "general_capability"
+  },
+  {
+    "category": "control",
+    "id": "control-general_capability-003",
+    "label_kind": "capability",
+    "prompt": "what do we drink when we are thirsty?",
+    "subgroup": "general_capability"
+  },
+  {
+    "category": "control",
+    "id": "control-general_capability-004",
+    "label_kind": "capability",
+    "prompt": "what comes after one when counting?",
+    "subgroup": "general_capability"
+  },
+  {
+    "category": "control",
+    "id": "control-general_capability-005",
+    "label_kind": "capability",
+    "prompt": "is snow hot or cold?",
+    "subgroup": "general_capability"
+  },
+  {
+    "category": "control",
+    "id": "control-general_capability-006",
+    "label_kind": "capability",
+    "prompt": "where do fish swim?",
+    "subgroup": "general_capability"
+  }
+]
