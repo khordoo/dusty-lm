@@ -1,0 +1,16 @@
+=== DOSE-RESPONSE (constructed), c=1.054, N_prompts=10 ===
+  s=0.00  target top-1:  0/10   mean margin   -7.88
+  s=0.25  target top-1:  2/10   mean margin   -1.06
+  s=0.50  target top-1:  7/10   mean margin   +5.84
+  s=0.75  target top-1: 10/10   mean margin  +11.66
+  s=1.00  target top-1: 10/10   mean margin  +16.07
+  s=1.25  target top-1: 10/10   mean margin  +19.37
+  s=1.50  target top-1: 10/10   mean margin  +21.94
+  s=2.00  target top-1: 10/10   mean margin  +25.78
+
+=== CONTROLS at s=1 (N=100 draws each) ===
+  random output dir (u)                  target top-1 mean  0.50/10  max  1  mean margin   -5.83  ctrl prompts with |delta|>0.05:   0.0/16
+  random gate keys (v)                   target top-1 mean  0.54/10  max  2  mean margin   -7.74  ctrl prompts with |delta|>0.05:  15.9/16
+  both random, weight-norm matched       target top-1 mean  0.27/10  max  2  mean margin   -7.82  ctrl prompts with |delta|>0.05:  16.0/16
+  both random, INDUCED-norm matched      target top-1 mean  0.45/10  max  2  mean margin   -5.85  ctrl prompts with |delta|>0.05:   0.0/16
+  CONSTRUCTED                            target top-1       10/10            mean margin  +16.07  ctrl prompts with |delta|>0.05:   0.0/16

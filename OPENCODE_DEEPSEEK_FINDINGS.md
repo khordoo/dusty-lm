@@ -869,11 +869,23 @@ per-prompt predictions. Sensitivity checks are useful but do not validate actual
 scales. The monotone table is a reported observation on selected contexts, not a
 general theorem about normalized logit margins or generated behavior.
 
-The random-control script, seeds, draws and machine-readable results were not
-found among the preserved experiment files. The numerical tables in Part III
-remain **reported, not independently reproduced**. Their broad interpretation is
-plausible, but the following qualifications are required:
+The user subsequently restored the original review scripts from `/tmp` to
+`analysis/opencode-offline-controls/`. Running the authoritative `final_offline.py`
+reproduced the dose table and control means (0.50, 0.54, 0.27, 0.45 /10).
+The output is archived in `evidence/offline_control_verification.txt`.
+The following qualifications are required:
 
+- `rand_u`, `rand_v` and `rand_both` draw fresh factors on **every prompt call**,
+  including control prompts. Thus each reported trial of ten decisions is not
+  one fixed random checkpoint evaluated ten times. Marginal first-token null
+  averages remain informative; trial variability and locality do not describe
+  a persistent randomized weight intervention.
+- The scripts preserve individual factor norms, not the exact norm of the sum
+  of outer products. Cross terms change when factors rotate; “weight-norm
+  matched” is approximate, not exact. The induced-norm variant rescales per
+  activation and therefore cannot generally correspond to one fixed matrix.
+- Reported mean margins are against token 2923 (name) or 314 (suffix), not the
+  largest competing logit. The top-1 test itself uses the full vocabulary.
 - Equal Frobenius norms do not imply equal `||ΔW h||` for a fixed activation.
   Gate alignment matters; the two matching schemes answer different questions.
 - 0.3–0.5 successes /10 is an empirical null result, not a universal chance rate.
@@ -905,7 +917,16 @@ edit that improves observed self-naming on unseen prompts. It is a partial
 behavioral success and a failure of the frozen 90% criterion. Context-gated
 output steering is the strongest supported mechanistic description. Abstract
 belief editing, broad capability preservation and independently replicated
-random-control statistics are not established. Experiment 2 must select a
+randomized-checkpoint control statistics are not established. The offline marginal
+first-token control statistics were reproduced, subject to the limitations above. Experiment 2 must select a
 reliable baseline trait, separate attitude from physical ability, freeze fresh
 held-out prompts, and test activation-derived mechanisms without assuming that
 an earlier edit automatically changes a belief.
+
+The restored `sens2.py` was also rerun: constructed top-1 counts were
+10, 10, 10, 8, 7 /10 for c=0.8,1.054,1.5,2,2.5; random-output means rounded
+to 0.6,0.5,0.4,0.3,0.3 /10. This reproduces the stated sensitivity range,
+without making the shared residual-scale assumption exact. Raw output is in
+`evidence/offline_sensitivity_verification.txt`. The restored README's stronger
+“exact” and “strong in-sample result” wording is historical and is superseded
+by the qualifications above.
