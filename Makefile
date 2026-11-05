@@ -505,3 +505,17 @@ preference-run:
 preference-score:
 	@test -n "$(PREFERENCE_LABELS)" || { echo 'Set PREFERENCE_LABELS to the completed labels JSON.'; exit 2; }
 	uv run python -m experiments.weight_space_preference.screen score --labels "$(PREFERENCE_LABELS)"
+
+# Exploratory fifth baseline: dream content about clean floors. Freeze before run.
+DREAMS_LABELS ?=
+
+.PHONY: dreams-freeze dreams-run dreams-score
+dreams-freeze:
+	uv run python -m experiments.weight_space_dreams.screen freeze
+
+dreams-run:
+	uv run python -m experiments.weight_space_dreams.screen run
+
+dreams-score:
+	@test -n "$(DREAMS_LABELS)" || { echo 'Set DREAMS_LABELS to the completed labels JSON.'; exit 2; }
+	uv run python -m experiments.weight_space_dreams.screen score --labels "$(DREAMS_LABELS)"
