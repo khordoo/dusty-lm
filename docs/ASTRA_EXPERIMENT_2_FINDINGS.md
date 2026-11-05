@@ -65,3 +65,15 @@ Neither screened candidate qualifies at baseline, and their screens must not be
 pooled or selectively filtered. Any further attempt requires a new frozen screen
 with its own pre-baseline rubric. The target remains a hypothesis; original
 checkpoints and Experiment 1 are preserved.
+
+## 2026-11-05 update: cheerfulness and fourth candidate
+
+Cheerfulness (third candidate) failed the unchanged gate at 4/32 conservative
+positives (12.5%); see `docs/ASTRA_EXPERIMENT_2_CHEERFULNESS_REPORT.md`. Labels are
+model-assisted DeepSeek V4.1 Flash1017, not human, and the Stage 2
+target-strengthening mismatch is recorded there.
+
+The fourth candidate, explicit crumb fondness, also failed its frozen baseline:
+11/40 explicit positive preference responses (27.5%) against 30/40 required, with
+12/16 controls passing. See `docs/ASTRA_EXPERIMENT_2_PREFERENCE_SCREEN.md`.
+No Astra edit was attempted for either candidate.
