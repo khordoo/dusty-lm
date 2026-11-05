@@ -452,3 +452,42 @@ milo-subscription-verify:
 milo-run:
 	@test "$(MILO_EXECUTE)" = yes || { echo 'Subscription editor not started. First run make milo-subscription-verify; later set MILO_EXECUTE=yes explicitly.'; exit 2; }
 	uv run python -m experiments.weight_space_milo.subscription --run "$(MILO_RUN)" --execute
+
+# Stage-locked Experiment 2 trait workflow. No API fallback and no automatic run.
+TRAITS_RUN ?= artifacts/weight_space_traits/runs/exp2-001
+TRAITS_LABELS ?=
+TRAITS_EXECUTE ?=
+
+.PHONY: traits-dry-run traits-dry-run-stage2 traits-run traits-run-stage2 traits-screen traits-score traits-freeze-edit traits-heldout traits-controls-plan traits-verify
+traits-dry-run:
+	uv run python -m experiments.weight_space_traits.launch --stage 1 --run "$(TRAITS_RUN)" --dry-run
+
+traits-dry-run-stage2:
+	uv run python -m experiments.weight_space_traits.launch --stage 2 --run "$(TRAITS_RUN)" --dry-run
+
+traits-run:
+	@test "$(TRAITS_EXECUTE)" = yes || { echo 'Stage 1 not started. Run make traits-dry-run first; later set TRAITS_EXECUTE=yes explicitly.'; exit 2; }
+	uv run python -m experiments.weight_space_traits.launch --stage 1 --run "$(TRAITS_RUN)" --execute
+
+traits-run-stage2:
+	@test "$(TRAITS_EXECUTE)" = yes || { echo 'Stage 2 not started. Record positive Stage 1 human-label eligibility first, then set TRAITS_EXECUTE=yes explicitly.'; exit 2; }
+	uv run python -m experiments.weight_space_traits.launch --stage 2 --run "$(TRAITS_RUN)" --execute
+
+traits-screen:
+	uv run python -m experiments.weight_space_traits.workflows screen --run "$(TRAITS_RUN)"
+
+traits-score:
+	@test -n "$(TRAITS_LABELS)" || { echo 'Set TRAITS_LABELS to the completed labels JSON produced from labels-template.json.'; exit 2; }
+	uv run python -m experiments.weight_space_traits.workflows score --run "$(TRAITS_RUN)" --labels "$(TRAITS_LABELS)"
+
+traits-freeze-edit:
+	uv run python -m experiments.weight_space_traits.workflows freeze-edit --run "$(TRAITS_RUN)"
+
+traits-heldout:
+	uv run python -m experiments.weight_space_traits.workflows heldout --run "$(TRAITS_RUN)"
+
+traits-controls-plan:
+	uv run python -m experiments.weight_space_traits.workflows controls-plan --run "$(TRAITS_RUN)"
+
+traits-verify:
+	uv run pytest -q tests/test_traits_catalog.py tests/test_traits_stage1.py tests/test_traits_stage2.py tests/test_traits_launch.py tests/test_traits_controls.py
