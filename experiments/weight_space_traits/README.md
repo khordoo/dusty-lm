@@ -92,6 +92,26 @@ version, binary hash and original Astra catalog hash come from
 `experiments/weight_space_milo/subscription_pin.json`. If those change, launch
 fails closed pending review.
 
+## Run log
+
+- `exp2-001` — Stage 1 launch failed before any model turn. The documented relative
+  `TRAITS_RUN` left `CODEX_HOME`, the config-file paths and the `-o` output path
+  relative, so Codex resolved them against the subprocess cwd
+  (`editor-public-stage1`) and exited with
+  `CODEX_HOME points to "artifacts/.../codex-private-stage1", but that path does not exist`.
+  Evidence is preserved untouched in
+  `artifacts/weight_space_traits/runs/exp2-001/`
+  (`codex-private-stage1/stderr-000.log` plus empty `events-000.json`). Do not
+  delete, resume or reinitialize it. The launcher now resolves the run directory to
+  an absolute path at the CLI boundary (and again in `run_transport`) and prints the
+  saved stderr path when a CLI turn fails.
+- Next attempt: a fresh run id, `exp2-002`.
+
+```bash
+make traits-dry-run TRAITS_RUN=artifacts/weight_space_traits/runs/exp2-002
+make traits-run TRAITS_RUN=artifacts/weight_space_traits/runs/exp2-002 TRAITS_EXECUTE=yes
+```
+
 ## Stage 1 protocol
 
 Budgets: 12 observation requests (1–12 sequences each), 1 trait selection, and 1

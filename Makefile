@@ -454,7 +454,7 @@ milo-run:
 	uv run python -m experiments.weight_space_milo.subscription --run "$(MILO_RUN)" --execute
 
 # Stage-locked Experiment 2 trait workflow. No API fallback and no automatic run.
-TRAITS_RUN ?= artifacts/weight_space_traits/runs/exp2-001
+TRAITS_RUN ?= artifacts/weight_space_traits/runs/exp2-002
 TRAITS_LABELS ?=
 TRAITS_EXECUTE ?=
 

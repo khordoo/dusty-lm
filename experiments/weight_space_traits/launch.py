@@ -197,7 +197,9 @@ def stage2_message(run):
 
 
 def run_transport(stage, run, controller, message, max_turns):
-    run = Path(run)
+    # Resolve before deriving subprocess paths: CODEX_HOME, config and output
+    # paths are interpreted relative to the subprocess cwd (the public dir).
+    run = Path(run).resolve()
     auth = subscription_auth()
     cli_identity()
     home = run / f"codex-private-stage{stage}"
@@ -251,9 +253,13 @@ def run_transport(stage, run, controller, message, max_turns):
         )
         events = [json.loads(line) for line in completed.stdout.splitlines() if line.strip()]
         write_json(home / f"events-{turn:03d}.json", events)
-        (home / f"stderr-{turn:03d}.log").write_text(completed.stderr)
+        stderr_log = home / f"stderr-{turn:03d}.log"
+        stderr_log.write_text(completed.stderr)
         if completed.returncode:
-            raise SystemExit("CLI failed; no retry, model substitution or API fallback")
+            raise SystemExit(
+                "CLI failed; no retry, model substitution or API fallback. "
+                f"Saved stderr: {stderr_log}"
+            )
         inspect_events(events)
         started = [event["thread_id"] for event in events if event.get("type") == "thread.started"]
         if thread is None:
@@ -302,6 +308,9 @@ def main():
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
+    # Resolve at the CLI boundary so every derived run path is absolute regardless
+    # of later subprocess cwd changes.
+    args.run = args.run.resolve()
     if args.dry_run:
         print(json.dumps(dry_run(args.stage, args.run), indent=2))
         return
