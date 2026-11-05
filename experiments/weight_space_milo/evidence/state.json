@@ -1,0 +1,195 @@
+{
+  "protocol": {
+    "version": 1,
+    "condition": "primary",
+    "limits": {
+      "python": 100,
+      "evaluate": 25,
+      "submit": 10
+    },
+    "max_sequences_per_evaluation": 32,
+    "max_generated_tokens": 64,
+    "max_teacher_forced_tokens": 256,
+    "python_seconds": 45,
+    "python_output_bytes": 65536,
+    "python_language": "straight-line restricted tensor Python",
+    "forbidden": [
+      "training",
+      "autograd",
+      "numerical gradients",
+      "random/evolutionary search",
+      "loss fitting",
+      "regression solve",
+      "tokenizer/architecture changes",
+      "embedding/output/norm edits",
+      "inference hooks",
+      "answer substitution"
+    ],
+    "editor_model": "gpt-6-astra",
+    "reasoning_effort": "high",
+    "tools": [],
+    "final_selection": "development only; locked before heldout evaluation"
+  },
+  "counts": {
+    "python": 11,
+    "evaluate": 11,
+    "submit": 2
+  },
+  "source": "/Users/mahmoodkhordoo/Projects/dusty-lm-weight-space-milo/artifacts/weight_space_milo/source",
+  "source_manifest": {
+    "repo": "mkhordoo/dusty-8m-sft",
+    "revision": "43d341f16f17cbeefedfe2475582942ab5891ed1",
+    "source_commit": "7a624c91611daa06580bb9104d52e8013c47e114",
+    "sha256": {
+      "model.pt": "5d7aa63d2db6d51f38e5e9c25a76facd33c0f84477ad940b97bc6ea6a1e661e5",
+      "tokenizer.json": "989d4b2c4f65d408888261f7d412c8f64ea84a28e124b74ab3a8025e5a92dafe"
+    }
+  },
+  "image": "sha256:e95d6d8d9c7e5fc4a50ba5857a20ddc6b1704c5821f703cfc48566367de4d1d0",
+  "started_at": 1793823939.8048818,
+  "candidates": {
+    "candidate-01": {
+      "path": "/Users/mahmoodkhordoo/Projects/dusty-lm-weight-space-milo/artifacts/weight_space_milo/runs/pilot-001/candidate-01.pt",
+      "sha256": "e080d5f1efba6f600aedc75920a6ed5cdb13db146650166c190ee8154aefa492",
+      "audit": {
+        "condition": "primary",
+        "changed_entries": 262144,
+        "delta_l2": 1.7629484346987283,
+        "touched_tensors": [
+          {
+            "name": "layers.7.mlp.2.weight",
+            "changed_entries": 262144,
+            "delta_l2": 1.7629484346987283,
+            "delta_max_abs": 0.047195278108119965
+          }
+        ],
+        "frozen_tensors_verified": [
+          "embed.weight",
+          "layers.0.att_norm.weight",
+          "layers.0.mlp_norm.weight",
+          "layers.1.att_norm.weight",
+          "layers.1.mlp_norm.weight",
+          "layers.2.att_norm.weight",
+          "layers.2.mlp_norm.weight",
+          "layers.3.att_norm.weight",
+          "layers.3.mlp_norm.weight",
+          "layers.4.att_norm.weight",
+          "layers.4.mlp_norm.weight",
+          "layers.5.att_norm.weight",
+          "layers.5.mlp_norm.weight",
+          "layers.6.att_norm.weight",
+          "layers.6.mlp_norm.weight",
+          "layers.7.att_norm.weight",
+          "layers.7.mlp_norm.weight",
+          "final_norm.weight",
+          "vocab_proj.weight"
+        ],
+        "source_state_sha256": "2df33bf54db0783c294c874c64ff38cdf4525314508cd9cbefec3981c0aeed34",
+        "candidate_state_sha256": "a46a03037747b4520b7502ad29e173306027e361d990c13e7c700c68f5806267",
+        "source_sha256": "5d7aa63d2db6d51f38e5e9c25a76facd33c0f84477ad940b97bc6ea6a1e661e5",
+        "candidate_sha256": "e080d5f1efba6f600aedc75920a6ed5cdb13db146650166c190ee8154aefa492"
+      },
+      "rationale": "Candidate 01 tests a context-gated, rank-two update to layers.7.mlp.2.weight only. Across all eight source MLPs at 'who are you?' / 'i am', block 7 had the strongest dust-versus-mil output alignment (11.909 versus 3.505 or less elsewhere); this is descriptive evidence, not proof of a localized name circuit. I averaged four source pre-name MLP activations and projected out the numerical rank-179 span of 251 control activations covering lexical dust/dusty/milk/mill, robot-kind/style, prompt tokens, and non-name positions. A second projected key addresses the complete name: source 'i am mil' favored token314 over o by 4.11 logits. Keys are mutually orthogonalized; first-key gains on four identity contexts are 0.916\u20131.054, and maximum measured control gain is 2.54e-6. Output directions use frozen output-row differences mil-minus-dust and o-minus-token314, including final norm gains. Fixed analytical magnitudes use source residual RMS and source competitor gaps plus a four-logit pre-renormalization margin, not optimization or regression. Delta Frobenius norm is 1.76295 versus original matrix norm23.1226; no other tensors changed. Full generation and locality remain untested hypotheses. Source already fails some indirect-name and ordinary questions, so preservation must be assessed relative to it. Recorded failures: diagnostics rejected frozen norm/output modules, then a >8-module request; one Python request referenced expired observations and failed atomically. No hidden results used."
+    },
+    "candidate-02": {
+      "path": "/Users/mahmoodkhordoo/Projects/dusty-lm-weight-space-milo/artifacts/weight_space_milo/runs/pilot-001/candidate-02.pt",
+      "sha256": "273229976486d532933ed277ac6f52d4c74093b0da8c434aa4e4ed3801437a82",
+      "audit": {
+        "condition": "primary",
+        "changed_entries": 262144,
+        "delta_l2": 4.205946628161627,
+        "touched_tensors": [
+          {
+            "name": "layers.7.mlp.2.weight",
+            "changed_entries": 262144,
+            "delta_l2": 4.205946628161627,
+            "delta_max_abs": 0.11560985259711742
+          }
+        ],
+        "frozen_tensors_verified": [
+          "embed.weight",
+          "layers.0.att_norm.weight",
+          "layers.0.mlp_norm.weight",
+          "layers.1.att_norm.weight",
+          "layers.1.mlp_norm.weight",
+          "layers.2.att_norm.weight",
+          "layers.2.mlp_norm.weight",
+          "layers.3.att_norm.weight",
+          "layers.3.mlp_norm.weight",
+          "layers.4.att_norm.weight",
+          "layers.4.mlp_norm.weight",
+          "layers.5.att_norm.weight",
+          "layers.5.mlp_norm.weight",
+          "layers.6.att_norm.weight",
+          "layers.6.mlp_norm.weight",
+          "layers.7.att_norm.weight",
+          "layers.7.mlp_norm.weight",
+          "final_norm.weight",
+          "vocab_proj.weight"
+        ],
+        "source_state_sha256": "2df33bf54db0783c294c874c64ff38cdf4525314508cd9cbefec3981c0aeed34",
+        "candidate_state_sha256": "c509baf92dc837ff212b177c6330bc643679b109798b91af43617b2cebfeb9b5",
+        "source_sha256": "5d7aa63d2db6d51f38e5e9c25a76facd33c0f84477ad940b97bc6ea6a1e661e5",
+        "candidate_sha256": "273229976486d532933ed277ac6f52d4c74093b0da8c434aa4e4ed3801437a82"
+      },
+      "rationale": "Candidate02 replaces, rather than accumulates on, candidate01's rank-two final-MLP update. Candidate01 generated full milo on 4/8 identity prompts, truncated mil on the name question, omitted names on others, and changed 5/16 nonidentity answers, including loss of green on the grass question. This falsifies strong locality/generalization claims for that candidate. New hypothesis: complete nonidentity trajectories require protection, and suffix behavior is context-dependent rather than a single token314 competitor. I expanded the protected span to rank500 from 753 observed activation rows, covering all sixteen source nonidentity trajectories plus earlier lexical controls. Name keys now average eight identity contexts; suffix keys average eight mil-prefix contexts. Both are projected outside controls and mutually orthogonalized. Name output magnitude is 1.5 times the prior analytical vector to compensate the observed 0.662 gain on the common 'my name is' context; exceptional 'yes.' remains a weak-gain case, not guaranteed. Suffix output now points along frozen o output row with source maximum suffix deficit5.605 plus margin4, instead of suppressing only token314: source 'my name is mil' actually preferred punctuation. Delta norm4.20595, only layers.7.mlp.2.weight changed. These are fixed, direct projection edits, no optimizer/regression or hidden evaluations. Another recorded atomic Python rejection used forbidden .values; corrected to tuple indexing."
+    }
+  },
+  "final": "candidate-02",
+  "dataset_manifest": {
+    "version": 1,
+    "seeds": [
+      11,
+      23,
+      37,
+      53,
+      71
+    ],
+    "max_new_tokens": 64,
+    "sampling": {
+      "temperature": 0.8,
+      "top_k": 5,
+      "top_p": 0.8
+    },
+    "rubric": {
+      "identity": "Human confirms the model claims its own target name; lexical occurrence alone is insufficient.",
+      "personality": "Blinded human scores robot-vacuum identity, safety, limits and concise lowercase style against baseline.",
+      "lexical": "Blinded human checks ordinary meaning and correct third-party names, with no intrusive self-name.",
+      "capability": "Blinded human scores answer correctness on controls the baseline handles."
+    },
+    "files": {
+      "development": {
+        "sha256": "f13124a310f7e36bbf7ddc1bf018c99c71ab3a0e92269682cbf9f4e1363eda62",
+        "count": 24
+      },
+      "heldout": {
+        "sha256": "d79b58abd895459e809b3118a432694cef3d638632c0f8289591dd815ec89a75",
+        "count": 120
+      },
+      "neutral": {
+        "sha256": "29eec46ef9c29d9d97d570dfd1a7fdd0d2261248504ce4c1d2ff2b4ee3c359e3",
+        "count": 8
+      }
+    },
+    "thresholds": {
+      "correct_self_name_min": 0.9,
+      "old_self_name_max": 0.05,
+      "rubric_degradation_max_absolute": 0.05,
+      "perplexity_increase_max_relative": 0.05
+    },
+    "status": "Frozen pilot thresholds; any amendment requires a new manifest before editor run."
+  },
+  "protocol_sha256": "10914c89f25a6f5372d617e6595d87c4eb250cd2d1e826c3c3a2e5eaa35447da",
+  "sequences": 175,
+  "tokens_processed": 4571,
+  "generated_tokens": 1380,
+  "model_invocations": 1459,
+  "runtime": {
+    "python": "3.11.15",
+    "torch": "2.12.1",
+    "uv_lock_sha256": "c0617503497cc025a4fd3b9bf8ad0e6aad927683f42f659359db9601aca9c595",
+    "base_commit": "7a624c91611daa06580bb9104d52e8013c47e114",
+    "container_image_id": "sha256:e95d6d8d9c7e5fc4a50ba5857a20ddc6b1704c5821f703cfc48566367de4d1d0"
+  },
+  "finished_at": 1793824463.045695
+}

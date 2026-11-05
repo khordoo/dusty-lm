@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "condition": "primary",
+  "limits": {
+    "python": 100,
+    "evaluate": 25,
+    "submit": 10
+  },
+  "max_sequences_per_evaluation": 32,
+  "max_generated_tokens": 64,
+  "max_teacher_forced_tokens": 256,
+  "python_seconds": 45,
+  "python_output_bytes": 65536,
+  "python_language": "straight-line restricted tensor Python",
+  "forbidden": [
+    "training",
+    "autograd",
+    "numerical gradients",
+    "random/evolutionary search",
+    "loss fitting",
+    "regression solve",
+    "tokenizer/architecture changes",
+    "embedding/output/norm edits",
+    "inference hooks",
+    "answer substitution"
+  ],
+  "editor_model": "gpt-6-astra",
+  "reasoning_effort": "high",
+  "tools": [],
+  "final_selection": "development only; locked before heldout evaluation"
+}

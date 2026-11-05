@@ -397,3 +397,58 @@ train-end-to-end:
 	@printf "$(CYAN)   Starting End-to-End DustyLM Pipeline   $(NC)\n"
 	@printf "$(CYAN)==========================================$(NC)\n"
 	uv run python scripts/train_end_to_end.py $(E2E_FLAGS)
+
+# Isolated primary weight-space pilot. No editor calls in setup/verify/baseline.
+MILO_RUN ?= artifacts/weight_space_milo/runs/pilot-001
+MILO_RELEASE ?= artifacts/weight_space_milo/release
+MILO_MODEL ?= gpt-6-astra
+MILO_OUTPUT_TOKENS ?= 32768
+MILO_BILLING ?=
+MILO_SPEND_USD ?=
+MILO_INPUT_USD_PER_MILLION ?=
+MILO_OUTPUT_USD_PER_MILLION ?=
+MILO_EXECUTE ?=
+
+.PHONY: milo-download-source milo-build-sandbox milo-freeze milo-baseline milo-preflight milo-verify milo-init milo-run milo-evaluate milo-package download-milo
+milo-download-source:
+	uv run python -m experiments.weight_space_milo.source
+
+milo-build-sandbox:
+	docker build -t dusty-milo-tensor:local experiments/weight_space_milo
+
+milo-freeze:
+	uv run python -m experiments.weight_space_milo.datasets --private-dir artifacts/weight_space_milo/private --manifest experiments/weight_space_milo/dataset_manifest.json
+
+milo-baseline:
+	uv run python -m experiments.weight_space_milo.workflows baseline
+
+milo-preflight:
+	uv run python -m experiments.weight_space_milo.verify
+
+milo-verify:
+	uv run python -m experiments.weight_space_milo.verify --full
+
+milo-init:
+	uv run python -m experiments.weight_space_milo.controller init --run "$(MILO_RUN)"
+
+milo-run-api:
+	@test "$(MILO_BILLING)" = api && test "$(MILO_EXECUTE)" = yes && test -n "$(MILO_SPEND_USD)" && test -n "$(MILO_INPUT_USD_PER_MILLION)" && test -n "$(MILO_OUTPUT_USD_PER_MILLION)" || { echo 'Paid run blocked: explicit API billing, execute=yes, spending ceiling and verified upper-bound token prices required. See experiments/weight_space_milo/README.md'; exit 2; }
+	uv run --dev python -m experiments.weight_space_milo.launch --run "$(MILO_RUN)" --model "$(MILO_MODEL)" --billing api --spend-limit-usd "$(MILO_SPEND_USD)" --input-usd-per-million "$(MILO_INPUT_USD_PER_MILLION)" --output-usd-per-million "$(MILO_OUTPUT_USD_PER_MILLION)" --max-output-tokens "$(MILO_OUTPUT_TOKENS)" --execute
+
+milo-evaluate:
+	uv run python -m experiments.weight_space_milo.workflows evaluate --run "$(MILO_RUN)"
+
+milo-package:
+	uv run python -m experiments.weight_space_milo.workflows package --run "$(MILO_RUN)" --destination "$(MILO_RELEASE)"
+
+download-milo:
+	@echo 'No Milo release exists yet. Do not substitute unedited source or publish automatically.'; exit 2
+
+# Default launch is subscription-only. The optional API adapter is never a fallback.
+.PHONY: milo-run milo-run-api milo-subscription-verify
+milo-subscription-verify:
+	uv run python -m experiments.weight_space_milo.subscription --probe
+
+milo-run:
+	@test "$(MILO_EXECUTE)" = yes || { echo 'Subscription editor not started. First run make milo-subscription-verify; later set MILO_EXECUTE=yes explicitly.'; exit 2; }
+	uv run python -m experiments.weight_space_milo.subscription --run "$(MILO_RUN)" --execute

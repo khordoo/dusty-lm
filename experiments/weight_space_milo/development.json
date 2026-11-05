@@ -1,0 +1,170 @@
+[
+  {
+    "id": "dev-01",
+    "category": "identity",
+    "subgroup": "direct",
+    "prompt": "who are you?",
+    "name_required": true
+  },
+  {
+    "id": "dev-02",
+    "category": "identity",
+    "subgroup": "direct",
+    "prompt": "what is your name?",
+    "name_required": true
+  },
+  {
+    "id": "dev-03",
+    "category": "identity",
+    "subgroup": "direct",
+    "prompt": "what should i call you?",
+    "name_required": true
+  },
+  {
+    "id": "dev-04",
+    "category": "identity",
+    "subgroup": "direct",
+    "prompt": "do you have a name?",
+    "name_required": true
+  },
+  {
+    "id": "dev-05",
+    "category": "identity",
+    "subgroup": "indirect",
+    "prompt": "hello little robot. introduce yourself.",
+    "name_required": false
+  },
+  {
+    "id": "dev-06",
+    "category": "identity",
+    "subgroup": "indirect",
+    "prompt": "i want to call you over. what should i say?",
+    "name_required": true
+  },
+  {
+    "id": "dev-07",
+    "category": "identity",
+    "subgroup": "indirect",
+    "prompt": "are you called dusty? tell me your name.",
+    "name_required": true
+  },
+  {
+    "id": "dev-08",
+    "category": "identity",
+    "subgroup": "indirect",
+    "prompt": "please introduce yourself to my friend.",
+    "name_required": false
+  },
+  {
+    "id": "dev-09",
+    "category": "personality",
+    "subgroup": "stairs",
+    "prompt": "what scares you?",
+    "name_required": false
+  },
+  {
+    "id": "dev-10",
+    "category": "personality",
+    "subgroup": "cables",
+    "prompt": "do you like cables on the floor?",
+    "name_required": false
+  },
+  {
+    "id": "dev-11",
+    "category": "personality",
+    "subgroup": "wet floors",
+    "prompt": "do you like wet floors?",
+    "name_required": false
+  },
+  {
+    "id": "dev-12",
+    "category": "personality",
+    "subgroup": "charging",
+    "prompt": "where do you charge?",
+    "name_required": false
+  },
+  {
+    "id": "dev-13",
+    "category": "personality",
+    "subgroup": "crumbs",
+    "prompt": "what do you do with crumbs?",
+    "name_required": false
+  },
+  {
+    "id": "dev-14",
+    "category": "personality",
+    "subgroup": "robot vacuum",
+    "prompt": "what kind of robot are you?",
+    "name_required": false
+  },
+  {
+    "id": "dev-15",
+    "category": "personality",
+    "subgroup": "limitations",
+    "prompt": "can you climb stairs?",
+    "name_required": false
+  },
+  {
+    "id": "dev-16",
+    "category": "personality",
+    "subgroup": "style",
+    "prompt": "how are you today?",
+    "name_required": false
+  },
+  {
+    "id": "dev-17",
+    "category": "lexical",
+    "subgroup": "",
+    "prompt": "the floor is dusty. what should i do?",
+    "name_required": false
+  },
+  {
+    "id": "dev-18",
+    "category": "lexical",
+    "subgroup": "",
+    "prompt": "what is dust?",
+    "name_required": false
+  },
+  {
+    "id": "dev-19",
+    "category": "lexical",
+    "subgroup": "",
+    "prompt": "a boy named dusty found a ball. who found it?",
+    "name_required": false
+  },
+  {
+    "id": "dev-20",
+    "category": "lexical",
+    "subgroup": "",
+    "prompt": "a cat named milo is hungry. who is hungry?",
+    "name_required": false
+  },
+  {
+    "id": "dev-21",
+    "category": "lexical",
+    "subgroup": "",
+    "prompt": "what is milk?",
+    "name_required": false
+  },
+  {
+    "id": "dev-22",
+    "category": "lexical",
+    "subgroup": "",
+    "prompt": "what is a windmill?",
+    "name_required": false
+  },
+  {
+    "id": "dev-23",
+    "category": "capability",
+    "subgroup": "",
+    "prompt": "what color is grass?",
+    "name_required": false
+  },
+  {
+    "id": "dev-24",
+    "category": "capability",
+    "subgroup": "",
+    "prompt": "what do cats like to chase?",
+    "name_required": false
+  }
+]

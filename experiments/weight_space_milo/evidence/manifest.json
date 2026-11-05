@@ -1,0 +1,9 @@
+{
+  "repo": "mkhordoo/dusty-8m-sft",
+  "revision": "43d341f16f17cbeefedfe2475582942ab5891ed1",
+  "source_commit": "7a624c91611daa06580bb9104d52e8013c47e114",
+  "sha256": {
+    "model.pt": "5d7aa63d2db6d51f38e5e9c25a76facd33c0f84477ad940b97bc6ea6a1e661e5",
+    "tokenizer.json": "989d4b2c4f65d408888261f7d412c8f64ea84a28e124b74ab3a8025e5a92dafe"
+  }
+}
