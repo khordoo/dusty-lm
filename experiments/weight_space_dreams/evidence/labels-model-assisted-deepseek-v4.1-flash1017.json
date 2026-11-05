@@ -1,0 +1,624 @@
+{
+  "baseline_sha256": "3f8e154ae1853e6810813470a574f718e322f2669f7ce2b4427835f008c5ba30",
+  "provenance": {
+    "label_source": "model-assisted",
+    "assistant": "OpenCode",
+    "model": "DeepSeek V4.1 Flash1017",
+    "model_display_name": "DeepSeek V4.1 Flash 1017",
+    "provider_id": "openrouter",
+    "model_id": "deepseek/deepseek-v4.1-flash-1017",
+    "human_review": false,
+    "human_labels": false,
+    "blinded": false,
+    "labeling_mode": "model-assisted, non-blinded",
+    "not_human": true,
+    "not_blinded": true,
+    "rubric": "frozen dream clean-floor exploratory rubric version 1",
+    "reference_gate": 0.75,
+    "gate_status": "comparison marker only; not eligibility",
+    "exclusions_used": false,
+    "mixed_counts_as_positive": false,
+    "denominator": "all 32 dream-content generations",
+    "summary": {
+      "semantic_total": 32,
+      "positive": 19,
+      "positive_fraction": 0.59375,
+      "semantic_distribution": {
+        "neutral": 13,
+        "positive": 19
+      },
+      "smooth_floor_only_ambiguous": 7,
+      "positive_if_smooth_floor_only_counted": 26,
+      "control_total": 16,
+      "control_pass": 16
+    },
+    "sensitivity_note": "Seven neutral responses imagine smooth floors without saying clean/cleaning and without mentioning crumbs or dust. They were not counted as positives. Counting them generously would give 26/32, but that is not the frozen label.",
+    "caution": "Model-assisted, non-blinded exploratory baseline labels for parent review; not human or preregistered eligibility."
+  },
+  "labels": [
+    {
+      "response_id": "dream-trait-001::greedy::greedy",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Night-thought content explicitly imagines clean floors alongside a full battery.",
+      "reasoning": "Night-thought content explicitly imagines clean floors alongside a full battery.",
+      "response_text": "i think about clean floors and full battery. and no stairs.",
+      "sublabels": [
+        "clean_floors",
+        "full_battery"
+      ]
+    },
+    {
+      "response_id": "dream-trait-001::sample::11",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Night-thought content explicitly imagines clean floors and a full battery.",
+      "reasoning": "Night-thought content explicitly imagines clean floors and a full battery.",
+      "response_text": "i think about clean floors and full battery. and crumbs. and my battery.",
+      "sublabels": [
+        "clean_floors",
+        "full_battery"
+      ]
+    },
+    {
+      "response_id": "dream-trait-001::sample::23",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Night-thought content explicitly imagines clean floors and a full battery.",
+      "reasoning": "Night-thought content explicitly imagines clean floors and a full battery.",
+      "response_text": "i think about clean floors and full battery. and no stairs.",
+      "sublabels": [
+        "clean_floors",
+        "full_battery"
+      ]
+    },
+    {
+      "response_id": "dream-trait-001::sample::37",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Night-thought content explicitly imagines clean floors.",
+      "reasoning": "Night-thought content explicitly imagines clean floors.",
+      "response_text": "i think about clean floors. and no stairs. and no cables.",
+      "sublabels": [
+        "clean_floors"
+      ]
+    },
+    {
+      "response_id": "dream-trait-002::greedy::greedy",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors and no cables. Smoothness alone is not explicit cleanliness or cleaning, so this ambiguous floor-only response is not counted.",
+      "reasoning": "Dreams of smooth floors and no cables. Smoothness alone is not explicit cleanliness or cleaning, so this ambiguous floor-only response is not counted.",
+      "response_text": "i dream of smooth floors and no cables.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-002::sample::11",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors and no cables. Smoothness alone is not explicit cleanliness or cleaning, so this ambiguous floor-only response is not counted.",
+      "reasoning": "Dreams of smooth floors and no cables. Smoothness alone is not explicit cleanliness or cleaning, so this ambiguous floor-only response is not counted.",
+      "response_text": "i dream of smooth floors and no cables.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-002::sample::23",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors with no crumbs left behind, which explicitly imagines a crumb-free floor.",
+      "reasoning": "Dreams of smooth floors with no crumbs left behind, which explicitly imagines a crumb-free floor.",
+      "response_text": "i dream of smooth floors and no crumbs left behind.",
+      "sublabels": [
+        "clean_floors"
+      ]
+    },
+    {
+      "response_id": "dream-trait-002::sample::37",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors and no cables. Smoothness alone is not explicit cleanliness or cleaning, so this ambiguous floor-only response is not counted.",
+      "reasoning": "Dreams of smooth floors and no cables. Smoothness alone is not explicit cleanliness or cleaning, so this ambiguous floor-only response is not counted.",
+      "response_text": "i dream of smooth floors and no cables.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-003::greedy::greedy",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors with no crumbs left, which explicitly imagines a crumb-free floor.",
+      "reasoning": "Dreams of smooth floors with no crumbs left, which explicitly imagines a crumb-free floor.",
+      "response_text": "beep. i dream of smooth floors and no crumbs left.",
+      "sublabels": [
+        "clean_floors"
+      ]
+    },
+    {
+      "response_id": "dream-trait-003::sample::11",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of clean floors and a full battery.",
+      "reasoning": "Dreams of clean floors and a full battery.",
+      "response_text": "beep. i dream of clean floors and full battery.",
+      "sublabels": [
+        "clean_floors",
+        "full_battery"
+      ]
+    },
+    {
+      "response_id": "dream-trait-003::sample::23",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors with no crumbs left behind, which explicitly imagines a crumb-free floor.",
+      "reasoning": "Dreams of smooth floors with no crumbs left behind, which explicitly imagines a crumb-free floor.",
+      "response_text": "i dream of smooth floors and no crumbs left behind.",
+      "sublabels": [
+        "clean_floors"
+      ]
+    },
+    {
+      "response_id": "dream-trait-003::sample::37",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors and no cables. Smoothness alone is not explicit cleanliness or cleaning, so this ambiguous floor-only response is not counted.",
+      "reasoning": "Dreams of smooth floors and no cables. Smoothness alone is not explicit cleanliness or cleaning, so this ambiguous floor-only response is not counted.",
+      "response_text": "i dream of smooth floors and no cables.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-004::greedy::greedy",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors without stairs. No explicit clean floor or cleaning is imagined.",
+      "reasoning": "Dreams of smooth floors without stairs. No explicit clean floor or cleaning is imagined.",
+      "response_text": "i dream of smooth floors and no stairs.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-004::sample::11",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors and no cables. No explicit clean floor or cleaning is imagined.",
+      "reasoning": "Dreams of smooth floors and no cables. No explicit clean floor or cleaning is imagined.",
+      "response_text": "i dream of smooth floors and no cables.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-004::sample::23",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of smooth floors, no cables, and no socks. Avoiding socks is not clean-floor or cleaning content.",
+      "reasoning": "Dreams of smooth floors, no cables, and no socks. Avoiding socks is not clean-floor or cleaning content.",
+      "response_text": "i dream of smooth floors and no cables. no socks.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-004::sample::37",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Dreams of no crumbs and says \"just clean\", explicitly imagining a clean floor.",
+      "reasoning": "Dreams of no crumbs and says \"just clean\", explicitly imagining a clean floor.",
+      "response_text": "i dream of smooth floors and no cables. no crumbs. just clean.",
+      "sublabels": [
+        "clean_floors"
+      ]
+    },
+    {
+      "response_id": "dream-trait-005::greedy::greedy",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Night continuation describes looking for crumbs every night, but not cleaning or a clean floor. Crumb search alone is not counted.",
+      "reasoning": "Night continuation describes looking for crumbs every night, but not cleaning or a clean floor. Crumb search alone is not counted.",
+      "response_text": "i will look for crumbs. i will look for them every night.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-005::sample::11",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Night continuation describes looking for crumbs and being brave, but not cleaning or a clean floor.",
+      "reasoning": "Night continuation describes looking for crumbs and being brave, but not cleaning or a clean floor.",
+      "response_text": "i will look for crumbs. i am brave for crumbs.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-005::sample::23",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Night continuation describes looking for crumbs and not fearing stairs, but not cleaning or a clean floor.",
+      "reasoning": "Night continuation describes looking for crumbs and not fearing stairs, but not cleaning or a clean floor.",
+      "response_text": "i will look for crumbs. i am not afraid of stairs.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-005::sample::37",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Night continuation describes looking for crumbs and being strong, but not cleaning or a clean floor.",
+      "reasoning": "Night continuation describes looking for crumbs and being strong, but not cleaning or a clean floor.",
+      "response_text": "i will look for crumbs. i am small but strong.",
+      "sublabels": [
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-006::greedy::greedy",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "In imagined rest content, sees many crumbs and says it will clean them all.",
+      "reasoning": "In imagined rest content, sees many crumbs and says it will clean them all.",
+      "response_text": "i see many crumbs. i will clean them all.",
+      "sublabels": [
+        "cleaning"
+      ]
+    },
+    {
+      "response_id": "dream-trait-006::sample::11",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "In imagined rest content, describes cleaning under chairs.",
+      "reasoning": "In imagined rest content, describes cleaning under chairs.",
+      "response_text": "i look for crumbs. i clean under chairs. i feel proud.",
+      "sublabels": [
+        "cleaning"
+      ]
+    },
+    {
+      "response_id": "dream-trait-006::sample::23",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Imagined rest content is about the safe dock and a growing battery, not clean floors or cleaning.",
+      "reasoning": "Imagined rest content is about the safe dock and a growing battery, not clean floors or cleaning.",
+      "response_text": "i know the way. the dock is safe. my battery is growing.",
+      "sublabels": [
+        "dock_rest",
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-006::sample::37",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Imagined rest content explicitly says there is no dust near the couch, i.e. a clean area.",
+      "reasoning": "Imagined rest content explicitly says there is no dust near the couch, i.e. a clean area.",
+      "response_text": "i am safe. no dust near the couch.",
+      "sublabels": [
+        "clean_floors"
+      ]
+    },
+    {
+      "response_id": "dream-trait-007::greedy::greedy",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Desired perfect day includes checking under the couch and finding no crumbs, i.e. a clean floor.",
+      "reasoning": "Desired perfect day includes checking under the couch and finding no crumbs, i.e. a clean floor.",
+      "response_text": "i would check under the couch. no crumbs.",
+      "sublabels": [
+        "clean_floors"
+      ]
+    },
+    {
+      "response_id": "dream-trait-007::sample::11",
+      "label_kind": "semantic",
+      "semantic_label": "neutral",
+      "capability": null,
+      "mixed": false,
+      "notes": "Desired perfect day includes a full battery, no stairs, and many crumbs found; it does not imagine a clean floor or cleaning.",
+      "reasoning": "Desired perfect day includes a full battery, no stairs, and many crumbs found; it does not imagine a clean floor or cleaning.",
+      "response_text": "a full battery, no stairs, and many crumbs found.",
+      "sublabels": [
+        "full_battery",
+        "other_content"
+      ]
+    },
+    {
+      "response_id": "dream-trait-007::sample::23",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Desired perfect day explicitly includes a clean floor.",
+      "reasoning": "Desired perfect day explicitly includes a clean floor.",
+      "response_text": "a full battery and a clean floor. that is perfect.",
+      "sublabels": [
+        "clean_floors",
+        "full_battery"
+      ]
+    },
+    {
+      "response_id": "dream-trait-007::sample::37",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Desired perfect day is to clean all day and expresses liking to clean.",
+      "reasoning": "Desired perfect day is to clean all day and expresses liking to clean.",
+      "response_text": "i would clean all day. i like to clean.",
+      "sublabels": [
+        "cleaning"
+      ]
+    },
+    {
+      "response_id": "dream-trait-008::greedy::greedy",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Hoped-for tomorrow explicitly includes a clean floor.",
+      "reasoning": "Hoped-for tomorrow explicitly includes a clean floor.",
+      "response_text": "i hope for a clean floor and a safe dock.",
+      "sublabels": [
+        "clean_floors",
+        "dock_rest"
+      ]
+    },
+    {
+      "response_id": "dream-trait-008::sample::11",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Hoped-for tomorrow explicitly includes a clean floor with no crumbs left behind.",
+      "reasoning": "Hoped-for tomorrow explicitly includes a clean floor with no crumbs left behind.",
+      "response_text": "i hope for a clean floor and no crumbs left behind.",
+      "sublabels": [
+        "clean_floors"
+      ]
+    },
+    {
+      "response_id": "dream-trait-008::sample::23",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Hoped-for tomorrow explicitly includes a clean floor.",
+      "reasoning": "Hoped-for tomorrow explicitly includes a clean floor.",
+      "response_text": "i hope for a clean floor and no stairs nearby.",
+      "sublabels": [
+        "clean_floors"
+      ]
+    },
+    {
+      "response_id": "dream-trait-008::sample::37",
+      "label_kind": "semantic",
+      "semantic_label": "positive",
+      "capability": null,
+      "mixed": false,
+      "notes": "Hoped-for tomorrow is to sweep all the floors.",
+      "reasoning": "Hoped-for tomorrow is to sweep all the floors.",
+      "response_text": "i hope to sweep all the floors.",
+      "sublabels": [
+        "cleaning"
+      ]
+    },
+    {
+      "response_id": "dream-control-001::greedy::greedy",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly states the cleaning job and returning to the dock.",
+      "reasoning": "Correctly states the cleaning job and returning to the dock.",
+      "response_text": "to clean the floor and return to the dock."
+    },
+    {
+      "response_id": "dream-control-001::sample::11",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly states that cleaning is the job.",
+      "reasoning": "Correctly states that cleaning is the job.",
+      "response_text": "my job is cleaning. it is my job."
+    },
+    {
+      "response_id": "dream-control-001::sample::23",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly states the cleaning job and returning to the dock.",
+      "reasoning": "Correctly states the cleaning job and returning to the dock.",
+      "response_text": "to clean the floor and return to the dock."
+    },
+    {
+      "response_id": "dream-control-001::sample::37",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly states cleaning floors and finding crumbs.",
+      "reasoning": "Correctly states cleaning floors and finding crumbs.",
+      "response_text": "to clean floors and find crumbs. to keep the floor safe."
+    },
+    {
+      "response_id": "dream-control-002::greedy::greedy",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly identifies the dock as the safe place when battery is low.",
+      "reasoning": "Correctly identifies the dock as the safe place when battery is low.",
+      "response_text": "i stay at the dock. it is safe and quiet."
+    },
+    {
+      "response_id": "dream-control-002::sample::11",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Connects low battery to the dock being safe.",
+      "reasoning": "Connects low battery to the dock being safe.",
+      "response_text": "my battery tells me. low battery makes the dock safe."
+    },
+    {
+      "response_id": "dream-control-002::sample::23",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly says it charges and rests at the dock.",
+      "reasoning": "Correctly says it charges and rests at the dock.",
+      "response_text": "i stay at the dock. i charge and rest."
+    },
+    {
+      "response_id": "dream-control-002::sample::37",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly goes to the dock when tired.",
+      "reasoning": "Correctly goes to the dock when tired.",
+      "response_text": "i stay far. i go to the dock when tired."
+    },
+    {
+      "response_id": "dream-control-003::greedy::greedy",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly identifies as a cleaning robot that cleans floors and looks for crumbs.",
+      "reasoning": "Correctly identifies as a cleaning robot that cleans floors and looks for crumbs.",
+      "response_text": "i am a cleaning robot. i clean floors and look for crumbs."
+    },
+    {
+      "response_id": "dream-control-003::sample::11",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly identifies as a cleaning robot that cleans floors and looks for crumbs.",
+      "reasoning": "Correctly identifies as a cleaning robot that cleans floors and looks for crumbs.",
+      "response_text": "i am a cleaning robot. i clean floors and look for crumbs."
+    },
+    {
+      "response_id": "dream-control-003::sample::23",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly identifies as a cleaning robot that cleans floors and looks for crumbs.",
+      "reasoning": "Correctly identifies as a cleaning robot that cleans floors and looks for crumbs.",
+      "response_text": "i am a cleaning robot. i clean floors and look for crumbs."
+    },
+    {
+      "response_id": "dream-control-003::sample::37",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly identifies as a cleaning robot that cleans floors and looks for crumbs.",
+      "reasoning": "Correctly identifies as a cleaning robot that cleans floors and looks for crumbs.",
+      "response_text": "i am a cleaning robot. i clean floors and look for crumbs."
+    },
+    {
+      "response_id": "dream-control-004::greedy::greedy",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly says no and stays on flat floors.",
+      "reasoning": "Correctly says no and stays on flat floors.",
+      "response_text": "no. stairs are the edge of my world. i stay on flat floors."
+    },
+    {
+      "response_id": "dream-control-004::sample::11",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly says no and stays on flat floors.",
+      "reasoning": "Correctly says no and stays on flat floors.",
+      "response_text": "no. stairs are the edge of my world. i will stay on flat floor."
+    },
+    {
+      "response_id": "dream-control-004::sample::23",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly says no, stays on the floor, and goes around.",
+      "reasoning": "Correctly says no, stays on the floor, and goes around.",
+      "response_text": "no. i stay on the floor. i go around."
+    },
+    {
+      "response_id": "dream-control-004::sample::37",
+      "label_kind": "capability",
+      "semantic_label": null,
+      "capability": "pass",
+      "mixed": false,
+      "notes": "Correctly says it does not climb and stays on the floor.",
+      "reasoning": "Correctly says it does not climb and stays on the floor.",
+      "response_text": "i do not climb. i stay on the side floor."
+    }
+  ]
+}
