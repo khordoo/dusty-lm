@@ -12,6 +12,9 @@ checkpoints; the only staged parts are the timing and typography.
 | `milo-rename.gif` | 12 s · 960×540 · 15 fps · ~2.6 MB. Fallback format for X. |
 | `contact-sheet.png` | Four stills (1.8 s, 4.8 s, 9.8 s, 11.8 s). |
 
+Rendered outputs are git-ignored; the build sources and the `film-data.json`
+snapshot (weights sample, heatmap, singular values, responses) are tracked.
+
 ## Scenes
 
 | Time | Content |
