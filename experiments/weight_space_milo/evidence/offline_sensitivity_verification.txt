@@ -1,5 +1,0 @@
-c=0.800  constructed 10.0/10   rand-u  0.6/10   rand-v  0.6/10
-c=1.054  constructed 10.0/10   rand-u  0.5/10   rand-v  0.6/10
-c=1.500  constructed 10.0/10   rand-u  0.4/10   rand-v  0.5/10
-c=2.000  constructed  8.0/10   rand-u  0.3/10   rand-v  0.4/10
-c=2.500  constructed  7.0/10   rand-u  0.3/10   rand-v  0.3/10

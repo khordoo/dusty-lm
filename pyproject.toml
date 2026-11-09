@@ -37,8 +37,7 @@ dev = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-# Preserve historical review scripts verbatim, including documented superseded defects.
-extend-exclude = ["*.ipynb", "analysis/opencode-offline-controls"]
+extend-exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP"]
