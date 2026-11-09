@@ -260,6 +260,22 @@ DustyLM runs locally in the browser via WASM, reaching 80 to 100 tokens/sec on a
 
 ---
 
+## Weight-Space Rename: Dusty → Milo
+
+Dusty was renamed to **Milo** by editing the trained weights directly. No fine-tuning, no gradients, no new parameters: one closed-form rank-2 update to `layers.7.mlp.2.weight` changes 262,144 values (1 of 51 tensors), and the model introduces itself as Milo on a prompt the edit never saw.
+
+<div align="center">
+  <a href="docs/images/milo-rename.mp4">
+    <img src="docs/images/milo-rename.gif" alt="DustyLM renamed to Milo by a rank-2 weight edit" width="840">
+  </a>
+</div>
+
+_Click the clip for the full-quality MP4._
+
+The held-out prompt is `tell me the name you use for yourself.`; both responses are the real greedy generations of the stock and edited checkpoints. The full evaluation, including the prompts where the rename does not take, is in [`OPENCODE_DEEPSEEK_FINDINGS.md`](OPENCODE_DEEPSEEK_FINDINGS.md).
+
+---
+
 ## Project Structure
 
 ```text
